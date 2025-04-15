@@ -3,23 +3,12 @@ import Navigation from "@/components/Navigation";
 import WalletInfo from "@/components/WalletInfo";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
-import { CreditCard, DollarSign, ArrowDownCircle, Clock, Receipt } from "lucide-react";
+import { DepositForm } from "@/components/wallet/DepositForm";
+import { WithdrawForm } from "@/components/wallet/WithdrawForm";
+import { TransactionsList } from "@/components/wallet/TransactionsList";
 
 const Wallet = () => {
-  const { toast } = useToast();
-  
-  // Mock transaction history
+  // Mock transaction history - this would normally come from an API or state management
   const transactions = [
     {
       id: "tx1",
@@ -76,24 +65,6 @@ const Wallet = () => {
       description: "Referral bonus",
     },
   ];
-  
-  const handleDeposit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    toast({
-      title: "Deposit Initiated",
-      description: "Your deposit is being processed. Please check your email for confirmation.",
-    });
-  };
-  
-  const handleWithdraw = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    toast({
-      title: "Withdrawal Requested",
-      description: "Your withdrawal request has been submitted. Processing may take 1-3 business days.",
-    });
-  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -118,86 +89,7 @@ const Wallet = () => {
                   <CardTitle>Deposit Funds</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleDeposit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="amount">Amount</Label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="amount"
-                          type="number"
-                          placeholder="Enter amount"
-                          className="pl-9"
-                          min="10"
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="payment-method">Payment Method</Label>
-                      <Select required>
-                        <SelectTrigger id="payment-method">
-                          <SelectValue placeholder="Select payment method" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="credit-card">Credit Card</SelectItem>
-                          <SelectItem value="paypal">PayPal</SelectItem>
-                          <SelectItem value="bank-transfer">Bank Transfer</SelectItem>
-                          <SelectItem value="crypto">Cryptocurrency</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="card-number">Card Number</Label>
-                      <div className="relative">
-                        <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="card-number"
-                          type="text"
-                          placeholder="XXXX XXXX XXXX XXXX"
-                          className="pl-9"
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="expiry">Expiry Date</Label>
-                        <Input
-                          id="expiry"
-                          type="text"
-                          placeholder="MM/YY"
-                          required
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="cvv">CVV</Label>
-                        <Input
-                          id="cvv"
-                          type="text"
-                          placeholder="XXX"
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="referral">Referral Code (Optional)</Label>
-                      <Input
-                        id="referral"
-                        type="text"
-                        placeholder="Enter referral code"
-                      />
-                    </div>
-                    
-                    <Button type="submit" className="w-full">
-                      Deposit Now
-                    </Button>
-                  </form>
+                  <DepositForm />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -208,146 +100,13 @@ const Wallet = () => {
                   <CardTitle>Withdraw Funds</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleWithdraw} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="withdraw-amount">Amount</Label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="withdraw-amount"
-                          type="number"
-                          placeholder="Enter amount"
-                          className="pl-9"
-                          min="20"
-                          max="500"
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="withdraw-method">Withdrawal Method</Label>
-                      <Select required>
-                        <SelectTrigger id="withdraw-method">
-                          <SelectValue placeholder="Select withdrawal method" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="bank-transfer">Bank Transfer</SelectItem>
-                          <SelectItem value="paypal">PayPal</SelectItem>
-                          <SelectItem value="credit-card">Credit Card Refund</SelectItem>
-                          <SelectItem value="crypto">Cryptocurrency</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="bank-account">Bank Account Number</Label>
-                      <Input
-                        id="bank-account"
-                        type="text"
-                        placeholder="Enter your account number"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="bank-routing">Routing Number</Label>
-                      <Input
-                        id="bank-routing"
-                        type="text"
-                        placeholder="Enter your routing number"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="account-name">Account Holder Name</Label>
-                      <Input
-                        id="account-name"
-                        type="text"
-                        placeholder="Enter account holder name"
-                        required
-                      />
-                    </div>
-                    
-                    <Button type="submit" className="w-full">
-                      Request Withdrawal
-                    </Button>
-                  </form>
+                  <WithdrawForm />
                 </CardContent>
               </Card>
             </TabsContent>
             
             <TabsContent value="history">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Transaction History</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {transactions.map((tx) => (
-                      <div
-                        key={tx.id}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg bg-card border border-border"
-                      >
-                        <div className="flex items-start gap-3 mb-3 sm:mb-0">
-                          {tx.type === "win" && (
-                            <div className="bg-green-500/10 p-3 rounded-full">
-                              <DollarSign className="h-5 w-5 text-green-500" />
-                            </div>
-                          )}
-                          {tx.type === "bet" && (
-                            <div className="bg-red-500/10 p-3 rounded-full">
-                              <DollarSign className="h-5 w-5 text-red-500" />
-                            </div>
-                          )}
-                          {tx.type === "deposit" && (
-                            <div className="bg-blue-500/10 p-3 rounded-full">
-                              <ArrowDownCircle className="h-5 w-5 text-blue-500" />
-                            </div>
-                          )}
-                          {tx.type === "withdrawal" && (
-                            <div className="bg-orange-500/10 p-3 rounded-full">
-                              <ArrowDownCircle className="h-5 w-5 text-orange-500" />
-                            </div>
-                          )}
-                          {tx.type === "purchase" && (
-                            <div className="bg-purple-500/10 p-3 rounded-full">
-                              <CreditCard className="h-5 w-5 text-purple-500" />
-                            </div>
-                          )}
-                          {tx.type === "referral" && (
-                            <div className="bg-green-500/10 p-3 rounded-full">
-                              <Receipt className="h-5 w-5 text-green-500" />
-                            </div>
-                          )}
-                          
-                          <div>
-                            <div className="font-medium">{tx.description}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {tx.game ? `${tx.game} Game` : "Wallet Transaction"}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex justify-between sm:flex-col sm:items-end">
-                          <div
-                            className={`font-medium ${
-                              tx.amount > 0 ? "text-green-500" : "text-red-500"
-                            }`}
-                          >
-                            {tx.amount > 0 ? "+" : ""}${Math.abs(tx.amount)}
-                          </div>
-                          <div className="text-xs flex items-center gap-1 text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            {tx.date} at {tx.time}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <TransactionsList transactions={transactions} />
             </TabsContent>
           </Tabs>
         </div>
