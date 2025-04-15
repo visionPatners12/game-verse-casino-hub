@@ -1,92 +1,80 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 250 33% 10%;
+    --foreground: 0 0% 98%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 250 33% 13%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 250 33% 13%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 280 86% 47%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 272 74% 32%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 250 30% 20%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 43 100% 52%;
+    --accent-foreground: 0 0% 0%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 250 30% 20%;
+    --input: 250 30% 20%;
+    --ring: 280 86% 47%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
+    --sidebar-background: 250 33% 8%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 280 86% 47%;
     --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 43 100% 52%;
+    --sidebar-accent-foreground: 0 0% 0%;
+    --sidebar-border: 250 30% 20%;
+    --sidebar-ring: 280 86% 47%;
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 4%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 98%;
+    --card-foreground: 240 10% 4%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 98%;
+    --popover-foreground: 240 10% 4%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 280 86% 47%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 272 74% 32%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 43 100% 52%;
+    --accent-foreground: 0 0% 0%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 280 86% 47%;
+
+    --radius: 0.5rem;
   }
 }
 
@@ -97,5 +85,96 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Custom styles for casino elements */
+@layer components {
+  .casino-card {
+    @apply bg-card rounded-xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300;
+  }
+  
+  .room-card {
+    @apply casino-card p-4 h-full flex flex-col justify-between;
+  }
+  
+  .game-card {
+    @apply casino-card overflow-hidden flex flex-col;
+  }
+  
+  .game-card-image {
+    @apply w-full h-48 object-cover;
+  }
+  
+  .game-card-content {
+    @apply p-4 flex flex-col gap-2;
+  }
+  
+  .balance-card {
+    @apply casino-card p-4 flex items-center gap-3;
+  }
+  
+  .balance-amount {
+    @apply text-2xl font-semibold;
+  }
+  
+  .transaction-item {
+    @apply flex justify-between items-center border-b border-border py-3 last:border-0;
+  }
+  
+  .stat-value {
+    @apply text-2xl font-bold;
+  }
+  
+  .stat-label {
+    @apply text-sm text-muted-foreground;
+  }
+  
+  .chat-message {
+    @apply p-3 rounded-lg max-w-[80%];
+  }
+  
+  .chat-message-self {
+    @apply bg-primary text-primary-foreground ml-auto;
+  }
+  
+  .chat-message-other {
+    @apply bg-muted text-muted-foreground mr-auto;
+  }
+  
+  .gold-glow {
+    @apply animate-pulse-glow;
+  }
+  
+  .avatar-selector {
+    @apply grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3;
+  }
+  
+  .chip {
+    @apply inline-flex items-center justify-center rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+  }
+  
+  .chip-sm {
+    @apply h-8 px-3;
+  }
+  
+  .chip-default {
+    @apply h-10 px-4;
+  }
+  
+  .chip-lg {
+    @apply h-12 px-6;
+  }
+  
+  .chip-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+  
+  .chip-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90;
+  }
+  
+  .chip-accent {
+    @apply bg-accent text-accent-foreground hover:bg-accent/90;
   }
 }
