@@ -37,6 +37,21 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
+  // State to store current user ID
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
+  // Fetch current user ID on component mount
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        setCurrentUserId(data.user.id);
+      }
+    };
+    
+    fetchCurrentUser();
+  }, []);
+
   // Fetch game sessions for the current user
   const { data: gameSessions, isLoading: loadingGames } = useQuery({
     queryKey: ['user-game-sessions'],
@@ -64,9 +79,7 @@ const Dashboard = () => {
 
   // Calculate and format game history from the sessions data
   const gameHistory = gameSessions?.map(session => {
-    // Get the current user's id for comparison
-    const currentUserId = supabase.auth.getUser().then(response => response.data.user?.id);
-    
+    // Using the state variable for current user ID comparison
     const isUserPlayer = session.game_players?.some(player => 
       player.user_id === currentUserId
     );
