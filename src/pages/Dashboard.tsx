@@ -1,5 +1,5 @@
-
 import Navigation from "@/components/Navigation";
+import { MyItems } from "@/components/dashboard/MyItems";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -258,6 +258,7 @@ const Dashboard = () => {
           <TabsList>
             <TabsTrigger value="history">Game History</TabsTrigger>
             <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+            <TabsTrigger value="items">Mes Items</TabsTrigger>
           </TabsList>
           
           <TabsContent value="history">
@@ -351,6 +352,10 @@ const Dashboard = () => {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+          
+          <TabsContent value="items">
+            <MyItems />
           </TabsContent>
         </Tabs>
       </main>
