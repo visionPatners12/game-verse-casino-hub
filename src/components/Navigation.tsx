@@ -1,37 +1,12 @@
 
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetTrigger 
-} from "@/components/ui/sheet";
-import { 
-  Menu, 
-  GamepadIcon, 
-  Store, 
-  BarChart3, 
-  Wallet, 
-  LogOut,
-  User
-} from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { GamepadIcon, Store, BarChart3, Wallet } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-type NavItem = {
-  label: string;
-  href: string;
-  icon: React.ReactNode;
-};
+import { NavigationDesktop } from "./navigation/NavigationDesktop";
+import { NavigationMobile } from "./navigation/NavigationMobile";
+import { ProfileMenu } from "./navigation/ProfileMenu";
+import { NavItem } from "./navigation/types";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -77,23 +52,7 @@ const Navigation = () => {
           <span className="text-xl font-bold">Casino</span>
         </Link>
         
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8">
-          {navItems.map((item) => (
-            <Link
-              key={item.label}
-              to={item.href}
-              className={`flex items-center gap-1.5 transition-colors ${
-                isActivePath(item.href)
-                  ? "text-primary font-medium"
-                  : "text-foreground/80 hover:text-accent"
-              }`}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <NavigationDesktop navItems={navItems} isActivePath={isActivePath} />
         
         <div className="flex items-center gap-4">
           <div className="hidden sm:flex items-center gap-2">
@@ -105,102 +64,16 @@ const Navigation = () => {
             </div>
           </div>
           
-          <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:hidden"
-                aria-label="Menu"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="bg-card">
-              <div className="flex flex-col h-full">
-                <div className="border-b border-border py-4 mb-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarImage src={user.avatar} />
-                      <AvatarFallback className="bg-primary">
-                        {user.name.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium">{user.name}</div>
-                      <div className="text-sm text-foreground/70">
-                        ${user.balance.real} <span className="text-foreground/50">+${user.balance.bonus} bonus</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <nav className="flex-1">
-                  <ul className="space-y-3">
-                    {navItems.map((item) => (
-                      <li key={item.label}>
-                        <Link
-                          to={item.href}
-                          className={`flex items-center gap-3 px-2 py-2 rounded-md transition-colors ${
-                            isActivePath(item.href)
-                              ? "bg-primary/10 text-primary font-medium"
-                              : "hover:bg-primary/10"
-                          }`}
-                          onClick={() => setIsOpen(false)}
-                        >
-                          {item.icon}
-                          {item.label}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </nav>
-                
-                <div className="border-t border-border pt-4 mt-4">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-destructive"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="h-5 w-5 mr-2" />
-                    Logout
-                  </Button>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+          <NavigationMobile
+            isOpen={isOpen}
+            setIsOpen={setIsOpen}
+            navItems={navItems}
+            isActivePath={isActivePath}
+            user={user}
+            onLogout={handleLogout}
+          />
           
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Avatar>
-                  <AvatarImage src={user.avatar} />
-                  <AvatarFallback className="bg-primary">
-                    {user.name.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                <span>{user.name}</span>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <Link to="/profile">
-                <DropdownMenuItem className="cursor-pointer">
-                  Profile Settings
-                </DropdownMenuItem>
-              </Link>
-              <DropdownMenuItem 
-                className="text-destructive cursor-pointer" 
-                onClick={handleLogout}
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                <span>Logout</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ProfileMenu user={user} onLogout={handleLogout} />
         </div>
       </div>
     </header>
