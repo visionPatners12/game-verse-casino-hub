@@ -1,7 +1,9 @@
 
 import AuthForms from "@/components/AuthForms";
-import { GamepadIcon, Users, TrophyIcon, DiceIcon } from "lucide-react";
-import ludoBackground from "../assets/ludo-background.jpg";
+import { GamepadIcon, Users, TrophyIcon, DicesIcon } from "lucide-react";
+import placeholderBackground from "../assets/ludo-background.jpg";
+// If the image import fails, we'll use a solid color as fallback
+const backgroundImage = placeholderBackground || "linear-gradient(to right, #4f46e5, #7c3aed)";
 
 const Index = () => {
   return (
@@ -10,7 +12,7 @@ const Index = () => {
       <div 
         className="absolute inset-0 z-0 opacity-10"
         style={{
-          backgroundImage: `url(${ludoBackground})`,
+          background: typeof backgroundImage === 'string' ? backgroundImage : `url(${backgroundImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
@@ -39,7 +41,7 @@ const Index = () => {
             {/* Featured Games */}
             <div className="grid sm:grid-cols-2 gap-4">
               <GameFeature 
-                icon={<DiceIcon className="w-8 h-8 text-primary" />}
+                icon={<DicesIcon className="w-8 h-8 text-primary" />}
                 title="Ludo"
                 description="Le classique jeu de plateau indien revisité pour le digital. Stratégie et chance s'entremêlent dans cette aventure captivante."
               />
