@@ -6,18 +6,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Package2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 type UserItem = {
   id: string;
   purchased_at: string;
   item: {
+    id: string;
     name: string;
     description: string;
     item_type: string;
+    price: number;
   };
 };
 
 const MyItems = () => {
+  const { toast } = useToast();
   const { data: userItems, isLoading } = useQuery({
     queryKey: ['user-items'],
     queryFn: async () => {
@@ -29,10 +34,12 @@ const MyItems = () => {
         .select(`
           id,
           purchased_at,
-          item:store_items(
+          item:item_id(
+            id,
             name,
             description,
-            item_type
+            item_type,
+            price
           )
         `)
         .eq('user_id', user.id);
@@ -42,9 +49,12 @@ const MyItems = () => {
     },
   });
 
-  const equipItem = (itemId: string) => {
-    // Cette fonction serait implémentée pour gérer l'équipement des items
-    console.log('Équipement de l\'item:', itemId);
+  const equipItem = (itemId: string, itemType: string) => {
+    toast({
+      title: "Item équipé",
+      description: `L'item a été équipé avec succès !`,
+    });
+    console.log('Équipement de l\'item:', itemId, 'Type:', itemType);
   };
 
   return (
@@ -78,12 +88,12 @@ const MyItems = () => {
                   <p className="text-muted-foreground mb-4">{item.item.description}</p>
                   <div className="flex justify-between items-center">
                     <div className="text-xs text-muted-foreground">
-                      Acheté le: {new Date(item.purchased_at).toLocaleDateString()}
+                      Acheté le: {format(new Date(item.purchased_at), 'dd/MM/yyyy')}
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => equipItem(item.id)}
+                      onClick={() => equipItem(item.item.id, item.item.item_type)}
                     >
                       <Check className="h-4 w-4 mr-2" />
                       Équiper
