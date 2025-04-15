@@ -1,6 +1,6 @@
 
 import AuthForms from "@/components/AuthForms";
-import { GamepadIcon, Users, TrophyIcon, DicesIcon, CreditCard, Shield, Clock } from "lucide-react";
+import { GamepadIcon, Users, TrophyIcon, DicesIcon, Shield, CreditCard, Clock } from "lucide-react";
 import placeholderBackground from "../assets/ludo-background.jpg";
 // If the image import fails, we'll use a solid color as fallback
 const backgroundImage = placeholderBackground || "linear-gradient(to right, #4f46e5, #7c3aed)";
@@ -147,3 +147,4 @@ const TrustFactor = ({ icon, title, description }: {
 };
 
 export default Index;
+
