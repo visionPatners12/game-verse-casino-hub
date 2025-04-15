@@ -41,10 +41,10 @@ const Dashboard = () => {
   const { data: gameSessions, isLoading: loadingGames } = useQuery({
     queryKey: ['user-game-sessions'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) throw new Error('Not authenticated');
 
-      const { data, error } = await supabase
+      const { data: sessions, error } = await supabase
         .from('game_sessions')
         .select(`
           id, 
@@ -58,21 +58,25 @@ const Dashboard = () => {
         .limit(10);
 
       if (error) throw error;
-      return data || [];
+      return sessions || [];
     },
   });
 
   // Calculate and format game history from the sessions data
   const gameHistory = gameSessions?.map(session => {
+    // Get the current user's id for comparison
+    const currentUserId = supabase.auth.getUser().then(response => response.data.user?.id);
+    
     const isUserPlayer = session.game_players?.some(player => 
-      player.user_id === supabase.auth.getUser()?.data?.user?.id
+      player.user_id === currentUserId
     );
     
+    // Fixed comparison to use 'Finished' instead of 'Completed'
     const result = isUserPlayer ? 
-      (session.status === 'Completed' ? 'win' : 'loss') : 'loss';
+      (session.status === 'Finished' ? 'win' : 'loss') : 'loss';
     
     const opponents = session.game_players
-      ?.filter(player => player.user_id !== supabase.auth.getUser()?.data?.user?.id)
+      ?.filter(player => player.user_id !== currentUserId)
       .map(player => player.display_name);
 
     return {
@@ -160,6 +164,29 @@ const Dashboard = () => {
     },
     initialData: [], // Default empty array
   });
+
+  // Get current user data for highlighting in leaderboard
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        // Fetch the current user's username
+        const { data: userData, error } = await supabase
+          .from('users')
+          .select('username')
+          .eq('id', data.user.id)
+          .single();
+          
+        if (!error && userData) {
+          setCurrentUsername(userData.username);
+        }
+      }
+    };
+    
+    getCurrentUser();
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -351,7 +378,7 @@ const Dashboard = () => {
                   </TableHeader>
                   <TableBody>
                     {leaderboardData.map((player) => (
-                      <TableRow key={player.rank} className={player.name === "Player123" ? "bg-primary/5" : ""}>
+                      <TableRow key={player.rank} className={player.name === currentUsername ? "bg-primary/5" : ""}>
                         <TableCell className="font-medium">
                           {player.rank <= 3 ? (
                             <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-accent text-accent-foreground text-xs font-bold">
@@ -361,9 +388,9 @@ const Dashboard = () => {
                             player.rank
                           )}
                         </TableCell>
-                        <TableCell className={player.name === "Player123" ? "font-bold" : ""}>
+                        <TableCell className={player.name === currentUsername ? "font-bold" : ""}>
                           {player.name}
-                          {player.name === "Player123" && " (You)"}
+                          {player.name === currentUsername && " (You)"}
                         </TableCell>
                         <TableCell>{player.winRate}</TableCell>
                         <TableCell>{player.earnings}</TableCell>
