@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Package2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface ProfileMenuProps {
@@ -42,6 +42,12 @@ export const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
         <Link to="/profile">
           <DropdownMenuItem className="cursor-pointer">
             Profile Settings
+          </DropdownMenuItem>
+        </Link>
+        <Link to="/my-items">
+          <DropdownMenuItem className="cursor-pointer">
+            <Package2 className="h-4 w-4 mr-2" />
+            <span>My Items</span>
           </DropdownMenuItem>
         </Link>
         <DropdownMenuItem 

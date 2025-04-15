@@ -8,6 +8,8 @@ import { NavigationMobile } from "./navigation/NavigationMobile";
 import { ProfileMenu } from "./navigation/ProfileMenu";
 import { NavItem } from "./navigation/types";
 import { useWallet } from "@/hooks/useWallet";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,10 +17,35 @@ const Navigation = () => {
   const location = useLocation();
   const { wallet, isLoading } = useWallet();
   
-  // Mock user data - would normally come from auth context
+  const { data: userProfile } = useQuery({
+    queryKey: ['user-profile'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, avatar_url')
+        .eq('id', user.id)
+        .single();
+        
+      const { data: userData } = await supabase
+        .from('users')
+        .select('username')
+        .eq('id', user.id)
+        .single();
+        
+      return {
+        ...profile,
+        username: userData?.username
+      };
+    },
+  });
+  
+  // User data with avatar
   const user = {
-    name: "Player123",
-    avatar: "",
+    name: userProfile?.username || "Player",
+    avatar: userProfile?.avatar_url || "",
     balance: {
       real: wallet?.real_balance ?? 0,
       bonus: wallet?.bonus_balance ?? 0
@@ -33,12 +60,13 @@ const Navigation = () => {
     { label: "My Items", href: "/my-items", icon: <Package2 className="h-5 w-5" /> },
   ];
   
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     toast({
       title: "Logged out",
       description: "You have been successfully logged out.",
     });
-    // Would normally handle actual logout logic here
+    window.location.href = "/";
   };
 
   const isActivePath = (path: string) => {

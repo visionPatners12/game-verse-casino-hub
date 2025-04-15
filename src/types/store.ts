@@ -26,4 +26,5 @@ export interface StoreItem {
   store_id: string;
   avatars: AvatarDetails | null;
   chat_words: ChatWordDetails | null;
+  equipped?: boolean;
 }

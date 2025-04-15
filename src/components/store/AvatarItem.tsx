@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Check, ShoppingCart } from "lucide-react";
+import { Check, ShoppingCart, User } from "lucide-react";
 
 interface AvatarItemProps {
   item: StoreItem;
@@ -12,9 +12,21 @@ interface AvatarItemProps {
   onPurchase: (itemId: string, price: number) => void;
   isPurchasing: boolean;
   canAfford: boolean;
+  onEquip?: (itemId: string, imageUrl: string) => void;
+  isEquipped?: boolean;
+  isEquipping?: boolean;
 }
 
-export const AvatarItem = ({ item, isOwned, onPurchase, isPurchasing, canAfford }: AvatarItemProps) => {
+export const AvatarItem = ({ 
+  item, 
+  isOwned, 
+  onPurchase, 
+  isPurchasing, 
+  canAfford,
+  onEquip,
+  isEquipped,
+  isEquipping
+}: AvatarItemProps) => {
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -38,14 +50,28 @@ export const AvatarItem = ({ item, isOwned, onPurchase, isPurchasing, canAfford 
           )}
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex flex-col gap-2">
         {isOwned ? (
-          <Button
-            className="w-full"
-            variant="outline"
-          >
-            <Check className="h-4 w-4 mr-2" /> Possédé
-          </Button>
+          <>
+            {onEquip && (
+              <Button
+                className="w-full"
+                variant={isEquipped ? "outline" : "default"}
+                onClick={() => onEquip(item.id, item.avatars?.image_url || '')}
+                disabled={isEquipping || isEquipped}
+              >
+                {isEquipped ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" /> Équipé
+                  </>
+                ) : (
+                  <>
+                    <User className="h-4 w-4 mr-2" /> Équiper
+                  </>
+                )}
+              </Button>
+            )}
+          </>
         ) : (
           <Button
             className="w-full"

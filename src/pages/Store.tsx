@@ -1,8 +1,10 @@
+
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useItemPurchase } from "@/hooks/useItemPurchase";
+import { useEquipItem } from "@/hooks/useEquipItem";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AvatarItem } from "@/components/store/AvatarItem";
@@ -12,6 +14,7 @@ import { StoreItem } from "@/types/store";
 const Store = () => {
   const { toast } = useToast();
   const { purchaseItem, isPurchasing } = useItemPurchase();
+  const { equipAvatar, isEquipping } = useEquipItem();
   
   const { data: storeItems, isLoading: isLoadingItems } = useQuery({
     queryKey: ['store-items'],
@@ -39,6 +42,23 @@ const Store = () => {
         .from('wallets')
         .select('*')
         .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+  
+  const { data: userData } = useQuery({
+    queryKey: ['user-profile'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('users')
+        .select('equipped_avatar_id')
+        .eq('id', user.id)
         .single();
 
       if (error) throw error;
@@ -84,6 +104,14 @@ const Store = () => {
   const canAffordItem = (price: number) => {
     return wallet && wallet.real_balance >= price;
   };
+  
+  const isItemEquipped = (itemId: string) => {
+    return userData?.equipped_avatar_id === itemId;
+  };
+  
+  const handleEquipAvatar = (itemId: string, imageUrl: string) => {
+    equipAvatar({ itemId, imageUrl });
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -122,6 +150,9 @@ const Store = () => {
                     onPurchase={handlePurchase}
                     isPurchasing={isPurchasing}
                     canAfford={canAffordItem(item.price)}
+                    onEquip={isItemOwned(item.id) ? handleEquipAvatar : undefined}
+                    isEquipped={isItemEquipped(item.id)}
+                    isEquipping={isEquipping}
                   />
                 ))}
               </div>

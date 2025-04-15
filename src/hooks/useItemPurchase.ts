@@ -37,7 +37,7 @@ export const useItemPurchase = () => {
 
       const { data: wallet } = await supabase
         .from('wallets')
-        .select('real_balance')
+        .select('real_balance, id')
         .eq('user_id', user.id)
         .single();
 
@@ -45,16 +45,37 @@ export const useItemPurchase = () => {
         throw new Error('Solde insuffisant');
       }
 
-      // Insertion de l'achat - cela déclenchera le trigger dans la base de données
-      // pour mettre à jour le solde du portefeuille
-      const { error } = await supabase
+      // Mettre à jour le solde du portefeuille
+      const { error: walletError } = await supabase
+        .from('wallets')
+        .update({ real_balance: wallet.real_balance - item.price })
+        .eq('id', wallet.id);
+
+      if (walletError) throw walletError;
+
+      // Insertion de l'achat
+      const { error: purchaseError } = await supabase
         .from('user_items')
         .insert({
           item_id: itemId,
           user_id: user.id,
         });
 
-      if (error) throw error;
+      if (purchaseError) throw purchaseError;
+
+      // Insérer une transaction pour garder trace de l'achat
+      const { error: transactionError } = await supabase
+        .from('transactions')
+        .insert({
+          amount: -item.price,
+          type: 'StorePurchase',
+          wallet_id: wallet.id,
+          source_balance: 'real',
+          status: 'Success',
+          description: `Achat d'un item dans la boutique`,
+        });
+
+      if (transactionError) throw transactionError;
     },
     onSuccess: () => {
       toast({
