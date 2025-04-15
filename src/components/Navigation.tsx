@@ -2,24 +2,26 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { GamepadIcon, Store, BarChart3, Wallet } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { NavigationDesktop } from "./navigation/NavigationDesktop";
 import { NavigationMobile } from "./navigation/NavigationMobile";
 import { ProfileMenu } from "./navigation/ProfileMenu";
 import { NavItem } from "./navigation/types";
+import { useWallet } from "@/hooks/useWallet";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
   const location = useLocation();
+  const { wallet, isLoading } = useWallet();
   
   // Mock user data - would normally come from auth context
   const user = {
     name: "Player123",
     avatar: "",
     balance: {
-      real: 500,
-      bonus: 100
+      real: wallet?.real_balance ?? 0,
+      bonus: wallet?.bonus_balance ?? 0
     }
   };
   
@@ -59,7 +61,10 @@ const Navigation = () => {
             <div className="text-right">
               <div className="text-sm text-foreground/70">Balance</div>
               <div className="font-medium text-accent">
-                ${user.balance.real} <span className="text-foreground/50 text-xs">+${user.balance.bonus} bonus</span>
+                ${isLoading ? "..." : user.balance.real} 
+                <span className="text-foreground/50 text-xs">
+                  +${isLoading ? "..." : user.balance.bonus} bonus
+                </span>
               </div>
             </div>
           </div>
