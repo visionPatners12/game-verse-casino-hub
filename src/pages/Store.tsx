@@ -13,20 +13,33 @@ import { useItemPurchase } from "@/hooks/useItemPurchase";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+interface AvatarDetails {
+  created_at: string;
+  image_url: string;
+  item_id: string;
+  rarity: string;
+  updated_at: string;
+}
+
+interface ChatWordDetails {
+  created_at: string;
+  item_id: string;
+  special_effect: string;
+  updated_at: string;
+  usage_rules: string | null;
+}
+
 interface StoreItem {
   id: string;
   name: string;
   price: number;
   description: string | null;
   item_type: string;
-  avatars?: {
-    image_url: string;
-    rarity: string;
-  }[];
-  chat_words?: {
-    special_effect: string;
-    usage_rules: string | null;
-  }[];
+  created_at: string;
+  updated_at: string;
+  store_id: string;
+  avatars: AvatarDetails | null;
+  chat_words: ChatWordDetails | null;
 }
 
 const Store = () => {
@@ -140,13 +153,13 @@ const Store = () => {
                       <div className="flex justify-between items-start">
                         <CardTitle className="text-base">{item.name}</CardTitle>
                         <Badge variant="outline">
-                          {item.avatars?.[0]?.rarity || 'common'}
+                          {item.avatars?.rarity || 'common'}
                         </Badge>
                       </div>
                     </CardHeader>
                     <CardContent className="pt-0 pb-4 flex flex-col items-center">
                       <Avatar className="h-24 w-24 mb-2">
-                        <AvatarImage src={item.avatars?.[0]?.image_url} />
+                        <AvatarImage src={item.avatars?.image_url} />
                         <AvatarFallback>{item.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       
@@ -207,6 +220,11 @@ const Store = () => {
                       
                       <div className="text-center">
                         <div className="font-semibold text-lg">${item.price}</div>
+                        {item.chat_words?.special_effect && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Effet spécial: {item.chat_words.special_effect}
+                          </p>
+                        )}
                       </div>
                     </CardContent>
                     <CardFooter>
