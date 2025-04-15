@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { GamepadIcon, Store, BarChart3, Wallet } from "lucide-react";
+import { GamepadIcon, Store, BarChart3, Wallet, Package2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { NavigationDesktop } from "./navigation/NavigationDesktop";
 import { NavigationMobile } from "./navigation/NavigationMobile";
@@ -30,6 +30,7 @@ const Navigation = () => {
     { label: "Store", href: "/store", icon: <Store className="h-5 w-5" /> },
     { label: "Dashboard", href: "/dashboard", icon: <BarChart3 className="h-5 w-5" /> },
     { label: "Wallet", href: "/wallet", icon: <Wallet className="h-5 w-5" /> },
+    { label: "My Items", href: "/my-items", icon: <Package2 className="h-5 w-5" /> },
   ];
   
   const handleLogout = () => {

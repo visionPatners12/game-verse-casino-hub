@@ -12,6 +12,7 @@ import Wallet from "./pages/Wallet";
 import Store from "./pages/Store";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import MyItems from "./pages/MyItems";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/store" element={<Store />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/my-items" element={<MyItems />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

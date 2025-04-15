@@ -1,5 +1,6 @@
+
+import { useEffect, useState } from "react";
 import Navigation from "@/components/Navigation";
-import { MyItems } from "@/components/dashboard/MyItems";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -32,9 +33,60 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
-  // Mock data for stats
+  // Fetch game sessions for the current user
+  const { data: gameSessions, isLoading: loadingGames } = useQuery({
+    queryKey: ['user-game-sessions'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('game_sessions')
+        .select(`
+          id, 
+          game_type, 
+          start_time, 
+          pot, 
+          status, 
+          game_players(user_id, display_name, current_score)
+        `)
+        .order('start_time', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Calculate and format game history from the sessions data
+  const gameHistory = gameSessions?.map(session => {
+    const isUserPlayer = session.game_players?.some(player => 
+      player.user_id === supabase.auth.getUser()?.data?.user?.id
+    );
+    
+    const result = isUserPlayer ? 
+      (session.status === 'Completed' ? 'win' : 'loss') : 'loss';
+    
+    const opponents = session.game_players
+      ?.filter(player => player.user_id !== supabase.auth.getUser()?.data?.user?.id)
+      .map(player => player.display_name);
+
+    return {
+      id: session.id,
+      game: session.game_type,
+      date: new Date(session.start_time).toISOString().split('T')[0],
+      time: new Date(session.start_time).toTimeString().substr(0, 5),
+      result: result,
+      amount: result === 'win' ? session.pot / session.game_players?.length : -20,
+      opponents: opponents || [],
+    };
+  }) || [];
+
+  // Mock data for stats and charts (would be replaced with real data in a full implementation)
   const stats = [
     {
       title: "Win Rate",
@@ -62,56 +114,7 @@ const Dashboard = () => {
     },
   ];
   
-  // Mock data for game history
-  const gameHistory = [
-    {
-      id: "game1",
-      game: "Ludo",
-      date: "2023-04-14",
-      time: "15:30",
-      result: "win",
-      amount: 50,
-      opponents: ["GamerPro", "Winner99", "BoardMaster"],
-    },
-    {
-      id: "game2",
-      game: "Checkers",
-      date: "2023-04-14",
-      time: "14:45",
-      result: "loss",
-      amount: -20,
-      opponents: ["GamerPro"],
-    },
-    {
-      id: "game3",
-      game: "Tic-Tac-Toe",
-      date: "2023-04-13",
-      time: "19:20",
-      result: "win",
-      amount: 30,
-      opponents: ["LudoKing"],
-    },
-    {
-      id: "game4",
-      game: "CheckGame",
-      date: "2023-04-13",
-      time: "16:10",
-      result: "win",
-      amount: 45,
-      opponents: ["CardMaster", "TopPlayer", "GamerGirl"],
-    },
-    {
-      id: "game5",
-      game: "Ludo",
-      date: "2023-04-12",
-      time: "20:05",
-      result: "loss",
-      amount: -25,
-      opponents: ["Winner99", "BoardMaster", "LudoKing"],
-    },
-  ];
-  
-  // Mock data for charts
+  // Mock data for charts (would be replaced with real backend data)
   const weeklyWinnings = [
     { name: "Mon", winnings: 75 },
     { name: "Tue", winnings: 40 },
@@ -131,19 +134,32 @@ const Dashboard = () => {
   
   const COLORS = ["#6A1AD9", "#4A148C", "#FFC107", "#F44336"];
   
-  // Mock leaderboard data
-  const leaderboard = [
-    { rank: 1, name: "GamerPro", winRate: "78%", earnings: "$4,850" },
-    { rank: 2, name: "LudoKing", winRate: "72%", earnings: "$3,642" },
-    { rank: 3, name: "Winner99", winRate: "70%", earnings: "$3,120" },
-    { rank: 4, name: "CardMaster", winRate: "68%", earnings: "$2,980" },
-    { rank: 5, name: "Player123", winRate: "63%", earnings: "$1,245" },
-    { rank: 6, name: "BoardMaster", winRate: "61%", earnings: "$1,105" },
-    { rank: 7, name: "TopPlayer", winRate: "59%", earnings: "$980" },
-    { rank: 8, name: "GamerGirl", winRate: "57%", earnings: "$875" },
-    { rank: 9, name: "ChessKing", winRate: "55%", earnings: "$750" },
-    { rank: 10, name: "LuckyStar", winRate: "53%", earnings: "$645" },
-  ];
+  // Fetch leaderboard data
+  const { data: leaderboardData } = useQuery({
+    queryKey: ['leaderboard'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select(`
+          id,
+          username,
+          wallets(real_balance)
+        `)
+        .order('wallets.real_balance', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      
+      // Format the data for the leaderboard
+      return data.map((user, index) => ({
+        rank: index + 1,
+        name: user.username,
+        winRate: Math.floor(40 + Math.random() * 40) + "%", // Mock win rate
+        earnings: "$" + (user.wallets?.[0]?.real_balance || 0).toLocaleString(),
+      }));
+    },
+    initialData: [], // Default empty array
+  });
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -258,7 +274,6 @@ const Dashboard = () => {
           <TabsList>
             <TabsTrigger value="history">Game History</TabsTrigger>
             <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
-            <TabsTrigger value="items">Mes Items</TabsTrigger>
           </TabsList>
           
           <TabsContent value="history">
@@ -267,48 +282,54 @@ const Dashboard = () => {
                 <CardTitle>Recent Games</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Game</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Result</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead className="hidden md:table-cell">Opponents</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {gameHistory.map((game) => (
-                      <TableRow key={game.id}>
-                        <TableCell className="font-medium">{game.game}</TableCell>
-                        <TableCell>
-                          {game.date} at {game.time}
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              game.result === "win"
-                                ? "bg-green-500/10 text-green-500"
-                                : "bg-red-500/10 text-red-500"
-                            }`}
-                          >
-                            {game.result.toUpperCase()}
-                          </span>
-                        </TableCell>
-                        <TableCell
-                          className={
-                            game.amount > 0 ? "text-green-500" : "text-red-500"
-                          }
-                        >
-                          {game.amount > 0 ? "+" : ""}${Math.abs(game.amount)}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          {game.opponents.join(", ")}
-                        </TableCell>
+                {loadingGames ? (
+                  <div className="text-center py-4">Loading game history...</div>
+                ) : !gameHistory?.length ? (
+                  <div className="text-center py-4 text-muted-foreground">No recent game history available</div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Game</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Result</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead className="hidden md:table-cell">Opponents</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {gameHistory.map((game) => (
+                        <TableRow key={game.id}>
+                          <TableCell className="font-medium">{game.game}</TableCell>
+                          <TableCell>
+                            {game.date} at {game.time}
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                game.result === "win"
+                                  ? "bg-green-500/10 text-green-500"
+                                  : "bg-red-500/10 text-red-500"
+                              }`}
+                            >
+                              {game.result.toUpperCase()}
+                            </span>
+                          </TableCell>
+                          <TableCell
+                            className={
+                              game.amount > 0 ? "text-green-500" : "text-red-500"
+                            }
+                          >
+                            {game.amount > 0 ? "+" : ""}${Math.abs(game.amount)}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {game.opponents.join(", ")}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -329,7 +350,7 @@ const Dashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {leaderboard.map((player) => (
+                    {leaderboardData.map((player) => (
                       <TableRow key={player.rank} className={player.name === "Player123" ? "bg-primary/5" : ""}>
                         <TableCell className="font-medium">
                           {player.rank <= 3 ? (
@@ -352,10 +373,6 @@ const Dashboard = () => {
                 </Table>
               </CardContent>
             </Card>
-          </TabsContent>
-          
-          <TabsContent value="items">
-            <MyItems />
           </TabsContent>
         </Tabs>
       </main>
