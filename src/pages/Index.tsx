@@ -10,7 +10,7 @@ const Index = () => {
             GameVerse Casino
           </h1>
           <p className="text-muted-foreground">
-            Play, compete, and win in our online casino games!
+            Jouez, affrontez-vous et gagnez dans nos jeux de casino en ligne !
           </p>
         </div>
         

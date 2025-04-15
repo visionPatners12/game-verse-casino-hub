@@ -791,6 +791,7 @@ export type Database = {
           referred_by: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string | null
+          username: string
         }
         Insert: {
           country?: string | null
@@ -805,6 +806,7 @@ export type Database = {
           referred_by?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
+          username: string
         }
         Update: {
           country?: string | null
@@ -819,6 +821,7 @@ export type Database = {
           referred_by?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
+          username?: string
         }
         Relationships: [
           {

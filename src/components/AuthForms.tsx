@@ -30,14 +30,14 @@ export const AuthForms = () => {
       if (error) throw error;
 
       toast({
-        title: "Login successful",
-        description: "Welcome back to GameVerse Casino!",
+        title: "Connexion réussie",
+        description: "Bienvenue sur GameVerse Casino!",
       });
       
       navigate('/games');
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: "Erreur",
         description: error.message,
         variant: "destructive",
       });
@@ -53,6 +53,7 @@ export const AuthForms = () => {
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+    const username = formData.get('username') as string;
     const firstName = formData.get('firstName') as string;
     const lastName = formData.get('lastName') as string;
     const phone = formData.get('phone') as string;
@@ -64,6 +65,7 @@ export const AuthForms = () => {
         password,
         options: {
           data: {
+            username,
             first_name: firstName,
             last_name: lastName,
             phone,
@@ -75,14 +77,14 @@ export const AuthForms = () => {
       if (error) throw error;
 
       toast({
-        title: "Account created",
-        description: "Welcome to GameVerse Casino! You can now login.",
+        title: "Compte créé",
+        description: "Bienvenue sur GameVerse Casino! Vous pouvez maintenant vous connecter.",
       });
       
       navigate('/games');
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: "Erreur",
         description: error.message,
         variant: "destructive",
       });
@@ -95,8 +97,8 @@ export const AuthForms = () => {
     <div className="w-full max-w-md mx-auto">
       <Tabs defaultValue="login">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="login">Login</TabsTrigger>
-          <TabsTrigger value="signup">Sign Up</TabsTrigger>
+          <TabsTrigger value="login">Connexion</TabsTrigger>
+          <TabsTrigger value="signup">Inscription</TabsTrigger>
         </TabsList>
         
         <TabsContent value="login">
@@ -108,13 +110,13 @@ export const AuthForms = () => {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="your.email@example.com"
+                  placeholder="votre.email@example.com"
                   required
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Mot de passe</Label>
                 <Input
                   id="password"
                   name="password"
@@ -125,7 +127,7 @@ export const AuthForms = () => {
               </div>
               
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Login"}
+                {isLoading ? "Connexion..." : "Se connecter"}
               </Button>
             </form>
           </div>
@@ -134,9 +136,19 @@ export const AuthForms = () => {
         <TabsContent value="signup">
           <div className="space-y-4 mt-4">
             <form onSubmit={handleSignup} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Nom d'utilisateur</Label>
+                <Input
+                  id="username"
+                  name="username"
+                  type="text"
+                  required
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
+                  <Label htmlFor="firstName">Prénom</Label>
                   <Input
                     id="firstName"
                     name="firstName"
@@ -146,7 +158,7 @@ export const AuthForms = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
+                  <Label htmlFor="lastName">Nom</Label>
                   <Input
                     id="lastName"
                     name="lastName"
@@ -162,13 +174,13 @@ export const AuthForms = () => {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="your.email@example.com"
+                  placeholder="votre.email@example.com"
                   required
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Mot de passe</Label>
                 <Input
                   id="password"
                   name="password"
@@ -179,7 +191,7 @@ export const AuthForms = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">Numéro de téléphone</Label>
                 <Input
                   id="phone"
                   name="phone"
@@ -189,7 +201,7 @@ export const AuthForms = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="country">Country</Label>
+                <Label htmlFor="country">Pays</Label>
                 <Input
                   id="country"
                   name="country"
@@ -199,7 +211,7 @@ export const AuthForms = () => {
               </div>
               
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating account..." : "Create Account"}
+                {isLoading ? "Création du compte..." : "Créer un compte"}
               </Button>
             </form>
           </div>
