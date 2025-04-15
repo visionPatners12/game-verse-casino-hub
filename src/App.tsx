@@ -10,6 +10,7 @@ import GameRoom from "./pages/GameRoom";
 import Dashboard from "./pages/Dashboard";
 import Wallet from "./pages/Wallet";
 import Store from "./pages/Store";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/store" element={<Store />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
