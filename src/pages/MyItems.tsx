@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Package2 } from "lucide-react";
+import { Package2, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type UserItem = {
   id: string;
@@ -41,12 +42,17 @@ const MyItems = () => {
     },
   });
 
+  const equipItem = (itemId: string) => {
+    // Cette fonction serait implémentée pour gérer l'équipement des items
+    console.log('Équipement de l\'item:', itemId);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
       
       <main className="flex-1 container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">My Items</h1>
+        <h1 className="text-3xl font-bold mb-8">Mes Items</h1>
         
         {isLoading ? (
           <div className="text-center py-8">Chargement de vos items...</div>
@@ -70,8 +76,18 @@ const MyItems = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground mb-4">{item.item.description}</p>
-                  <div className="text-xs text-muted-foreground">
-                    Acheté le: {new Date(item.purchased_at).toLocaleDateString()}
+                  <div className="flex justify-between items-center">
+                    <div className="text-xs text-muted-foreground">
+                      Acheté le: {new Date(item.purchased_at).toLocaleDateString()}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => equipItem(item.id)}
+                    >
+                      <Check className="h-4 w-4 mr-2" />
+                      Équiper
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

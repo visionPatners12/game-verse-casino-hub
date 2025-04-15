@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,9 +5,12 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Check, ShoppingCart } from "lucide-react";
+import { useItemPurchase } from "@/hooks/useItemPurchase";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AvatarItem {
   id: string;
@@ -30,7 +32,43 @@ interface ChatWordItem {
 
 const Store = () => {
   const { toast } = useToast();
+  const { purchaseItem, isPurchasing } = useItemPurchase();
   
+  // Fetch user's owned items
+  const { data: userItems } = useQuery({
+    queryKey: ['user-items'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('user_items')
+        .select('item_id')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      return data.map(item => item.item_id);
+    },
+  });
+
+  // Fetch wallet balance
+  const { data: wallet } = useQuery({
+    queryKey: ['wallet'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // Mock user data
   const user = {
     name: "Player123",
@@ -174,7 +212,19 @@ const Store = () => {
     },
   ]);
   
-  const purchaseItem = (type: "avatar" | "chatword", id: string) => {
+  const handlePurchase = (itemId: string, price: number) => {
+    if (!wallet || wallet.real_balance < price) {
+      toast({
+        title: "Solde insuffisant",
+        description: "Vous n'avez pas assez d'argent pour acheter cet item",
+        variant: "destructive",
+      });
+      return;
+    }
+    purchaseItem({ itemId });
+  };
+  
+  const equipItem = (type: "avatar" | "chatword", id: string) => {
     if (type === "avatar") {
       setAvatars(
         avatars.map((avatar) =>
@@ -194,16 +244,6 @@ const Store = () => {
       description: "Item has been added to your inventory",
     });
   };
-  
-  const equipItem = (type: "avatar" | "chatword", id: string) => {
-    toast({
-      title: "Item Equipped",
-      description:
-        type === "avatar"
-          ? "Avatar has been set as your profile picture"
-          : "Chat word is now available to use in games",
-    });
-  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -215,7 +255,10 @@ const Store = () => {
           <div className="text-right">
             <div className="text-sm text-muted-foreground">Your Balance</div>
             <div className="font-medium text-accent">
-              ${user.balance.real} <span className="text-foreground/50 text-xs">+${user.balance.bonus} bonus</span>
+              ${wallet?.real_balance ?? 0}
+              <span className="text-foreground/50 text-xs">
+                +${wallet?.bonus_balance ?? 0} bonus
+              </span>
             </div>
           </div>
         </div>
@@ -233,15 +276,13 @@ const Store = () => {
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
                       <CardTitle className="text-base">{avatar.name}</CardTitle>
-                      <Badge
-                        variant={
-                          avatar.category === "premium"
-                            ? "default"
-                            : avatar.category === "exclusive"
-                            ? "destructive"
-                            : "secondary"
-                        }
-                      >
+                      <Badge variant={
+                        avatar.category === "premium"
+                          ? "default"
+                          : avatar.category === "exclusive"
+                          ? "destructive"
+                          : "secondary"
+                      }>
                         {avatar.category}
                       </Badge>
                     </div>
@@ -257,20 +298,21 @@ const Store = () => {
                     </div>
                   </CardContent>
                   <CardFooter>
-                    {avatar.isOwned ? (
+                    {userItems?.includes(avatar.id) ? (
                       <Button
                         className="w-full"
                         variant="outline"
                         onClick={() => equipItem("avatar", avatar.id)}
                       >
-                        <Check className="h-4 w-4 mr-2" /> Equip
+                        <Check className="h-4 w-4 mr-2" /> Équiper
                       </Button>
                     ) : (
                       <Button
                         className="w-full"
-                        onClick={() => purchaseItem("avatar", avatar.id)}
+                        onClick={() => handlePurchase(avatar.id, avatar.price)}
+                        disabled={isPurchasing}
                       >
-                        <ShoppingCart className="h-4 w-4 mr-2" /> Purchase
+                        <ShoppingCart className="h-4 w-4 mr-2" /> Acheter
                       </Button>
                     )}
                   </CardFooter>
@@ -311,14 +353,15 @@ const Store = () => {
                         variant="outline"
                         onClick={() => equipItem("chatword", word.id)}
                       >
-                        <Check className="h-4 w-4 mr-2" /> Use in Chat
+                        <Check className="h-4 w-4 mr-2" /> Utiliser dans le Chat
                       </Button>
                     ) : (
                       <Button
                         className="w-full"
-                        onClick={() => purchaseItem("chatword", word.id)}
+                        onClick={() => handlePurchase(word.id, word.price)}
+                        disabled={isPurchasing}
                       >
-                        <ShoppingCart className="h-4 w-4 mr-2" /> Purchase
+                        <ShoppingCart className="h-4 w-4 mr-2" /> Acheter
                       </Button>
                     )}
                   </CardFooter>
