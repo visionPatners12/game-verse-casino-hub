@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,26 +17,60 @@ interface StoreItem {
   id: string;
   name: string;
   price: number;
-  description: string;
+  description: string | null;
   item_type: string;
+  avatars?: {
+    image_url: string;
+    rarity: string;
+  }[];
+  chat_words?: {
+    special_effect: string;
+    usage_rules: string | null;
+  }[];
 }
 
 const Store = () => {
   const { toast } = useToast();
   const { purchaseItem, isPurchasing } = useItemPurchase();
   
-  // Fetch store items
+  // Fetch store items with their details
   const { data: storeItems, isLoading: isLoadingItems } = useQuery({
     queryKey: ['store-items'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('store_items')
-        .select('*');
+        .select(`
+          *,
+          avatars (*),
+          chat_words (*)
+        `);
 
       if (error) throw error;
       return data as StoreItem[];
     },
   });
+  
+  // Fetch wallet balance
+  const { data: wallet } = useQuery({
+    queryKey: ['wallet'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+  
+  // Filter store items by type
+  const avatarItems = storeItems?.filter(item => item.item_type === 'avatar') || [];
+  const chatwordItems = storeItems?.filter(item => item.item_type === 'chatword') || [];
   
   // Fetch user's owned items
   const { data: userItems } = useQuery({
@@ -55,28 +89,6 @@ const Store = () => {
     },
   });
 
-  // Fetch wallet balance
-  const { data: wallet } = useQuery({
-    queryKey: ['wallet'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      const { data, error } = await supabase
-        .from('wallets')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Filter store items by type
-  const avatarItems = storeItems?.filter(item => item.item_type === 'avatar') || [];
-  const chatwordItems = storeItems?.filter(item => item.item_type === 'chatword') || [];
-  
   const handlePurchase = (itemId: string, price: number) => {
     if (!wallet || wallet.real_balance < price) {
       toast({
@@ -127,14 +139,14 @@ const Store = () => {
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
                         <CardTitle className="text-base">{item.name}</CardTitle>
-                        <Badge variant="default">
-                          {item.item_type}
+                        <Badge variant="outline">
+                          {item.avatars?.[0]?.rarity || 'common'}
                         </Badge>
                       </div>
                     </CardHeader>
                     <CardContent className="pt-0 pb-4 flex flex-col items-center">
                       <Avatar className="h-24 w-24 mb-2">
-                        <AvatarImage src={`https://api.dicebear.com/7.x/bottts/svg?seed=${item.name.toLowerCase().replace(/\s+/g, '')}`} />
+                        <AvatarImage src={item.avatars?.[0]?.image_url} />
                         <AvatarFallback>{item.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       
