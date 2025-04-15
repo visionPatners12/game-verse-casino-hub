@@ -4,7 +4,7 @@ import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GameCard, GameType } from "@/components/GameCard";
+import GameCard, { GameType } from "@/components/GameCard";
 import RoomCard from "@/components/RoomCard";
 import { Search, Users, Filter } from "lucide-react";
 import {
