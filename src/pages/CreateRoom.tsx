@@ -69,7 +69,7 @@ const CreateRoom = () => {
       const { data, error } = await supabase
         .from('game_types')
         .select('*')
-        .eq('code', validGameType)
+        .eq('code', validGameType as GameCode)
         .single();
       
       if (error) throw error;
