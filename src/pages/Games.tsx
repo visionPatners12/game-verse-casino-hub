@@ -5,8 +5,13 @@ import { useNavigate } from "react-router-dom";
 import GamesList from "@/components/games/GamesList";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Users } from "lucide-react";
+import { JoinGameDialog } from "@/components/games/JoinGameDialog";
 
 const Games = () => {
+  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
+  
   const { data: games, isLoading } = useQuery({
     queryKey: ['game-types'],
     queryFn: async () => {
@@ -37,6 +42,14 @@ const Games = () => {
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Games</h1>
+          <Button 
+            onClick={() => setIsJoinDialogOpen(true)}
+            variant="outline"
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Join a Room
+          </Button>
         </div>
         
         {isLoading ? (
@@ -53,6 +66,11 @@ const Games = () => {
           &copy; {new Date().getFullYear()} GameVerse Casino. All rights reserved.
         </div>
       </footer>
+
+      <JoinGameDialog 
+        open={isJoinDialogOpen} 
+        onOpenChange={setIsJoinDialogOpen} 
+      />
     </div>
   );
 };

@@ -1,9 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Globe } from "lucide-react";
-import { useState } from "react";
-import { JoinGameDialog } from "@/components/games/JoinGameDialog";
+import { Users, Globe, PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export type GameType = "ludo" | "checkers" | "tictactoe" | "checkgame";
@@ -27,14 +25,17 @@ const GameCard = ({
   description,
   image,
   type,
-  players = { min: 2, max: 4 }, // Default values if players is undefined
+  players = { min: 2, max: 4 },
   active = true,
 }: GameCardProps) => {
-  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
   const navigate = useNavigate();
 
   const handlePublicRoomClick = () => {
     navigate(`/games/${type}/public`);
+  };
+
+  const handleCreateGameClick = () => {
+    navigate(`/games/${type}/create`);
   };
 
   return (
@@ -79,19 +80,15 @@ const GameCard = ({
             Public Room
           </Button>
           <Button 
-            onClick={() => setIsJoinDialogOpen(true)} 
+            onClick={handleCreateGameClick}
             variant="outline"
-            className="w-full"
+            className="w-full gap-2"
           >
-            Join a Room
+            <PlusCircle className="h-4 w-4" />
+            Create Game
           </Button>
         </div>
       </div>
-
-      <JoinGameDialog 
-        open={isJoinDialogOpen} 
-        onOpenChange={setIsJoinDialogOpen} 
-      />
     </div>
   );
 };
