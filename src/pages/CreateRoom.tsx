@@ -15,6 +15,7 @@ const CreateRoom = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const [username, setUsername] = useState("");
 
+  // Validate that gameType is one of the allowed game codes
   const validGameType = (gameType && Object.keys(gameCodeToType).includes(gameType)) 
     ? gameType as GameCode 
     : null;

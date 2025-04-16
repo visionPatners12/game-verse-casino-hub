@@ -46,11 +46,12 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
 
   const handleCreateRoom = async (values: z.infer<typeof createRoomSchema>) => {
     try {
-      if (!gameType || !gameCodeToType[gameType as keyof typeof gameCodeToType]) {
+      if (!gameType || !Object.keys(gameCodeToType).includes(gameType)) {
         console.error("Invalid game type");
         return;
       }
       
+      // Safely convert string gameType to enum value
       const gameTypeEnum = gameCodeToType[gameType as keyof typeof gameCodeToType];
       
       const { data, error } = await supabase
