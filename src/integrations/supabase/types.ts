@@ -782,6 +782,7 @@ export type Database = {
           country: string | null
           created_at: string | null
           email: string
+          equipped_avatar_id: string | null
           first_name: string
           id: string
           is_connected: boolean | null
@@ -797,6 +798,7 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           email: string
+          equipped_avatar_id?: string | null
           first_name: string
           id?: string
           is_connected?: boolean | null
@@ -812,6 +814,7 @@ export type Database = {
           country?: string | null
           created_at?: string | null
           email?: string
+          equipped_avatar_id?: string | null
           first_name?: string
           id?: string
           is_connected?: boolean | null
@@ -824,6 +827,13 @@ export type Database = {
           username?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "users_equipped_avatar_id_fkey"
+            columns: ["equipped_avatar_id"]
+            isOneToOne: false
+            referencedRelation: "store_items"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "users_referred_by_fkey"
             columns: ["referred_by"]

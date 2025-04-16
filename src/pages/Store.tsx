@@ -55,7 +55,7 @@ const Store = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Get the equipped avatar ID
+      // Fetch the user's equipped avatar ID
       const { data, error } = await supabase
         .from('users')
         .select('equipped_avatar_id')

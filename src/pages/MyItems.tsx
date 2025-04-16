@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -24,7 +23,7 @@ interface UserItem {
     description: string | null;
     item_type: string;
     price: number;
-    avatars?: {
+    avatars: {
       image_url: string;
       rarity: string;
     } | null;
@@ -45,7 +44,7 @@ const MyItems = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Récupérer l'avatar équipé de l'utilisateur
+      // Fetch the user's equipped avatar ID
       const { data: userData } = await supabase
         .from('users')
         .select('equipped_avatar_id')
@@ -60,17 +59,17 @@ const MyItems = () => {
           id,
           purchased_at,
           item_id,
-          item:item_id(
+          item:store_items(
             id,
             name,
             description,
             item_type,
             price,
-            avatars(
+            avatars (
               image_url,
               rarity
             ),
-            chat_words(
+            chat_words (
               special_effect
             )
           )
@@ -84,7 +83,8 @@ const MyItems = () => {
         equipped: item.item_id === equippedAvatarId,
         item: {
           ...item.item,
-          id: item.item_id
+          id: item.item_id,
+          avatars: item.item.avatars?.[0] || null
         }
       })) as UserItem[];
       
