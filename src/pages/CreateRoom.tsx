@@ -1,63 +1,92 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, Users, Trophy, Grid3X3 } from "lucide-react";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-// Define a mapping between game codes and their corresponding enum values
-const gameCodeToType: Record<string, "Ludo" | "Checkers" | "TicTacToe" | "CheckGame"> = {
-  ludo: "Ludo",
-  checkers: "Checkers",
-  tictactoe: "TicTacToe",
-  checkgame: "CheckGame"
-};
+// Define the form schema based on game type
+const createRoomSchema = z.object({
+  bet: z.number().min(0, "Bet amount must be positive"),
+  maxPlayers: z.number().min(2, "Must have at least 2 players"),
+  winnerCount: z.number().min(1, "Must have at least 1 winner"),
+  gridSize: z.number().optional(),
+});
 
 const CreateRoom = () => {
   const navigate = useNavigate();
-  const [selectedGame, setSelectedGame] = useState<string>("");
-  const [playerName, setPlayerName] = useState("");
-  const [bet, setBet] = useState<number>(0);
-  const [gridSize, setGridSize] = useState<number>(3); // For tic-tac-toe
-  
-  const { data: games, isLoading } = useQuery({
-    queryKey: ['game-types'],
+  const { gameType } = useParams<{ gameType: string }>();
+  const [username, setUsername] = useState("");
+
+  // Fetch current user's username
+  useEffect(() => {
+    const getUsername = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('username')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile) {
+          setUsername(profile.username);
+        }
+      }
+    };
+    getUsername();
+  }, []);
+
+  const { data: gameConfig, isLoading } = useQuery({
+    queryKey: ['game-type', gameType],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('game_types')
         .select('*')
-        .order('name');
+        .eq('code', gameType)
+        .single();
       
       if (error) throw error;
       return data;
     }
   });
 
-  const handleCreateRoom = async () => {
-    if (!selectedGame || !playerName) return;
+  const form = useForm<z.infer<typeof createRoomSchema>>({
+    resolver: zodResolver(createRoomSchema),
+    defaultValues: {
+      bet: 0,
+      maxPlayers: gameConfig?.min_players || 2,
+      winnerCount: 1,
+      gridSize: gameType === 'tictactoe' ? 3 : undefined,
+    },
+  });
 
+  const handleCreateRoom = async (values: z.infer<typeof createRoomSchema>) => {
     try {
-      // Convert the game code to the proper enum type
-      const gameType = gameCodeToType[selectedGame];
-      
-      if (!gameType) {
-        console.error(`Invalid game type: ${selectedGame}`);
-        return;
-      }
-
       const { data, error } = await supabase
         .from('game_sessions')
         .insert({
-          game_type: gameType, // Use the converted enum value
+          game_type: gameType?.toUpperCase(),
           room_type: 'private',
           room_id: Math.random().toString(36).substring(2, 8).toUpperCase(),
-          max_players: games?.find(g => g.code === selectedGame)?.max_players || 2,
-          entry_fee: bet,
-          commission_rate: 5
+          max_players: values.maxPlayers,
+          entry_fee: values.bet,
+          commission_rate: 5,
         })
         .select()
         .single();
@@ -69,13 +98,13 @@ const CreateRoom = () => {
         .from('game_players')
         .insert({
           session_id: data.id,
-          display_name: playerName,
+          display_name: username,
           user_id: (await supabase.auth.getUser()).data.user?.id
         });
 
       if (playerError) throw playerError;
 
-      navigate(`/games/${selectedGame}/room/${data.id}`);
+      navigate(`/games/${gameType}/room/${data.id}`);
     } catch (error) {
       console.error('Error creating room:', error);
     }
@@ -88,7 +117,7 @@ const CreateRoom = () => {
       <main className="flex-1 container mx-auto px-4 py-8">
         <Card className="max-w-xl mx-auto">
           <CardHeader>
-            <CardTitle>Create a Game Room</CardTitle>
+            <CardTitle>Create a Room</CardTitle>
           </CardHeader>
           
           <CardContent className="space-y-6">
@@ -97,67 +126,124 @@ const CreateRoom = () => {
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : (
-              <>
-                <div className="grid grid-cols-2 gap-4">
-                  {games?.map((game) => (
-                    <Button
-                      key={game.id}
-                      variant={selectedGame === game.code ? "default" : "outline"}
-                      onClick={() => setSelectedGame(game.code)}
-                      className="h-24"
-                    >
-                      {game.name}
-                      <span className="text-sm text-muted-foreground ml-2">
-                        ({game.min_players}-{game.max_players} players)
-                      </span>
-                    </Button>
-                  ))}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Player Name</label>
-                  <Input
-                    value={playerName}
-                    onChange={(e) => setPlayerName(e.target.value)}
-                    placeholder="Enter your display name"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Bet Amount ($)</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={bet}
-                    onChange={(e) => setBet(Number(e.target.value))}
-                  />
-                </div>
-
-                {selectedGame === 'tictactoe' && (
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleCreateRoom)} className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Grid Size</label>
+                    <label className="text-sm font-medium">Player Name</label>
                     <Input
-                      type="number"
-                      min="3"
-                      max="5"
-                      value={gridSize}
-                      onChange={(e) => setGridSize(Number(e.target.value))}
+                      value={username}
+                      disabled
+                      className="bg-muted"
                     />
                   </div>
-                )}
 
-                <Button 
-                  onClick={handleCreateRoom}
-                  disabled={!selectedGame || !playerName}
-                  className="w-full"
-                >
-                  Create Room
-                </Button>
-              </>
+                  <FormField
+                    control={form.control}
+                    name="bet"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bet Amount ($)</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              min="0"
+                              {...field}
+                              onChange={e => field.onChange(Number(e.target.value))}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="maxPlayers"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          Number of Players
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={gameConfig?.min_players}
+                            max={gameConfig?.max_players}
+                            {...field}
+                            onChange={e => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="winnerCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Trophy className="h-4 w-4" />
+                          Number of Winners
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={form.watch('maxPlayers') - 1}
+                            {...field}
+                            onChange={e => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {gameType === 'tictactoe' && gameConfig?.is_configurable && (
+                    <FormField
+                      control={form.control}
+                      name="gridSize"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <Grid3X3 className="h-4 w-4" />
+                            Grid Size
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={3}
+                              max={5}
+                              {...field}
+                              onChange={e => field.onChange(Number(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  <Button type="submit" className="w-full">
+                    Create Room
+                  </Button>
+                </form>
+              </Form>
             )}
           </CardContent>
         </Card>
       </main>
+
+      <footer className="bg-card border-t border-border py-6">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+          &copy; {new Date().getFullYear()} GameVerse Casino. All rights reserved.
+        </div>
+      </footer>
     </div>
   );
 };
