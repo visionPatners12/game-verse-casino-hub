@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
@@ -21,7 +20,6 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { gameCodeToType } from "@/lib/gameTypes";
 
-// Define the form schema based on game type
 const createRoomSchema = z.object({
   bet: z.number().min(0, "Bet amount must be positive"),
   maxPlayers: z.number().min(2, "Must have at least 2 players"),
@@ -29,7 +27,6 @@ const createRoomSchema = z.object({
   gridSize: z.number().optional(),
 });
 
-// Define type for game code
 type GameCode = keyof typeof gameCodeToType;
 
 const CreateRoom = () => {
@@ -37,12 +34,10 @@ const CreateRoom = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const [username, setUsername] = useState("");
 
-  // Validate gameType parameter and convert to GameCode type if valid
   const validGameType: GameCode | null = (gameType && Object.keys(gameCodeToType).includes(gameType)) 
     ? gameType as GameCode 
     : null;
 
-  // Fetch current user's username
   useEffect(() => {
     const getUsername = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -62,7 +57,6 @@ const CreateRoom = () => {
   }, []);
 
   const { data: gameConfig, isLoading } = useQuery({
-    // Fix the queryKey type issue by using a tuple with a string and the validGameType
     queryKey: ['game-type', validGameType] as const,
     queryFn: async () => {
       if (!validGameType) throw new Error("Game type not specified or invalid");
@@ -96,7 +90,6 @@ const CreateRoom = () => {
         return;
       }
       
-      // Get the properly formatted game type using the mapping
       const formattedGameType = gameCodeToType[validGameType];
       
       const { data, error } = await supabase
@@ -114,7 +107,6 @@ const CreateRoom = () => {
 
       if (error) throw error;
 
-      // Add player to the game
       const { error: playerError } = await supabase
         .from('game_players')
         .insert({
