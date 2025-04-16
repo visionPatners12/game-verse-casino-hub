@@ -16,8 +16,8 @@ interface GameCardProps {
     max: number;
   };
   active?: boolean;
-  buttonLabel?: string;
-  onButtonClick?: () => void;
+  onPublicRoomClick?: () => void;
+  onCreateRoomClick?: () => void;
 }
 
 const GameCard = ({
@@ -28,8 +28,8 @@ const GameCard = ({
   type,
   players,
   active = true,
-  buttonLabel = "Play Now",
-  onButtonClick,
+  onPublicRoomClick,
+  onCreateRoomClick,
 }: GameCardProps) => {
   return (
     <div className="game-card group">
@@ -56,12 +56,19 @@ const GameCard = ({
         <h3 className="text-lg font-semibold">{name}</h3>
         <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>
         
-        <div className="mt-4">
+        <div className="mt-4 flex gap-2">
           <Button 
-            onClick={onButtonClick} 
+            onClick={onPublicRoomClick} 
             className="w-full"
           >
-            {buttonLabel}
+            Public Room
+          </Button>
+          <Button 
+            onClick={onCreateRoomClick} 
+            variant="outline"
+            className="w-full"
+          >
+            Create a Room
           </Button>
         </div>
       </div>

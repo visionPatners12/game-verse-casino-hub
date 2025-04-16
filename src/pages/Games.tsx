@@ -1,29 +1,11 @@
+
 import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, Users, Filter } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
 import GameCard, { GameType } from "@/components/GameCard";
-import RoomCard from "@/components/RoomCard";
 
 const Games = () => {
-  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   
   // Mock games data
@@ -74,83 +56,6 @@ const Games = () => {
     },
   ];
   
-  // Mock rooms data
-  const rooms = [
-    {
-      id: "room1",
-      gameType: "ludo" as GameType,
-      gameName: "Ludo",
-      bet: 25,
-      maxPlayers: 4,
-      currentPlayers: 1,
-      isPrivate: false,
-      createdBy: "Player123",
-      winnerCount: 1,
-    },
-    {
-      id: "room2",
-      gameType: "tictactoe" as GameType,
-      gameName: "Tic-Tac-Toe",
-      bet: 10,
-      maxPlayers: 2,
-      currentPlayers: 1,
-      isPrivate: false,
-      createdBy: "GamerPro",
-      winnerCount: 1,
-    },
-    {
-      id: "room3",
-      gameType: "checkers" as GameType,
-      gameName: "Checkers",
-      bet: 50,
-      maxPlayers: 2,
-      currentPlayers: 1,
-      isPrivate: false,
-      createdBy: "Winner99",
-      winnerCount: 1,
-    },
-    {
-      id: "room4",
-      gameType: "checkgame" as GameType,
-      gameName: "CheckGame",
-      bet: 30,
-      maxPlayers: 4,
-      currentPlayers: 2,
-      isPrivate: false,
-      createdBy: "BoardMaster",
-      winnerCount: 2,
-    },
-    {
-      id: "room5",
-      gameType: "ludo" as GameType,
-      gameName: "Ludo",
-      bet: 15,
-      maxPlayers: 4,
-      currentPlayers: 3,
-      isPrivate: true,
-      createdBy: "LudoKing",
-      winnerCount: 1,
-    },
-    {
-      id: "room6",
-      gameType: "checkgame" as GameType,
-      gameName: "CheckGame",
-      bet: 40,
-      maxPlayers: 6,
-      currentPlayers: 3,
-      isPrivate: false,
-      createdBy: "CardMaster",
-      winnerCount: 3,
-    },
-  ];
-  
-  // Filter rooms based on search query
-  const filteredRooms = rooms.filter(
-    (room) =>
-      room.gameName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      room.createdBy.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
@@ -171,8 +76,8 @@ const Games = () => {
             <div key={game.id} className="flex flex-col gap-4">
               <GameCard 
                 {...game} 
-                buttonLabel="Public Room" 
-                onButtonClick={() => navigate(`/games/${game.type}/public`)}
+                onPublicRoomClick={() => navigate(`/games/${game.type}/public`)}
+                onCreateRoomClick={() => navigate(`/games/${game.type}/create`)}
               />
             </div>
           ))}
