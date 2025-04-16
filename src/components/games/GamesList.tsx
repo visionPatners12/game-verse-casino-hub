@@ -8,7 +8,7 @@ interface Game {
   description: string;
   image: string;
   type: GameType;
-  players: {
+  players?: {
     min: number;
     max: number;
   };

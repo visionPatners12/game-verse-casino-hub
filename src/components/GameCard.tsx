@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, Globe } from "lucide-react";
@@ -13,7 +14,7 @@ interface GameCardProps {
   description: string;
   image: string;
   type: GameType;
-  players: {
+  players?: {
     min: number;
     max: number;
   };
@@ -26,7 +27,7 @@ const GameCard = ({
   description,
   image,
   type,
-  players,
+  players = { min: 2, max: 4 }, // Default values if players is undefined
   active = true,
 }: GameCardProps) => {
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
