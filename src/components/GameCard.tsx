@@ -1,7 +1,6 @@
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Globe } from "lucide-react";
+import { Users, Globe, PlusCircle } from "lucide-react";
 import { useState } from "react";
 import { JoinGameDialog } from "@/components/games/JoinGameDialog";
 import { useNavigate } from "react-router-dom";
@@ -33,8 +32,8 @@ const GameCard = ({
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
   const navigate = useNavigate();
 
-  const handlePublicRoomClick = () => {
-    navigate(`/games/${type}/public`);
+  const handleCreateRoomClick = () => {
+    navigate(`/games/${type}/create`);
   };
 
   return (
@@ -43,9 +42,9 @@ const GameCard = ({
         size="icon" 
         variant="outline" 
         className="absolute top-3 right-3 z-10 bg-background/50 hover:bg-background/80"
-        onClick={handlePublicRoomClick}
+        onClick={handleCreateRoomClick}
       >
-        <Globe className="h-4 w-4" />
+        <PlusCircle className="h-4 w-4" />
       </Button>
 
       <div className="relative overflow-hidden">
@@ -73,14 +72,8 @@ const GameCard = ({
         
         <div className="mt-4 flex gap-2">
           <Button 
-            onClick={handlePublicRoomClick} 
-            className="w-full"
-          >
-            Public Room
-          </Button>
-          <Button 
-            onClick={() => setIsJoinDialogOpen(true)} 
             variant="outline"
+            onClick={() => setIsJoinDialogOpen(true)} 
             className="w-full"
           >
             Join a Room
