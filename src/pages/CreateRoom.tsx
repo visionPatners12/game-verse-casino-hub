@@ -60,10 +60,12 @@ const CreateRoom = () => {
   }, []);
 
   const { data: gameConfig, isLoading } = useQuery({
+    // Fix the queryKey typing by not including null values
     queryKey: ['game-type', validGameType] as const,
     queryFn: async () => {
       if (!validGameType) throw new Error("Game type not specified or invalid");
       
+      // Use the validGameType directly since we've already confirmed it's valid
       const { data, error } = await supabase
         .from('game_types')
         .select('*')
@@ -73,6 +75,7 @@ const CreateRoom = () => {
       if (error) throw error;
       return data;
     },
+    // Only run the query when validGameType is not null
     enabled: !!validGameType
   });
 
@@ -93,7 +96,7 @@ const CreateRoom = () => {
         return;
       }
       
-      // Make sure we have a valid game code and map it to the correct enum value
+      // Use the gameCodeToType mapping to get the correct enum value
       const gameTypeEnum = gameCodeToType[validGameType];
       
       const { data, error } = await supabase
