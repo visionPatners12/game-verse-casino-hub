@@ -2,6 +2,8 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
+import { useState } from "react";
+import { JoinGameDialog } from "@/components/games/JoinGameDialog";
 
 export type GameType = "ludo" | "checkers" | "tictactoe" | "checkgame";
 
@@ -16,8 +18,6 @@ interface GameCardProps {
     max: number;
   };
   active?: boolean;
-  onPublicRoomClick?: () => void;
-  onCreateRoomClick?: () => void;
 }
 
 const GameCard = ({
@@ -28,9 +28,9 @@ const GameCard = ({
   type,
   players,
   active = true,
-  onPublicRoomClick,
-  onCreateRoomClick,
 }: GameCardProps) => {
+  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
+
   return (
     <div className="game-card group">
       <div className="relative overflow-hidden">
@@ -58,20 +58,25 @@ const GameCard = ({
         
         <div className="mt-4 flex gap-2">
           <Button 
-            onClick={onPublicRoomClick} 
+            onClick={() => {}} 
             className="w-full"
           >
             Public Room
           </Button>
           <Button 
-            onClick={onCreateRoomClick} 
+            onClick={() => setIsJoinDialogOpen(true)} 
             variant="outline"
             className="w-full"
           >
-            Create a Room
+            Join a Room
           </Button>
         </div>
       </div>
+
+      <JoinGameDialog 
+        open={isJoinDialogOpen} 
+        onOpenChange={setIsJoinDialogOpen} 
+      />
     </div>
   );
 };
