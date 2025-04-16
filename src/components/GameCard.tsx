@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, PlusCircle } from "lucide-react";
+import { Users, Globe } from "lucide-react";
 import { useState } from "react";
 import { JoinGameDialog } from "@/components/games/JoinGameDialog";
 import { useNavigate } from "react-router-dom";
@@ -32,30 +32,20 @@ const GameCard = ({
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
   const navigate = useNavigate();
 
-  const handleCreateRoomClick = () => {
-    navigate(`/games/${type}/create`);
+  const handlePublicRoomClick = () => {
+    navigate(`/games/${type}/public`);
   };
 
   return (
     <div className="game-card group relative">
-      <div className="absolute top-3 right-3 z-10 flex gap-2">
-        <Button 
-          size="icon" 
-          variant="outline" 
-          className="bg-background/50 hover:bg-background/80"
-          onClick={() => setIsJoinDialogOpen(true)}
-        >
-          <Users className="h-4 w-4" />
-        </Button>
-        <Button 
-          size="icon" 
-          variant="outline" 
-          className="bg-background/50 hover:bg-background/80"
-          onClick={handleCreateRoomClick}
-        >
-          <PlusCircle className="h-4 w-4" />
-        </Button>
-      </div>
+      <Button 
+        size="icon" 
+        variant="outline" 
+        className="absolute top-3 right-3 z-10 bg-background/50 hover:bg-background/80"
+        onClick={handlePublicRoomClick}
+      >
+        <Globe className="h-4 w-4" />
+      </Button>
 
       <div className="relative overflow-hidden">
         <img 
@@ -79,6 +69,22 @@ const GameCard = ({
       <div className="game-card-content">
         <h3 className="text-lg font-semibold">{name}</h3>
         <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>
+        
+        <div className="mt-4 flex gap-2">
+          <Button 
+            onClick={handlePublicRoomClick} 
+            className="w-full"
+          >
+            Public Room
+          </Button>
+          <Button 
+            onClick={() => setIsJoinDialogOpen(true)} 
+            variant="outline"
+            className="w-full"
+          >
+            Join a Room
+          </Button>
+        </div>
       </div>
 
       <JoinGameDialog 
