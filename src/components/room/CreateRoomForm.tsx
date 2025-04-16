@@ -15,7 +15,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
-import { gameCodeToType } from "@/lib/gameTypes";
+import { GameCode, isValidGameType, gameCodeToType, GameVariant } from "@/lib/gameTypes";
 
 type GameCode = keyof typeof gameCodeToType;
 
@@ -35,11 +35,6 @@ type CreateRoomFormProps = {
 export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFormProps) {
   const navigate = useNavigate();
 
-  // Function to validate if gameType is one of the allowed game codes
-  const isValidGameType = (type: string | undefined): type is GameCode => {
-    return !!type && Object.keys(gameCodeToType).includes(type);
-  };
-
   const form = useForm<z.infer<typeof createRoomSchema>>({
     resolver: zodResolver(createRoomSchema),
     defaultValues: {
@@ -57,8 +52,8 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
         return;
       }
       
-      // Now gameType is safely typed as GameCode
-      const gameTypeEnum = gameCodeToType[gameType];
+      const safeGameType = gameType as GameCode;
+      const gameTypeEnum: GameVariant = gameCodeToType[safeGameType];
       
       const { data, error } = await supabase
         .from('game_sessions')

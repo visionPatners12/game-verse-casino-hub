@@ -1,7 +1,15 @@
 
-export const gameCodeToType: Record<string, "Ludo" | "Checkers" | "TicTacToe" | "CheckGame"> = {
+export const gameCodeToType = {
+  tictactoe: "TicTacToe",
   ludo: "Ludo",
   checkers: "Checkers",
-  tictactoe: "TicTacToe",
   checkgame: "CheckGame"
+} as const;
+
+export type GameCode = keyof typeof gameCodeToType;
+export type GameVariant = typeof gameCodeToType[GameCode];
+
+// Type guard function
+export const isValidGameType = (type: string | undefined): type is GameCode => {
+  return !!type && Object.keys(gameCodeToType).includes(type);
 };

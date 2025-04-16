@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
@@ -7,18 +6,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { CreateRoomForm } from "@/components/room/CreateRoomForm";
-import { gameCodeToType } from "@/lib/gameTypes";
-
-type GameCode = keyof typeof gameCodeToType;
+import { GameCode, isValidGameType } from "@/lib/gameTypes";
 
 const CreateRoom = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const [username, setUsername] = useState("");
-
-  // Function to validate if gameType is one of the allowed game codes
-  const isValidGameType = (type: string | undefined): type is GameCode => {
-    return !!type && Object.keys(gameCodeToType).includes(type);
-  };
 
   // Get a type-safe gameType or null
   const validGameType = isValidGameType(gameType) ? gameType : null;
@@ -49,7 +41,7 @@ const CreateRoom = () => {
       const { data, error } = await supabase
         .from('game_types')
         .select('*')
-        .eq('code', validGameType as GameCode)
+        .eq('code', validGameType)
         .single();
       
       if (error) throw error;
