@@ -9,6 +9,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
+// Define a mapping between game codes and their corresponding enum values
+const gameCodeToType: Record<string, "Ludo" | "Checkers" | "TicTacToe" | "CheckGame"> = {
+  ludo: "Ludo",
+  checkers: "Checkers",
+  tictactoe: "TicTacToe",
+  checkgame: "CheckGame"
+};
+
 const CreateRoom = () => {
   const navigate = useNavigate();
   const [selectedGame, setSelectedGame] = useState<string>("");
@@ -33,10 +41,18 @@ const CreateRoom = () => {
     if (!selectedGame || !playerName) return;
 
     try {
+      // Convert the game code to the proper enum type
+      const gameType = gameCodeToType[selectedGame];
+      
+      if (!gameType) {
+        console.error(`Invalid game type: ${selectedGame}`);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('game_sessions')
         .insert({
-          game_type: selectedGame,
+          game_type: gameType, // Use the converted enum value
           room_type: 'private',
           room_id: Math.random().toString(36).substring(2, 8).toUpperCase(),
           max_players: games?.find(g => g.code === selectedGame)?.max_players || 2,
