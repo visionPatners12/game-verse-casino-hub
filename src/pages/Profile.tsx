@@ -14,6 +14,7 @@ type ProfileData = {
   phone: string;
   country: string;
   username: string;
+  avatar_url?: string | null;
 };
 
 export default function Profile() {
@@ -95,6 +96,19 @@ export default function Profile() {
         .eq('id', user.id);
 
       if (userError) throw userError;
+
+      // Update avatar in profiles table if avatar_url is present
+      if (profile.avatar_url !== undefined) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            avatar_url: profile.avatar_url,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', user.id);
+
+        if (profileError) throw profileError;
+      }
 
       toast({
         title: "Success",
