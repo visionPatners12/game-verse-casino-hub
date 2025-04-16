@@ -32,10 +32,13 @@ export const useEquipItem = () => {
 
       if (profileError) throw profileError;
 
-      // Mettre à jour l'utilisateur pour stocker l'ID de l'item équipé
+      // Mettre à jour la table users pour stocker l'ID de l'item équipé
       const { error: userError } = await supabase
         .from('users')
-        .update({ equipped_avatar_id: itemId })
+        .update({ 
+          equipped_avatar_id: itemId,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', user.id);
 
       if (userError) throw userError;

@@ -26,7 +26,7 @@ export const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-full">
           <Avatar>
-            <AvatarImage src={user.avatar} />
+            <AvatarImage src={user.avatar} alt={user.name} />
             <AvatarFallback className="bg-primary">
               {user.name.slice(0, 2).toUpperCase()}
             </AvatarFallback>

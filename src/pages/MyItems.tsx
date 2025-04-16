@@ -13,26 +13,27 @@ import { useEquipItem } from "@/hooks/useEquipItem";
 import { AvatarItem } from "@/components/store/AvatarItem";
 import { ChatWordItem } from "@/components/store/ChatWordItem";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StoreItem } from "@/types/store";
 
-type UserItem = {
+interface UserItem {
   id: string;
   purchased_at: string;
   item: {
     id: string;
     name: string;
-    description: string;
+    description: string | null;
     item_type: string;
     price: number;
     avatars?: {
       image_url: string;
       rarity: string;
-    };
+    } | null;
     chat_words?: {
       special_effect: string;
-    };
+    } | null;
   };
   equipped: boolean;
-};
+}
 
 const MyItems = () => {
   const { toast } = useToast();
@@ -65,11 +66,11 @@ const MyItems = () => {
             description,
             item_type,
             price,
-            avatars:avatars (
+            avatars(
               image_url,
               rarity
             ),
-            chat_words:chat_words (
+            chat_words(
               special_effect
             )
           )
@@ -78,7 +79,7 @@ const MyItems = () => {
 
       if (error) throw error;
       
-      return data.map(item => ({
+      const formattedItems = data.map(item => ({
         ...item,
         equipped: item.item_id === equippedAvatarId,
         item: {
@@ -86,6 +87,8 @@ const MyItems = () => {
           id: item.item_id
         }
       })) as UserItem[];
+      
+      return formattedItems;
     },
   });
 
@@ -122,23 +125,40 @@ const MyItems = () => {
             
             <TabsContent value="avatars">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {avatarItems.map((item) => (
-                  <AvatarItem
-                    key={item.id}
-                    item={{
-                      ...item.item,
-                      avatars: item.item.avatars || null,
-                      chat_words: null
-                    }}
-                    isOwned={true}
-                    onPurchase={() => {}}
-                    isPurchasing={false}
-                    canAfford={true}
-                    onEquip={handleEquipAvatar}
-                    isEquipped={item.equipped}
-                    isEquipping={isEquipping}
-                  />
-                ))}
+                {avatarItems.map((item) => {
+                  const avatarItem: StoreItem = {
+                    id: item.item.id,
+                    name: item.item.name,
+                    price: item.item.price,
+                    description: item.item.description,
+                    item_type: item.item.item_type,
+                    created_at: "",
+                    updated_at: "",
+                    store_id: "",
+                    avatars: item.item.avatars ? {
+                      image_url: item.item.avatars.image_url,
+                      rarity: item.item.avatars.rarity,
+                      created_at: "",
+                      updated_at: "",
+                      item_id: item.item.id
+                    } : null,
+                    chat_words: null
+                  };
+
+                  return (
+                    <AvatarItem
+                      key={item.id}
+                      item={avatarItem}
+                      isOwned={true}
+                      onPurchase={() => {}}
+                      isPurchasing={false}
+                      canAfford={true}
+                      onEquip={handleEquipAvatar}
+                      isEquipped={item.equipped}
+                      isEquipping={isEquipping}
+                    />
+                  );
+                })}
               </div>
               {avatarItems.length === 0 && (
                 <div className="text-center py-12">
