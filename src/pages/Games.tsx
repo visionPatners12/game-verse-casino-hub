@@ -168,130 +168,132 @@ const Games = () => {
           </Tabs>
         </div>
         
-        <TabsContent value="browse" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {games.map((game) => (
-              <div key={game.id} className="flex flex-col gap-4">
-                <GameCard {...game} />
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => navigate(`/games/${game.type}/create`)}
-                  >
-                    Create Room
-                  </Button>
-                  <Button 
-                    className="flex-1"
-                    onClick={() => navigate(`/games/${game.type}/public`)}
-                  >
-                    Public Rooms
-                  </Button>
+        <Tabs defaultValue="browse">
+          <TabsContent value="browse" className="mt-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {games.map((game) => (
+                <div key={game.id} className="flex flex-col gap-4">
+                  <GameCard {...game} />
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => navigate(`/games/${game.type}/create`)}
+                    >
+                      Create Room
+                    </Button>
+                    <Button 
+                      className="flex-1"
+                      onClick={() => navigate(`/games/${game.type}/public`)}
+                    >
+                      Public Rooms
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="join" className="mt-0">
-          <div className="flex justify-between items-start sm:items-center gap-4 mb-6">
-            <div className="flex w-full sm:w-auto gap-2">
-              <div className="relative w-full sm:w-auto">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search rooms or players..."
-                  className="pl-8"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <Filter className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuGroup>
-                    <div className="p-2">
-                      <p className="text-sm font-medium mb-2">Game Type</p>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Games" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Games</SelectItem>
-                          <SelectItem value="ludo">Ludo</SelectItem>
-                          <SelectItem value="checkers">Checkers</SelectItem>
-                          <SelectItem value="tictactoe">Tic-Tac-Toe</SelectItem>
-                          <SelectItem value="checkgame">CheckGame</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="p-2">
-                      <p className="text-sm font-medium mb-2">Bet Amount</p>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Any Bet" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="any">Any Bet</SelectItem>
-                          <SelectItem value="low">Low ($1-$25)</SelectItem>
-                          <SelectItem value="medium">Medium ($25-$50)</SelectItem>
-                          <SelectItem value="high">High ($50+)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="p-2">
-                      <p className="text-sm font-medium mb-2">Room Type</p>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Rooms" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Rooms</SelectItem>
-                          <SelectItem value="public">Public Only</SelectItem>
-                          <SelectItem value="private">Private Only</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <DropdownMenuItem asChild>
-                      <Button className="w-full mt-2">Apply Filters</Button>
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              ))}
             </div>
-          </div>
+          </TabsContent>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredRooms.map((room) => (
-              <RoomCard key={room.id} {...room} />
-            ))}
-          </div>
-          
-          {filteredRooms.length === 0 && (
-            <div className="text-center py-12">
-              <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-medium mb-2">No rooms found</h3>
-              <p className="text-muted-foreground mb-6">
-                No game rooms match your search criteria
-              </p>
-              <Button onClick={() => setSearchQuery("")}>Clear Search</Button>
+          <TabsContent value="join" className="mt-0">
+            <div className="flex justify-between items-start sm:items-center gap-4 mb-6">
+              <div className="flex w-full sm:w-auto gap-2">
+                <div className="relative w-full sm:w-auto">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search rooms or players..."
+                    className="pl-8"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <Filter className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuGroup>
+                      <div className="p-2">
+                        <p className="text-sm font-medium mb-2">Game Type</p>
+                        <Select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="All Games" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Games</SelectItem>
+                            <SelectItem value="ludo">Ludo</SelectItem>
+                            <SelectItem value="checkers">Checkers</SelectItem>
+                            <SelectItem value="tictactoe">Tic-Tac-Toe</SelectItem>
+                            <SelectItem value="checkgame">CheckGame</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="p-2">
+                        <p className="text-sm font-medium mb-2">Bet Amount</p>
+                        <Select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Any Bet" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="any">Any Bet</SelectItem>
+                            <SelectItem value="low">Low ($1-$25)</SelectItem>
+                            <SelectItem value="medium">Medium ($25-$50)</SelectItem>
+                            <SelectItem value="high">High ($50+)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="p-2">
+                        <p className="text-sm font-medium mb-2">Room Type</p>
+                        <Select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="All Rooms" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Rooms</SelectItem>
+                            <SelectItem value="public">Public Only</SelectItem>
+                            <SelectItem value="private">Private Only</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <DropdownMenuItem asChild>
+                        <Button className="w-full mt-2">Apply Filters</Button>
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
-          )}
-        </TabsContent>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredRooms.map((room) => (
+                <RoomCard key={room.id} {...room} />
+              ))}
+            </div>
+            
+            {filteredRooms.length === 0 && (
+              <div className="text-center py-12">
+                <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-xl font-medium mb-2">No rooms found</h3>
+                <p className="text-muted-foreground mb-6">
+                  No game rooms match your search criteria
+                </p>
+                <Button onClick={() => setSearchQuery("")}>Clear Search</Button>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
       
       <footer className="bg-card border-t border-border py-6">
