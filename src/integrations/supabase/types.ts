@@ -390,6 +390,42 @@ export type Database = {
         }
         Relationships: []
       }
+      game_types: {
+        Row: {
+          code: Database["public"]["Enums"]["game_variant"]
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          is_configurable: boolean | null
+          max_players: number
+          min_players: number
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          code: Database["public"]["Enums"]["game_variant"]
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_configurable?: boolean | null
+          max_players: number
+          min_players: number
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: Database["public"]["Enums"]["game_variant"]
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_configurable?: boolean | null
+          max_players?: number
+          min_players?: number
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       kyc_requests: {
         Row: {
           id: string
@@ -895,6 +931,7 @@ export type Database = {
       balance_source: "real" | "bonus"
       document_type: "ID" | "ProofOfAddress" | "Passport"
       game_type: "Ludo" | "Checkers" | "TicTacToe" | "CheckGame"
+      game_variant: "ludo" | "checkers" | "tictactoe" | "checkgame"
       kyc_status: "Pending" | "Approved" | "Rejected"
       room_type: "public" | "private"
       session_status: "Waiting" | "Active" | "Finished"
@@ -1028,6 +1065,7 @@ export const Constants = {
       balance_source: ["real", "bonus"],
       document_type: ["ID", "ProofOfAddress", "Passport"],
       game_type: ["Ludo", "Checkers", "TicTacToe", "CheckGame"],
+      game_variant: ["ludo", "checkers", "tictactoe", "checkgame"],
       kyc_status: ["Pending", "Approved", "Rejected"],
       room_type: ["public", "private"],
       session_status: ["Waiting", "Active", "Finished"],
