@@ -1,6 +1,4 @@
-
 export const gameCodeToType = {
-  tictactoe: "TicTacToe",
   ludo: "Ludo",
   checkers: "Checkers",
   checkgame: "CheckGame"

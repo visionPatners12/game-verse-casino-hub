@@ -1,8 +1,6 @@
-
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
-import TicTacToe from "@/components/games/TicTacToe";
 import Checkers from "@/components/games/Checkers";
 import Ludo from "@/components/games/Ludo";
 import CheckGame from "@/components/games/CheckGame";
@@ -33,8 +31,6 @@ const GameRoom = () => {
   // Render the appropriate game component based on gameType
   const renderGameComponent = () => {
     switch (gameType) {
-      case "tictactoe":
-        return <TicTacToe />;
       case "checkers":
         return <Checkers />;
       case "ludo":
