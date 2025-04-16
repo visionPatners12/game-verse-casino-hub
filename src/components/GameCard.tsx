@@ -1,5 +1,4 @@
 
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
@@ -17,6 +16,8 @@ interface GameCardProps {
     max: number;
   };
   active?: boolean;
+  buttonLabel?: string;
+  onButtonClick?: () => void;
 }
 
 const GameCard = ({
@@ -27,6 +28,8 @@ const GameCard = ({
   type,
   players,
   active = true,
+  buttonLabel = "Play Now",
+  onButtonClick,
 }: GameCardProps) => {
   return (
     <div className="game-card group">
@@ -53,12 +56,12 @@ const GameCard = ({
         <h3 className="text-lg font-semibold">{name}</h3>
         <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>
         
-        <div className="mt-4 flex gap-2">
-          <Button asChild className="flex-1">
-            <Link to={`/games/${type}/public`}>Play Now</Link>
-          </Button>
-          <Button asChild variant="outline" className="flex-1">
-            <Link to={`/games/${type}/create`}>Create Room</Link>
+        <div className="mt-4">
+          <Button 
+            onClick={onButtonClick} 
+            className="w-full"
+          >
+            {buttonLabel}
           </Button>
         </div>
       </div>
