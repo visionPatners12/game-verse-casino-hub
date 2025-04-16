@@ -22,9 +22,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { useNavigate } from "react-router-dom";
 
 const Games = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
   
   // Mock games data
   const games = [
@@ -158,16 +160,41 @@ const Games = () => {
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Games</h1>
-          <Button>Create Private Room</Button>
+          <Tabs defaultValue="browse" className="w-auto">
+            <TabsList>
+              <TabsTrigger value="browse">Browse Games</TabsTrigger>
+              <TabsTrigger value="join">Join a Game</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
         
-        <Tabs defaultValue="join" className="mb-10">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <TabsList>
-              <TabsTrigger value="join">Join Game</TabsTrigger>
-              <TabsTrigger value="browse">Browse Games</TabsTrigger>
-            </TabsList>
-            
+        <TabsContent value="browse" className="mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {games.map((game) => (
+              <div key={game.id} className="flex flex-col gap-4">
+                <GameCard {...game} />
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => navigate(`/games/${game.type}/create`)}
+                  >
+                    Create Room
+                  </Button>
+                  <Button 
+                    className="flex-1"
+                    onClick={() => navigate(`/games/${game.type}/public`)}
+                  >
+                    Public Rooms
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="join" className="mt-0">
+          <div className="flex justify-between items-start sm:items-center gap-4 mb-6">
             <div className="flex w-full sm:w-auto gap-2">
               <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -248,33 +275,23 @@ const Games = () => {
             </div>
           </div>
           
-          <TabsContent value="join">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredRooms.map((room) => (
-                <RoomCard key={room.id} {...room} />
-              ))}
-            </div>
-            
-            {filteredRooms.length === 0 && (
-              <div className="text-center py-12">
-                <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-xl font-medium mb-2">No rooms found</h3>
-                <p className="text-muted-foreground mb-6">
-                  No game rooms match your search criteria
-                </p>
-                <Button onClick={() => setSearchQuery("")}>Clear Search</Button>
-              </div>
-            )}
-          </TabsContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredRooms.map((room) => (
+              <RoomCard key={room.id} {...room} />
+            ))}
+          </div>
           
-          <TabsContent value="browse">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {games.map((game) => (
-                <GameCard key={game.id} {...game} />
-              ))}
+          {filteredRooms.length === 0 && (
+            <div className="text-center py-12">
+              <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-xl font-medium mb-2">No rooms found</h3>
+              <p className="text-muted-foreground mb-6">
+                No game rooms match your search criteria
+              </p>
+              <Button onClick={() => setSearchQuery("")}>Clear Search</Button>
             </div>
-          </TabsContent>
-        </Tabs>
+          )}
+        </TabsContent>
       </main>
       
       <footer className="bg-card border-t border-border py-6">
