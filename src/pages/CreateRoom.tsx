@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
@@ -57,7 +58,7 @@ const CreateRoom = () => {
   }, []);
 
   const { data: gameConfig, isLoading } = useQuery({
-    queryKey: ['game-type', validGameType] as const,
+    queryKey: ['game-type', validGameType || ''] as const,
     queryFn: async () => {
       if (!validGameType) throw new Error("Game type not specified or invalid");
       
