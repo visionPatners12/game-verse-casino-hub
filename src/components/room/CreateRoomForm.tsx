@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { GameCode, isValidGameType, gameCodeToType, GameVariant } from "@/lib/gameTypes";
 
-type GameCode = keyof typeof gameCodeToType;
+// Remove the duplicate declaration of GameCode that was here
 
 const createRoomSchema = z.object({
   bet: z.number().min(0, "Bet amount must be positive"),
