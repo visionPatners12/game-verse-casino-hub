@@ -4,6 +4,41 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
+// Mise à jour de l'interface pour inclure les propriétés manquantes
+interface GameSession {
+  id: string;
+  commission_rate: number;
+  created_at: string;
+  current_players: number;
+  end_time: string | null;
+  entry_fee: number;
+  game_type: "Ludo" | "Checkers" | "TicTacToe" | "CheckGame";
+  max_players: number;
+  pot: number;
+  room_id: string | null;
+  room_type: "public" | "private";
+  start_time: string | null;
+  status: "Waiting" | "Active" | "Finished";
+  updated_at: string;
+  // Les propriétés ajoutées dans notre migration SQL
+  board: Array<string | null> | null;
+  current_turn: string | null;
+  winner_id: string | null;
+  game_state: 'waiting' | 'playing' | 'finished' | null;
+  game_players?: GamePlayer[];
+}
+
+interface GamePlayer {
+  id: string;
+  user_id: string;
+  display_name: string;
+  session_id: string;
+  is_connected: boolean;
+  tictactoe_players?: {
+    symbol: "X" | "O";
+  }[];
+}
+
 interface GameState {
   board: Array<"X" | "O" | null>;
   currentTurn: string | null;
@@ -42,13 +77,13 @@ export const useTicTacToeGame = () => {
           filter: `id=eq.${roomId}`,
         },
         (payload) => {
-          const newState = payload.new as any;
+          const newState = payload.new as GameSession;
           setGameState(current => ({
             ...current,
-            board: newState.board || Array(9).fill(null),
+            board: (newState.board as Array<string | null>) || Array(9).fill(null),
             currentTurn: newState.current_turn,
             winner: newState.winner_id,
-            gameState: newState.game_state,
+            gameState: newState.game_state || 'waiting',
           }));
         }
       )
@@ -89,18 +124,18 @@ export const useTicTacToeGame = () => {
     }
 
     if (gameSession) {
-      const players = gameSession.game_players.map((player: any) => ({
+      const players = gameSession.game_players?.map((player: GamePlayer) => ({
         id: player.user_id,
         displayName: player.display_name,
         symbol: player.tictactoe_players?.[0]?.symbol || null,
-      }));
+      })) || [];
 
       setGameState(current => ({
         ...current,
-        board: gameSession.board || Array(9).fill(null),
+        board: (gameSession.board as Array<string | null>) || Array(9).fill(null),
         currentTurn: gameSession.current_turn,
         winner: gameSession.winner_id,
-        gameState: gameSession.game_state,
+        gameState: gameSession.game_state || 'waiting',
         players,
       }));
     }
