@@ -28,6 +28,7 @@ const createRoomSchema = z.object({
   gridSize: z.number().optional(),
 });
 
+// Define the GameCode type explicitly to match the keys in gameCodeToType
 type GameCode = keyof typeof gameCodeToType;
 
 const CreateRoom = () => {
@@ -35,6 +36,7 @@ const CreateRoom = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const [username, setUsername] = useState("");
 
+  // Validate the gameType and ensure it's a valid GameCode
   const validGameType: GameCode | null = (gameType && Object.keys(gameCodeToType).includes(gameType)) 
     ? gameType as GameCode 
     : null;
@@ -58,7 +60,7 @@ const CreateRoom = () => {
   }, []);
 
   const { data: gameConfig, isLoading } = useQuery({
-    queryKey: ['game-type', validGameType || ''] as const,
+    queryKey: ['game-type', validGameType] as const,
     queryFn: async () => {
       if (!validGameType) throw new Error("Game type not specified or invalid");
       
