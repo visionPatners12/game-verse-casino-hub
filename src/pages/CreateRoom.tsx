@@ -91,7 +91,7 @@ const CreateRoom = () => {
         return;
       }
       
-      // Get the correct enum type value from our mapping
+      // Make sure we have a valid game code and map it to the correct enum value
       const gameTypeEnum = gameCodeToType[validGameType];
       
       const { data, error } = await supabase
