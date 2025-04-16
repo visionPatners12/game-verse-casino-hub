@@ -19,6 +19,7 @@ import {
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { gameCodeToType } from "@/lib/gameTypes";
 
 // Define the form schema based on game type
 const createRoomSchema = z.object({
@@ -55,6 +56,8 @@ const CreateRoom = () => {
   const { data: gameConfig, isLoading } = useQuery({
     queryKey: ['game-type', gameType],
     queryFn: async () => {
+      if (!gameType) throw new Error("Game type not specified");
+      
       const { data, error } = await supabase
         .from('game_types')
         .select('*')
@@ -78,10 +81,19 @@ const CreateRoom = () => {
 
   const handleCreateRoom = async (values: z.infer<typeof createRoomSchema>) => {
     try {
+      if (!gameType) return;
+      
+      // Convert gameType to the proper format using the mapping
+      const formattedGameType = gameCodeToType[gameType];
+      
+      if (!formattedGameType) {
+        throw new Error("Invalid game type");
+      }
+      
       const { data, error } = await supabase
         .from('game_sessions')
         .insert({
-          game_type: gameType?.toUpperCase(),
+          game_type: formattedGameType,
           room_type: 'private',
           room_id: Math.random().toString(36).substring(2, 8).toUpperCase(),
           max_players: values.maxPlayers,
