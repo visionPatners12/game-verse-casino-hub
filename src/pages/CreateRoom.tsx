@@ -42,7 +42,7 @@ const CreateRoom = () => {
   }, []);
 
   const { data: gameConfig, isLoading } = useQuery({
-    queryKey: ['game-type', validGameType] as const,
+    queryKey: ['game-type', validGameType],
     queryFn: async () => {
       if (!validGameType) throw new Error("Game type not specified or invalid");
       
