@@ -4,11 +4,13 @@ import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import GamesList from "@/components/games/GamesList";
+import { JoinGameDialog } from "@/components/games/JoinGameDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const Games = () => {
   const navigate = useNavigate();
+  const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   
   const { data: games, isLoading } = useQuery({
     queryKey: ['game-types'],
@@ -41,7 +43,7 @@ const Games = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Games</h1>
           <Button 
-            onClick={() => navigate("/games/join")}
+            onClick={() => setJoinDialogOpen(true)}
             className="ml-auto"
           >
             Join a Game
@@ -56,6 +58,11 @@ const Games = () => {
           <GamesList games={games} />
         ) : null}
       </main>
+      
+      <JoinGameDialog 
+        open={joinDialogOpen}
+        onOpenChange={setJoinDialogOpen}
+      />
       
       <footer className="bg-card border-t border-border py-6">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
