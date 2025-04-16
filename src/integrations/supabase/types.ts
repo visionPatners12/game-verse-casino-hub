@@ -395,6 +395,7 @@ export type Database = {
           code: Database["public"]["Enums"]["game_variant"]
           created_at: string | null
           id: string
+          image_url: string | null
           is_active: boolean | null
           is_configurable: boolean | null
           max_players: number
@@ -406,6 +407,7 @@ export type Database = {
           code: Database["public"]["Enums"]["game_variant"]
           created_at?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           is_configurable?: boolean | null
           max_players: number
@@ -417,6 +419,7 @@ export type Database = {
           code?: Database["public"]["Enums"]["game_variant"]
           created_at?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           is_configurable?: boolean | null
           max_players?: number
