@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -35,31 +34,16 @@ export default function Profile() {
         return;
       }
 
-      // Get data from both users and profiles tables
+      // Get data from users table
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('first_name, last_name, email, phone, country, username')
+        .select('first_name, last_name, email, phone, country, username, avatar_url')
         .eq('id', user.id)
         .single();
 
       if (userError) throw userError;
       
-      // Get profile avatar from profiles table if needed
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('avatar_url')
-        .eq('id', user.id)
-        .single();
-
-      if (profileError && profileError.code !== 'PGRST116') {
-        // Only throw if it's not a "no rows returned" error
-        throw profileError;
-      }
-
-      setProfile({
-        ...userData,
-        avatar_url: profileData?.avatar_url || null
-      });
+      setProfile(userData);
     } catch (error) {
       console.error('Error loading user profile:', error);
       toast({
@@ -91,24 +75,12 @@ export default function Profile() {
           phone: profile.phone,
           country: profile.country,
           username: profile.username,
+          avatar_url: profile.avatar_url,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
 
       if (userError) throw userError;
-
-      // Update avatar in profiles table if avatar_url is present
-      if (profile.avatar_url !== undefined) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            avatar_url: profile.avatar_url,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', user.id);
-
-        if (profileError) throw profileError;
-      }
 
       toast({
         title: "Success",
