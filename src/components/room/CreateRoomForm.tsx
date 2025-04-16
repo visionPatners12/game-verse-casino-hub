@@ -18,6 +18,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { gameCodeToType } from "@/lib/gameTypes";
 
+type GameCode = keyof typeof gameCodeToType;
+
 const createRoomSchema = z.object({
   bet: z.number().min(0, "Bet amount must be positive"),
   maxPlayers: z.number().min(2, "Must have at least 2 players"),
@@ -34,6 +36,11 @@ type CreateRoomFormProps = {
 export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFormProps) {
   const navigate = useNavigate();
 
+  // Function to validate if gameType is one of the allowed game codes
+  const isValidGameType = (type: string | undefined): type is GameCode => {
+    return !!type && Object.keys(gameCodeToType).includes(type);
+  };
+
   const form = useForm<z.infer<typeof createRoomSchema>>({
     resolver: zodResolver(createRoomSchema),
     defaultValues: {
@@ -46,13 +53,13 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
 
   const handleCreateRoom = async (values: z.infer<typeof createRoomSchema>) => {
     try {
-      if (!gameType || !Object.keys(gameCodeToType).includes(gameType)) {
+      if (!isValidGameType(gameType)) {
         console.error("Invalid game type");
         return;
       }
       
-      // Safely convert string gameType to enum value
-      const gameTypeEnum = gameCodeToType[gameType as keyof typeof gameCodeToType];
+      // Now gameType is safely typed as GameCode
+      const gameTypeEnum = gameCodeToType[gameType];
       
       const { data, error } = await supabase
         .from('game_sessions')

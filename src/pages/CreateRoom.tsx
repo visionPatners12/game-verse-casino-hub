@@ -15,10 +15,13 @@ const CreateRoom = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const [username, setUsername] = useState("");
 
-  // Validate that gameType is one of the allowed game codes
-  const validGameType = (gameType && Object.keys(gameCodeToType).includes(gameType)) 
-    ? gameType as GameCode 
-    : null;
+  // Function to validate if gameType is one of the allowed game codes
+  const isValidGameType = (type: string | undefined): type is GameCode => {
+    return !!type && Object.keys(gameCodeToType).includes(type);
+  };
+
+  // Get a type-safe gameType or null
+  const validGameType = isValidGameType(gameType) ? gameType : null;
 
   useEffect(() => {
     const getUsername = async () => {
