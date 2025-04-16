@@ -85,7 +85,7 @@ const GameCard = ({
             className="w-full gap-2"
           >
             <PlusCircle className="h-4 w-4" />
-            Create Game
+            Create a Room
           </Button>
         </div>
       </div>
@@ -94,3 +94,4 @@ const GameCard = ({
 };
 
 export default GameCard;
+
