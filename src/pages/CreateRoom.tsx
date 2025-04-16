@@ -37,8 +37,11 @@ const CreateRoom = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const [username, setUsername] = useState("");
 
-  // Ensure gameType is one of the valid game codes
-  const validGameType = gameType && (gameCodeToType[gameType as GameCode] ? gameType as GameCode : null);
+  // Validate gameType parameter
+  // This explicitly converts gameType to a GameCode type if it's valid
+  const validGameType = (gameType && Object.keys(gameCodeToType).includes(gameType)) 
+    ? gameType as GameCode 
+    : null;
 
   // Fetch current user's username
   useEffect(() => {
