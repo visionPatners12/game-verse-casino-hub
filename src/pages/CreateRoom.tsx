@@ -37,9 +37,8 @@ const CreateRoom = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const [username, setUsername] = useState("");
 
-  // Validate gameType parameter
-  // This explicitly converts gameType to a GameCode type if it's valid
-  const validGameType = (gameType && Object.keys(gameCodeToType).includes(gameType)) 
+  // Validate gameType parameter and convert to GameCode type if valid
+  const validGameType: GameCode | null = (gameType && Object.keys(gameCodeToType).includes(gameType)) 
     ? gameType as GameCode 
     : null;
 
@@ -63,7 +62,8 @@ const CreateRoom = () => {
   }, []);
 
   const { data: gameConfig, isLoading } = useQuery({
-    queryKey: ['game-type', validGameType],
+    // Fix the queryKey type issue by using a tuple with a string and the validGameType
+    queryKey: ['game-type', validGameType] as const,
     queryFn: async () => {
       if (!validGameType) throw new Error("Game type not specified or invalid");
       
