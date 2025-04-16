@@ -29,10 +29,16 @@ const createRoomSchema = z.object({
   gridSize: z.number().optional(),
 });
 
+// Define type for game code
+type GameCode = keyof typeof gameCodeToType;
+
 const CreateRoom = () => {
   const navigate = useNavigate();
   const { gameType } = useParams<{ gameType: string }>();
   const [username, setUsername] = useState("");
+
+  // Ensure gameType is one of the valid game codes
+  const validGameType = gameType && (gameCodeToType[gameType as GameCode] ? gameType as GameCode : null);
 
   // Fetch current user's username
   useEffect(() => {
@@ -54,19 +60,20 @@ const CreateRoom = () => {
   }, []);
 
   const { data: gameConfig, isLoading } = useQuery({
-    queryKey: ['game-type', gameType],
+    queryKey: ['game-type', validGameType],
     queryFn: async () => {
-      if (!gameType) throw new Error("Game type not specified");
+      if (!validGameType) throw new Error("Game type not specified or invalid");
       
       const { data, error } = await supabase
         .from('game_types')
         .select('*')
-        .eq('code', gameType)
+        .eq('code', validGameType)
         .single();
       
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!validGameType
   });
 
   const form = useForm<z.infer<typeof createRoomSchema>>({
@@ -75,20 +82,19 @@ const CreateRoom = () => {
       bet: 0,
       maxPlayers: gameConfig?.min_players || 2,
       winnerCount: 1,
-      gridSize: gameType === 'tictactoe' ? 3 : undefined,
+      gridSize: validGameType === 'tictactoe' ? 3 : undefined,
     },
   });
 
   const handleCreateRoom = async (values: z.infer<typeof createRoomSchema>) => {
     try {
-      if (!gameType) return;
-      
-      // Convert gameType to the proper format using the mapping
-      const formattedGameType = gameCodeToType[gameType];
-      
-      if (!formattedGameType) {
-        throw new Error("Invalid game type");
+      if (!validGameType) {
+        console.error("Invalid game type");
+        return;
       }
+      
+      // Get the properly formatted game type using the mapping
+      const formattedGameType = gameCodeToType[validGameType];
       
       const { data, error } = await supabase
         .from('game_sessions')
@@ -116,7 +122,7 @@ const CreateRoom = () => {
 
       if (playerError) throw playerError;
 
-      navigate(`/games/${gameType}/room/${data.id}`);
+      navigate(`/games/${validGameType}/room/${data.id}`);
     } catch (error) {
       console.error('Error creating room:', error);
     }
@@ -216,7 +222,7 @@ const CreateRoom = () => {
                     )}
                   />
 
-                  {gameType === 'tictactoe' && gameConfig?.is_configurable && (
+                  {validGameType === 'tictactoe' && gameConfig?.is_configurable && (
                     <FormField
                       control={form.control}
                       name="gridSize"
