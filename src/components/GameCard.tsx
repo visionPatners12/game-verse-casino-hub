@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, Globe, PlusCircle } from "lucide-react";
@@ -30,11 +29,7 @@ const GameCard = ({
 }: GameCardProps) => {
   const navigate = useNavigate();
 
-  const handlePublicRoomClick = () => {
-    navigate(`/games/${type}/public`);
-  };
-
-  const handleCreateGameClick = () => {
+  const handleCreateRoomClick = () => {
     navigate(`/games/${type}/create`);
   };
 
@@ -44,9 +39,9 @@ const GameCard = ({
         size="icon" 
         variant="outline" 
         className="absolute top-3 right-3 z-10 bg-background/50 hover:bg-background/80"
-        onClick={handlePublicRoomClick}
+        onClick={handleCreateRoomClick}
       >
-        <Globe className="h-4 w-4" />
+        <PlusCircle className="h-4 w-4" />
       </Button>
 
       <div className="relative overflow-hidden">
@@ -74,18 +69,11 @@ const GameCard = ({
         
         <div className="mt-4 flex gap-2">
           <Button 
-            onClick={handlePublicRoomClick} 
+            onClick={() => {}} 
             className="w-full"
+            disabled
           >
-            Public Room
-          </Button>
-          <Button 
-            onClick={handleCreateGameClick}
-            variant="outline"
-            className="w-full gap-2"
-          >
-            <PlusCircle className="h-4 w-4" />
-            Create Game
+            Create Room
           </Button>
         </div>
       </div>
