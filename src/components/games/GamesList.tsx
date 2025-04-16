@@ -27,8 +27,6 @@ const GamesList = ({ games }: GamesListProps) => {
         <div key={game.id} className="flex flex-col gap-4">
           <GameCard 
             {...game} 
-            onPublicRoomClick={() => navigate(`/games/${game.type}/public`)}
-            onCreateRoomClick={() => navigate(`/games/${game.type}/create`)}
           />
         </div>
       ))}
