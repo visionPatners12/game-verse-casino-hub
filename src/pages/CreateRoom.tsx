@@ -91,12 +91,13 @@ const CreateRoom = () => {
         return;
       }
       
-      const formattedGameType = gameCodeToType[validGameType];
+      // Get the correct enum type value from our mapping
+      const gameTypeEnum = gameCodeToType[validGameType];
       
       const { data, error } = await supabase
         .from('game_sessions')
         .insert({
-          game_type: formattedGameType,
+          game_type: gameTypeEnum,
           room_type: 'private',
           room_id: Math.random().toString(36).substring(2, 8).toUpperCase(),
           max_players: values.maxPlayers,
