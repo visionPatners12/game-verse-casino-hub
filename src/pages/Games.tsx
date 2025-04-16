@@ -42,12 +42,19 @@ const Games = () => {
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Games</h1>
-          <Button 
-            onClick={() => setJoinDialogOpen(true)}
-            className="ml-auto"
-          >
-            Join a Game
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => navigate('/games/create')}
+              variant="outline"
+            >
+              Create Room
+            </Button>
+            <Button 
+              onClick={() => setJoinDialogOpen(true)}
+            >
+              Join a Game
+            </Button>
+          </div>
         </div>
         
         {isLoading ? (

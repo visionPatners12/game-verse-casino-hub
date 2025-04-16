@@ -22,7 +22,7 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
   const { data: room, isLoading } = useQuery({
     queryKey: ['game-session', roomCode],
     queryFn: async () => {
-      if (!roomCode) return null;
+      if (roomCode.length !== 6) return null;
       
       const { data, error } = await supabase
         .from('game_sessions')
@@ -51,7 +51,7 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
       
       return data;
     },
-    enabled: roomCode.length > 0,
+    enabled: roomCode.length === 6,
     retry: false
   });
   
@@ -98,9 +98,11 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
         <div className="space-y-4 py-4">
           <div className="flex items-center gap-2">
             <Input
-              placeholder="Enter room code"
+              placeholder="Enter 6-character room code"
               value={roomCode}
-              onChange={(e) => setRoomCode(e.target.value)}
+              onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+              maxLength={6}
+              className="font-mono text-center text-lg tracking-wider"
             />
           </div>
           
