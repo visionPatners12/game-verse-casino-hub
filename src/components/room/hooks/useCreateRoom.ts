@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { GameCode, isValidGameType, gameCodeToType, GameVariant } from "@/lib/gameTypes";
 import { CreateRoomFormData } from "../schemas/createRoomSchema";
+import { toast } from "sonner";
 
 export function useCreateRoom(username: string, gameType: string | undefined) {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
   const createRoom = async (values: CreateRoomFormData) => {
     try {
       if (!isValidGameType(gameType)) {
-        console.error("Invalid game type");
+        toast.error("Invalid game type");
         return;
       }
       
@@ -30,7 +31,15 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        toast.error("Error creating room: " + error.message);
+        throw error;
+      }
+
+      if (!data || !data.id) {
+        toast.error("Failed to create room");
+        return;
+      }
 
       const { error: playerError } = await supabase
         .from('game_players')
@@ -40,8 +49,14 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
           user_id: (await supabase.auth.getUser()).data.user?.id
         });
 
-      if (playerError) throw playerError;
+      if (playerError) {
+        toast.error("Error joining room: " + playerError.message);
+        throw playerError;
+      }
+      
+      toast.success("Room created successfully!");
 
+      // Navigate to the game room with the generated room ID
       navigate(`/games/${gameType}/room/${data.id}`);
     } catch (error) {
       console.error('Error creating room:', error);
