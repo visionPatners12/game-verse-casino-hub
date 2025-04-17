@@ -932,6 +932,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      purchase_item: {
+        Args: {
+          p_item_id: string
+          p_user_id: string
+          p_price: number
+          p_item_name: string
+        }
+        Returns: {
+          new_balance: number
+        }[]
+      }
     }
     Enums: {
       balance_source: "real" | "bonus"

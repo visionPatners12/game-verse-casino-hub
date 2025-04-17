@@ -36,20 +36,18 @@ export const useItemPurchase = () => {
         throw new Error('Item introuvable');
       }
 
-      // Update wallet balance and record the purchase in a single transaction
-      const { data: updatedWallet, error: updateError } = await supabase.rpc(
-        'purchase_item',
-        { 
+      // Call the purchase_item function
+      const { data, error } = await supabase
+        .rpc('purchase_item', { 
           p_item_id: itemId,
           p_user_id: user.id,
           p_price: item.price,
           p_item_name: item.name
-        }
-      );
+        });
 
-      if (updateError) {
-        console.error('Purchase error:', updateError);
-        if (updateError.message.includes('insufficient_balance')) {
+      if (error) {
+        console.error('Purchase error:', error);
+        if (error.message.includes('insufficient_balance')) {
           throw new Error('Solde insuffisant');
         }
         throw new Error("Erreur lors de l'achat");
@@ -58,7 +56,7 @@ export const useItemPurchase = () => {
       return { 
         itemId, 
         price: item.price,
-        newBalance: updatedWallet.new_balance 
+        newBalance: data[0].new_balance 
       };
     },
     onSuccess: (data) => {
