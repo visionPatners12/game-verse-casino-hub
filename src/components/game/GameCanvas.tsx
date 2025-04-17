@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { RoomData } from "./types";
+import { LudoGameData } from "../../game-implementation/Ludo/types";
 import JSZip from "jszip";
 
 interface GameCanvasProps {
