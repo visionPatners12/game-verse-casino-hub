@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Checkers from "@/components/games/Checkers";
 import Ludo from "@/components/games/Ludo";
@@ -7,18 +8,31 @@ import CheckGame from "@/components/games/CheckGame";
 import GameChat from "@/components/GameChat";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { GameType } from "@/components/GameCard";
+import { GameCode, isValidGameType } from "@/lib/gameTypes";
 import { useToast } from "@/components/ui/use-toast";
 import { Copy, Share2, ExternalLink, DollarSign } from "lucide-react";
 
 const GameRoom = () => {
-  const { gameType, roomId } = useParams<{ gameType: GameType; roomId: string }>();
+  const { gameType, roomId } = useParams<{ gameType: string; roomId: string }>();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  
+  // Validate game type
+  useEffect(() => {
+    if (!isValidGameType(gameType)) {
+      toast({
+        title: "Invalid Game Type",
+        description: "The requested game does not exist.",
+        variant: "destructive"
+      });
+      navigate("/games");
+    }
+  }, [gameType, navigate, toast]);
   
   // Mock room data - would fetch from API based on roomId
   const [roomData] = useState({
     id: roomId || "unknown",
-    gameType: gameType || "tictactoe",
+    gameType: gameType || "unknown",
     gameName: gameType ? gameType.charAt(0).toUpperCase() + gameType.slice(1) : "Unknown Game",
     bet: 25,
     maxPlayers: gameType === "ludo" ? 4 : gameType === "checkgame" ? 6 : 2,
@@ -30,6 +44,17 @@ const GameRoom = () => {
   
   // Render the appropriate game component based on gameType
   const renderGameComponent = () => {
+    if (!gameType || !isValidGameType(gameType)) {
+      return (
+        <div className="text-center py-12">
+          <h3 className="text-xl font-medium mb-2">Game not found</h3>
+          <p className="text-muted-foreground">
+            The requested game type does not exist
+          </p>
+        </div>
+      );
+    }
+    
     switch (gameType) {
       case "checkers":
         return <Checkers />;
@@ -139,7 +164,9 @@ const GameRoom = () => {
                   </div>
                 </div>
                 
-                {renderGameComponent()}
+                <div className="game-container">
+                  {renderGameComponent()}
+                </div>
               </CardContent>
             </Card>
           </div>
