@@ -10,7 +10,6 @@ interface GameCanvasProps {
 
 const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
   const [gameState, setGameState] = useState<'loading' | 'waiting' | 'playing' | 'finished'>('loading');
-  const [extractedFiles, setExtractedFiles] = useState<{[key: string]: string}>({});
   const canvasRef = useRef<HTMLDivElement>(null);
   const gameScriptLoaded = useRef<boolean>(false);
   
@@ -24,40 +23,7 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     totalPot: roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0
   };
 
-  // Extract all Ludo game files from ZIP completely upfront
-  useEffect(() => {
-    const extractZipFile = async () => {
-      try {
-        console.log("Starting to fetch and extract the Ludo zip file...");
-        const response = await fetch('/src/game-implementation/ludo.zip');
-        const zipData = await response.arrayBuffer();
-        const zip = await JSZip.loadAsync(zipData);
-        
-        const files: {[key: string]: string} = {};
-        const filePromises: Promise<void>[] = [];
-        
-        zip.forEach((relativePath, zipEntry) => {
-          if (!zipEntry.dir) {
-            const promise = zipEntry.async('text').then(content => {
-              files[relativePath] = content;
-            });
-            filePromises.push(promise);
-          }
-        });
-        
-        await Promise.all(filePromises);
-        console.log("Successfully extracted all files:", Object.keys(files));
-        setExtractedFiles(files);
-        setGameState('waiting');
-      } catch (error) {
-        console.error("Error extracting Ludo game files:", error);
-      }
-    };
-    
-    extractZipFile();
-  }, []);
-
-  // Load game scripts and initialize game when we have enough players
+  // Initialiser le jeu Ludo quand il y a assez de joueurs
   useEffect(() => {
     if (gameState === 'waiting' && players.length >= 2) {
       console.log("Ready to play with", players.length, "players");
@@ -65,138 +31,99 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     }
   }, [players.length, gameState]);
 
-  // Initialize game when in playing state and files are extracted
+  // Initialiser le jeu quand on est en état 'playing'
   useEffect(() => {
-    if (gameState === 'playing' && Object.keys(extractedFiles).length > 0 && canvasRef.current && !gameScriptLoaded.current) {
-      try {
-        console.log("Initializing game...");
-        
-        // Create the game container
-        const gameContainer = document.createElement('div');
-        gameContainer.id = 'ludoGameContainer';
-        gameContainer.style.width = '100%';
-        gameContainer.style.height = '100%';
-        canvasRef.current.appendChild(gameContainer);
-        
-        // Add CSS styles to the document
-        const cssFiles = Object.keys(extractedFiles).filter(file => file.endsWith('.css'));
-        if (cssFiles.length > 0) {
+    const initializeLudoGame = async () => {
+      if (gameState === 'playing' && canvasRef.current && !gameScriptLoaded.current) {
+        try {
+          console.log("Initializing Ludo game...");
+          
+          // Créer le conteneur de jeu
+          const gameContainer = document.createElement('div');
+          gameContainer.id = 'mainHolder';
+          gameContainer.style.width = '100%';
+          gameContainer.style.height = '100%';
+          
+          // Créer le canvas
+          const canvas = document.createElement('canvas');
+          canvas.id = 'gameCanvas';
+          canvas.width = 1280;
+          canvas.height = 768;
+          
+          // Créer le conteneur de canvas
+          const canvasHolder = document.createElement('div');
+          canvasHolder.id = 'canvasHolder';
+          canvasHolder.appendChild(canvas);
+          
+          // Ajouter les éléments au DOM
+          gameContainer.appendChild(canvasHolder);
+          canvasRef.current.appendChild(gameContainer);
+          
+          // Injecter les scripts nécessaires dans l'ordre
+          const scripts = [
+            '/src/game-implementation/Ludo/js/vendor/jquery.min.js',
+            '/src/game-implementation/Ludo/js/vendor/createjs.min.js',
+            '/src/game-implementation/Ludo/js/vendor/TweenMax.min.js',
+            '/src/game-implementation/Ludo/js/vendor/proton.min.js',
+            '/src/game-implementation/Ludo/js/plugins.js',
+            '/src/game-implementation/Ludo/js/sound.js',
+            '/src/game-implementation/Ludo/js/canvas.js',
+            '/src/game-implementation/Ludo/js/boards.js',
+            '/src/game-implementation/Ludo/js/game.js',
+            '/src/game-implementation/Ludo/js/mobile.js',
+            '/src/game-implementation/Ludo/js/main.js',
+            '/src/game-implementation/Ludo/js/loader.js',
+            '/src/game-implementation/Ludo/js/init.js'
+          ];
+
+          // Ajouter les styles CSS
           const style = document.createElement('style');
-          style.setAttribute('data-ludo-style', 'true');
-          cssFiles.forEach(cssFile => {
-            console.log("Adding CSS:", cssFile);
-            style.textContent += extractedFiles[cssFile];
-          });
+          style.textContent = `
+            #mainHolder { position: relative; width: 100%; height: 100%; }
+            #canvasHolder { width: 100%; height: 100%; }
+            #gameCanvas { width: 100%; height: 100%; }
+          `;
           document.head.appendChild(style);
-        }
-        
-        // Find all JavaScript files and identify script types
-        const jsFiles = Object.keys(extractedFiles).filter(file => file.endsWith('.js'));
-        
-        // Sort scripts in order of game flow
-        const initScript = jsFiles.find(file => file.includes('init.js'));
-        const loaderScript = jsFiles.find(file => file.includes('loader.js'));
-        const mobileScript = jsFiles.find(file => file.includes('mobile.js'));
-        const canvasScript = jsFiles.find(file => file.includes('canvas.js'));
-        const mainScript = jsFiles.find(file => file.includes('main.js'));
-        const gameScript = jsFiles.find(file => file.includes('game.js'));
-        
-        console.log("Game flow scripts:", { 
-          initScript, loaderScript, mobileScript, canvasScript, mainScript, gameScript 
-        });
-        
-        // Create and inject script elements in correct order
-        const createScript = (scriptPath: string | undefined) => {
-          if (!scriptPath) return null;
-          
-          console.log("Creating script:", scriptPath);
-          const script = document.createElement('script');
-          script.type = 'text/javascript';
-          script.setAttribute('data-ludo-script', scriptPath);
-          
-          // Inject player data and game parameters
-          const playerData = JSON.stringify({
+
+          // Injecter les scripts séquentiellement
+          for (const scriptSrc of scripts) {
+            await new Promise((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = scriptSrc;
+              script.onload = resolve;
+              script.onerror = reject;
+              document.body.appendChild(script);
+            });
+          }
+
+          // Configurer les données du jeu
+          window.LUDO_GAME_DATA = {
             currentPlayerId: currentUserId,
             allPlayers: players,
             gameParams: gameParameters
-          });
-          
-          script.text = `
-            // Injected game data
-            window.LUDO_GAME_DATA = ${playerData};
-            
-            ${extractedFiles[scriptPath]}
-          `;
-          
-          return script;
-        };
-        
-        // Inject scripts in the correct order following game flow
-        const injectScriptsInOrder = async () => {
-          // 1. Browser detection
-          const init = createScript(initScript);
-          if (init) {
-            document.body.appendChild(init);
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-          
-          // 2. Asset loader
-          const loader = createScript(loaderScript);
-          if (loader) {
-            document.body.appendChild(loader);
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-          
-          // 3. Mobile orientation detection
-          const mobile = createScript(mobileScript);
-          if (mobile) {
-            document.body.appendChild(mobile);
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-          
-          // 4. Canvas construction
-          const canvas = createScript(canvasScript);
-          if (canvas) {
-            document.body.appendChild(canvas);
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-          
-          // 5. Main game menu
-          const main = createScript(mainScript);
-          if (main) {
-            document.body.appendChild(main);
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-          
-          // 6. Game logic
-          const game = createScript(gameScript);
-          if (game) {
-            document.body.appendChild(game);
-          }
-          
-          gameScriptLoaded.current = true;
-          console.log("All game scripts loaded successfully!");
-        };
-        
-        injectScriptsInOrder();
-        
-      } catch (error) {
-        console.error("Error initializing Ludo game:", error);
-      }
-    }
-  }, [gameState, extractedFiles, canvasRef, players, currentUserId, gameParameters]);
+          };
 
-  // Clean up scripts and styles when component unmounts
-  useEffect(() => {
-    return () => {
-      if (gameScriptLoaded.current) {
-        console.log("Cleaning up Ludo game resources...");
-        // Remove any injected scripts and styles
-        document.querySelectorAll('script[data-ludo-script]').forEach(script => script.remove());
-        document.querySelectorAll('style[data-ludo-style]').forEach(style => style.remove());
+          gameScriptLoaded.current = true;
+          console.log("Ludo game initialized successfully!");
+
+        } catch (error) {
+          console.error("Error initializing Ludo game:", error);
+        }
       }
     };
-  }, []);
+
+    initializeLudoGame();
+
+    // Nettoyage lors du démontage
+    return () => {
+      if (gameScriptLoaded.current) {
+        console.log("Cleaning up Ludo game...");
+        document.querySelectorAll('script[src*="Ludo/js"]').forEach(script => script.remove());
+        const style = document.querySelector('style[data-ludo-style]');
+        if (style) style.remove();
+      }
+    };
+  }, [gameState, players, currentUserId, gameParameters]);
 
   return (
     <div className="game-container">
@@ -206,7 +133,7 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
             <div className="text-center">
               <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
               <h3 className="text-2xl font-bold mb-2">Loading Game Files</h3>
-              <p className="text-muted-foreground">Extracting the Ludo game...</p>
+              <p className="text-muted-foreground">Initializing the Ludo game...</p>
             </div>
           </div>
         )}
