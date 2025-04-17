@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { createRoomSchema, type CreateRoomFormData } from "./schemas/createRoomSchema";
-import { PlayerNameField } from "./components/PlayerNameField";
 import { BetAmountField } from "./components/BetAmountField";
 import { PlayersField } from "./components/PlayersField";
 import { WinnersField } from "./components/WinnersField";
@@ -33,8 +32,7 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(createRoom)} className="space-y-4">
-        <PlayerNameField username={username} />
-        <BetAmountField form={form} />
+        <BetAmountField form={form} disableControls={true} />
         <PlayersField form={form} gameConfig={gameConfig} />
         <WinnersField form={form} />
         
