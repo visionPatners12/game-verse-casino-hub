@@ -51,7 +51,9 @@ export const useItemPurchase = () => {
         throw new Error('Solde insuffisant');
       }
 
-      // Begin transaction - Insert purchase first
+      // Disable RPC function approach and use direct database operations with error handling
+      
+      // 1. Record the purchase first
       const { error: purchaseError } = await supabase
         .from('user_items')
         .insert({
@@ -59,9 +61,12 @@ export const useItemPurchase = () => {
           user_id: user.id,
         });
 
-      if (purchaseError) throw purchaseError;
+      if (purchaseError) {
+        console.error('Error recording purchase:', purchaseError);
+        throw new Error("Erreur lors de l'enregistrement de l'achat");
+      }
 
-      // Update wallet balance
+      // 2. Update wallet balance directly
       const newBalance = wallet.real_balance - item.price;
       
       const { error: walletError } = await supabase
@@ -74,7 +79,7 @@ export const useItemPurchase = () => {
         throw new Error('Erreur lors de la mise à jour du solde');
       }
 
-      // Create transaction record
+      // 3. Record transaction
       const { error: transactionError } = await supabase
         .from('transactions')
         .insert({
@@ -90,12 +95,13 @@ export const useItemPurchase = () => {
         console.error('Error recording transaction:', transactionError);
       }
 
-      return { itemId, price: item.price };
+      // Return data for onSuccess callback
+      return { itemId, price: item.price, newBalance };
     },
     onSuccess: (data) => {
       toast({
         title: "Achat réussi",
-        description: "L'item a été ajouté à votre inventaire",
+        description: `L'item a été ajouté à votre inventaire. Nouveau solde: $${data.newBalance}`,
       });
       
       // Invalidate queries to refresh data
