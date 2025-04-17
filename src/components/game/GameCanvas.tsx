@@ -1,8 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { RoomData } from "./types";
-import GameStructure from "./GameStructure";
-import LudoGame from "./LudoGame";
 
 interface GameCanvasProps {
   roomData: RoomData;
@@ -34,31 +32,6 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
   const currentPlayerInfo = players.find(player => player.user_id === currentUserId);
   const isPlayerInGame = !!currentPlayerInfo;
 
-  // Render the game based on the game type
-  const renderGame = () => {
-    const gameType = roomData?.game_type?.toLowerCase();
-    
-    if (gameType === 'ludo') {
-      return (
-        <LudoGame 
-          players={players}
-          currentUserId={currentUserId}
-          gameParameters={gameParameters}
-        />
-      );
-    }
-    
-    // Default fallback for unsupported game types
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <h3 className="text-xl font-medium mb-2">Game Not Implemented</h3>
-          <p className="text-muted-foreground">This game type is not yet available.</p>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="game-container">
       <div className="bg-accent/10 rounded-lg border border-border aspect-video relative overflow-hidden">
@@ -72,10 +45,19 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
         )}
 
         {gameState === 'playing' && (
-          <GameStructure 
-            gameComponent={renderGame()}
-            gameParameters={gameParameters}
-          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <h3 className="text-2xl font-bold mb-2">Game Area</h3>
+              <p className="text-muted-foreground">Ici vous pouvez ajouter votre propre implémentation du jeu</p>
+              <pre className="mt-4 p-3 bg-black/10 rounded text-xs text-left overflow-auto max-h-40">
+                {JSON.stringify({
+                  players,
+                  currentUserId,
+                  gameParameters
+                }, null, 2)}
+              </pre>
+            </div>
+          </div>
         )}
 
         {gameState === 'finished' && (
