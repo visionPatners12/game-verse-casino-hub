@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Navigation from "@/components/Navigation";
@@ -57,7 +58,10 @@ const CreateRoom = () => {
       <main className="flex-1 container mx-auto px-4 py-8">
         <Card className="max-w-xl mx-auto">
           <CardHeader>
-            <CardTitle>Create a Room</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              Create a Room 
+              {gameConfig && <span className="text-primary">- {gameConfig.name}</span>}
+            </CardTitle>
           </CardHeader>
           
           <CardContent className="space-y-6">
