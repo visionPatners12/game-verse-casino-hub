@@ -33,12 +33,8 @@ const RoomCard = ({
   // Generate a 6-character room code display (first 6 chars or padded if shorter)
   const roomCode = id.substring(0, 6).toUpperCase().padEnd(6, 'A1B2C3').substring(0, 6);
   
-  // Calculate the total pot
-  const totalPot = bet * currentPlayers;
-  
-  // Calculate winner takes amount (total pot minus commission)
-  const commissionAmount = (totalPot * commissionRate) / 100;
-  const winnerTakes = totalPot - commissionAmount;
+  // Calculate the total pot with commission already deducted
+  const totalPot = bet * currentPlayers * (1 - commissionRate/100);
   
   return (
     <div className="room-card">
@@ -81,7 +77,7 @@ const RoomCard = ({
         
         <Badge variant="outline" className="flex items-center gap-1">
           <Trophy className="h-3 w-3" />
-          ${winnerTakes.toFixed(2)} Pot
+          ${totalPot.toFixed(2)} Prize
         </Badge>
         
         <Badge variant="outline">

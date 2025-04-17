@@ -1,14 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
-import Checkers from "@/components/games/Checkers";
-import Ludo from "@/components/games/Ludo";
-import CheckGame from "@/components/games/CheckGame";
 import GameChat from "@/components/GameChat";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { GameCode, isValidGameType, gameCodeToType } from "@/lib/gameTypes";
+import { isValidGameType, gameCodeToType } from "@/lib/gameTypes";
 import { useToast } from "@/components/ui/use-toast";
 import { Copy, Share2, ExternalLink, DollarSign, Loader2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -180,38 +176,6 @@ const GameRoom = () => {
     };
   }, [roomId]);
   
-  // Render the appropriate game component based on gameType
-  const renderGameComponent = () => {
-    if (!gameType || !isValidGameType(gameType)) {
-      return (
-        <div className="text-center py-12">
-          <h3 className="text-xl font-medium mb-2">Game not found</h3>
-          <p className="text-muted-foreground">
-            The requested game type does not exist
-          </p>
-        </div>
-      );
-    }
-    
-    switch (gameType) {
-      case "checkers":
-        return <Checkers />;
-      case "ludo":
-        return <Ludo />;
-      case "checkgame":
-        return <CheckGame />;
-      default:
-        return (
-          <div className="text-center py-12">
-            <h3 className="text-xl font-medium mb-2">Game not found</h3>
-            <p className="text-muted-foreground">
-              The requested game type does not exist
-            </p>
-          </div>
-        );
-    }
-  };
-  
   const copyRoomLink = () => {
     const roomUrl = `${window.location.origin}/games/${gameType}/room/${roomId}`;
     navigator.clipboard.writeText(roomUrl);
@@ -237,11 +201,9 @@ const GameRoom = () => {
     );
   }
   
-  // Calculate winner takes amount (pot minus commission)
+  // Calculate winner takes amount (total pot including commission adjustment)
   const gameName = gameType ? gameType.charAt(0).toUpperCase() + gameType.slice(1) : "Unknown Game";
-  const totalPot = roomData ? roomData.entry_fee * roomData.current_players : 0;
-  const commissionAmount = roomData ? (totalPot * roomData.commission_rate) / 100 : 0;
-  const winnerTakes = totalPot - commissionAmount;
+  const totalPot = roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0;
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -317,17 +279,10 @@ const GameRoom = () => {
                         </div>
                       </div>
                       
-                      <div className="text-center">
-                        <div className="text-sm font-medium">Commission</div>
-                        <div className="text-lg font-semibold text-muted-foreground">
-                          {roomData.commission_rate}% (${commissionAmount.toFixed(2)})
-                        </div>
-                      </div>
-                      
                       <div>
-                        <div className="text-sm font-medium text-right">Winner Takes</div>
+                        <div className="text-sm font-medium text-right">Prize Pool</div>
                         <div className="text-xl font-semibold text-accent">
-                          ${winnerTakes.toFixed(2)}
+                          ${totalPot.toFixed(2)}
                         </div>
                       </div>
                     </div>
@@ -364,7 +319,12 @@ const GameRoom = () => {
                 )}
                 
                 <div className="game-container">
-                  {renderGameComponent()}
+                  <div className="bg-accent/10 rounded-lg border border-border aspect-video flex items-center justify-center">
+                    <div className="text-center">
+                      <h3 className="text-2xl font-bold mb-2">Game Canvas</h3>
+                      <p className="text-muted-foreground">Custom game implementation will be displayed here</p>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
