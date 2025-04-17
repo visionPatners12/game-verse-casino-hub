@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
@@ -22,7 +21,6 @@ const GameRoom = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { toast } = useToast();
   
-  // Validate game type
   useEffect(() => {
     if (!isValidGameType(gameType)) {
       toast({
@@ -34,7 +32,6 @@ const GameRoom = () => {
     }
   }, [gameType, navigate, toast]);
   
-  // Fetch room data from Supabase
   useEffect(() => {
     const fetchRoomData = async () => {
       if (!roomId) return;
@@ -42,11 +39,9 @@ const GameRoom = () => {
       try {
         setLoading(true);
         
-        // Get current user
         const { data: { user } } = await supabase.auth.getUser();
         setCurrentUserId(user?.id || null);
         
-        // Fetch room data
         const { data, error } = await supabase
           .from('game_sessions')
           .select(`
@@ -92,11 +87,9 @@ const GameRoom = () => {
     fetchRoomData();
   }, [roomId, navigate, toast]);
   
-  // Set up realtime subscription for room updates
   useEffect(() => {
     if (!roomId) return;
     
-    // Subscribe to changes in the game_sessions table for this specific room
     const roomChannel = supabase
       .channel('room-updates')
       .on(
@@ -109,7 +102,6 @@ const GameRoom = () => {
         },
         (payload) => {
           console.log('Room updated:', payload);
-          // Refresh room data when it changes
           if (payload.new) {
             setRoomData(prev => ({
               ...prev,
@@ -120,7 +112,6 @@ const GameRoom = () => {
       )
       .subscribe();
     
-    // Subscribe to changes in the game_players table for this room
     const playersChannel = supabase
       .channel('players-updates')
       .on(
@@ -133,7 +124,6 @@ const GameRoom = () => {
         },
         (payload) => {
           console.log('Players updated:', payload);
-          // Refresh room data when players change
           fetchUpdatedPlayers();
         }
       )
@@ -160,7 +150,6 @@ const GameRoom = () => {
     };
   }, [roomId]);
   
-  // Calculate winner takes amount (total pot including commission adjustment)
   const gameName = gameType ? gameType.charAt(0).toUpperCase() + gameType.slice(1) : "Unknown Game";
   const totalPot = roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0;
   
@@ -200,7 +189,10 @@ const GameRoom = () => {
                         currentUserId={currentUserId}
                       />
                       
-                      <GameCanvas />
+                      <GameCanvas 
+                        roomData={roomData}
+                        currentUserId={currentUserId}
+                      />
                     </>
                   )
                 )}
