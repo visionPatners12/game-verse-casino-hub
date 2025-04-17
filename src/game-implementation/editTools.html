@@ -1,0 +1,235 @@
+<div id="editWrapper">
+    <div id="floatForm">
+    	<input id='toggleShowOption' name="toggleOption" type="button" value="Hide Edit Option" />
+        
+        <div id="panelWrapper">
+            <div id='selectBoardWrapper'>
+                Select boards:<br>
+                <select id="boardslist" name="boardslist">
+                </select><br>
+                <input id="prevBoard" name="prevBoard" class="button" type="button" value="Prev Board">
+                <input id="nextBoard" name="nextBoard" class="button" type="button" value="Next Board">
+                <br><br>
+            </div>
+            
+            <div id='editBoardWrapper'>
+                <input id='removeBoard' name="removeBoard" type="button" value="Remove Board" />
+                <input id='moveBoardUp' name="moveBoardUp" type="button" value="Move Board Up" />
+                <input id='moveBoardDown' name="moveBoardDown" type="button" value="Move Board Down" />
+                <input id='addBoard' name="addBoard" type="button" value="Add Board" />
+                
+                <br><br>
+                Edit board:<br>
+                <input id="editBoard" name="editBoard" type="button" value="Edit Board">
+                <input id="editPath" name="editPath" type="button" value="Edit Path">
+                <input id="editPlayers" name="editPath" type="button" value="Edit Players">
+                <br><br>
+                Generate and replace array:
+                <input id='generateArray' name="generateArray" type="button" value="Generate Array" />
+                <textarea id="outputArray" name="outputArray" cols="" rows="10"></textarea>
+            </div>
+            
+            <div id="boardEditWrapper">
+            	Edit board details:<br>
+                <div class="formRowLong extraHeight">
+                    <label>Image:</label>
+                    <input id="image" name="image" type="text" />
+                </div>
+                <div class="formRow">
+                    <label>Scale:</label>
+                    <input id="boardScale" name="boardScale" type="text" />
+                </div>
+                <div class="formRow">
+                    <label>Dice X:</label>
+                    <input id="diceX" name="diceX" type="text" />
+                </div>
+                <div class="formRow">
+                    <label>Dice Y:</label>
+                    <input id="diceY" name="diceY" type="text" />
+                </div>
+                <br>
+                <input id="updateImage" name="updateImage" type="button" value="Update Board">
+                <input id='boardBack' name="boardBack" type="button" value="Done" />
+            </div>
+            
+            <div id="pathEditWrapper">
+            	Edit board path:<br>
+                Select paths:<br>
+                <select id="pathlist" name="pathlist">
+                </select><br>
+                <input id="prevPath" name="prevPath" class="button" type="button" value="Prev Path">
+                <input id="nextPath" name="nextPath" class="button" type="button" value="Next Path">
+                <br><br>
+                
+                <input id='movePathUp' name="movePathUp" type="button" value="Move Path Up" />
+                <input id='movePathDown' name="movePathDown" type="button" value="Move Path Down" />
+                <br><br>
+                
+                <div id="pathWrapper">
+                    Double click on stage to add new path<br>
+                    <input id='removePath' name="removePath" type="button" value="Remove Path" />
+                    <br><br>
+                    <div class="formRow">
+                        <label class="button">Position X:</label>
+                        <input id="pathX" name="pathX" class="button" type="text" />
+                    </div>
+                    <div class="formRow">
+                        <label class="button">Position Y:</label>
+                        <input id="pathY" name="pathY" class="button" type="text" />
+                    </div>
+                    <input id='updatePath' name="updatePath" type="button" value="Update" />
+                </div>
+                <br>
+                <input id='pathBack' name="pathBack" type="button" value="Done" />
+            </div>
+            
+            <div id="playersEditWrapper">
+                Select players:<br>
+                <select id="playerslist" name="playerslist">
+                </select><br>
+                <input id="prevPlayer" name="prevPlayer" class="button" type="button" value="Prev Player">
+                <input id="nextPlayer" name="nextPlayer" class="button" type="button" value="Next Player">
+                <br><br>
+
+                <div id="playersDetailsEditWrapper">
+                    <input id='removePlayer' name="removePlayer" type="button" value="Remove Player" />
+                    <input id='addPlayer' name="addPlayer" type="button" value="Add Player" />
+                    
+                    <br><br>                    
+                    <select id="pathindexlist" name="pathindexlist">
+                        <option value="0">Path Start Index</option>
+                        <option value="1">Path Home Index</option>
+                        <option value="2">Path Save Index</option>
+                    </select>
+                    <br>
+                    <div class="formRow">
+                        <label class="button">Path Index:</label>
+                        <input id="pathIndex" name="pathIndex" class="button" type="text" />
+                    </div>
+                    *Click the path on stage to update index value
+                    <br><br>
+                    <input id='updatePlayer' name="updatePlayer" type="button" value="Update Player" />
+                    <br><br>
+                    <input id='editStartHomePosition' name="editStartHomePosition" type="button" value="Edit Start/Home Position" />
+                    <input id='editHomePath' name="editHomePath" type="button" value="Edit Home Path" />
+                    <input id='editPlayerName' name="editPlayerName" type="button" value="Edit Player Name" />
+                    <input id='editPlayerShape' name="editPlayerShape" type="button" value="Edit Board Color Shape" />
+                    <br><br>
+                    <input id='playerBack' name="playerBack" type="button" value="Done" />
+                </div>
+
+                <div id="positionEditWrapper">
+                    Edit position:<br>
+                    Select type of position:<br>
+                    <select id="positiontypelist" name="positiontypelist">
+                        <option value="start">Start</option>
+                        <option value="home">Home</option>
+                    </select><br><br>
+                    Select position:<br>
+                    <select id="positionlist" name="positionlist">
+                    </select><br>
+                    <input id="prevPos" name="prevPos" class="button" type="button" value="Prev Position">
+                    <input id="nextPos" name="nextPos" class="button" type="button" value="Next Position">
+                    <br><br>
+                    
+                    <div id="positionWrapper">
+                        Double click on stage to add new position<br>
+                        <input id='removePosition' name="removePosition" type="button" value="Remove Position" />
+                        <br><br>
+                        <div class="formRow">
+                            <label class="button">Position X:</label>
+                            <input id="positionX" name="positionX" class="button" type="text" />
+                        </div>
+                        <div class="formRow">
+                            <label class="button">Position Y:</label>
+                            <input id="positionY" name="positionY" class="button" type="text" />
+                        </div>
+                        <div class="formRow">
+                            <label class="button">Scale:</label>
+                            <input id="positionScale" name="positionScale" class="button" type="text" />
+                        </div>
+                        <input id='updatePosition' name="updatePosition" type="button" value="Update" />
+                    </div>
+                    <br>
+                    <input id='positionBack' name="positionBack" type="button" value="Done" />
+                </div>
+    
+                <div id="homePathEditWrapper">
+                    Edit player home path:<br>
+                    Select paths:<br>
+                    <select id="homepathlist" name="homepathlist">
+                    </select><br>
+                    <input id="prevHomePath" name="prevHomePath" class="button" type="button" value="Prev Path">
+                    <input id="nextHomePath" name="nextHomePath" class="button" type="button" value="Next Path">
+                    <br><br>
+                    
+                    <div id="homePathWrapper">
+                        Double click on stage to add new path<br>
+                        <input id='removeHomePath' name="removeHomePath" type="button" value="Remove Path" />
+                        <br><br>
+                        <div class="formRow">
+                            <label class="button">Position X:</label>
+                            <input id="homePathX" name="homePathX" class="button" type="text" />
+                        </div>
+                        <div class="formRow">
+                            <label class="button">Position Y:</label>
+                            <input id="homePathY" name="homePathY" class="button" type="text" />
+                        </div>
+                        <input id='updateHomePath' name="updateHomePath" type="button" value="Update" />
+                    </div>
+                    <br>
+                    <input id='homePathBack' name="homePathBack" type="button" value="Done" />
+                </div>
+    
+                <div id="nameEditWrapper">
+                    Edit name/status position:<br>
+                    Select type of position:<br>
+                    <select id="nametypelist" name="nametypelist">
+                        <option value="name">Name</option>
+                        <option value="status">Status</option>
+                    </select><br><br>
+                    
+                    <div class="formRow">
+                        <label class="button">Position X:</label>
+                        <input id="fontX" name="fontX" class="button" type="text" />
+                    </div>
+                    <div class="formRow">
+                        <label class="button">Position Y:</label>
+                        <input id="fontY" name="fontY" class="button" type="text" />
+                    </div>
+                    <div class="formRow">
+                        <label class="button">FontSize:</label>
+                        <input id="fontSize" name="fontSize" class="button" type="text" />
+                    </div>
+                    <div class="formRow">
+                        <label class="button">Color:</label>
+                        <input id="fontColor" name="fontColor" class="button" type="text" />
+                    </div>
+                    <div class="formRow">
+                        <label class="button">Rotation:</label>
+                        <input id="fontRotation" name="fontRotation" class="button" type="text" />
+                    </div>
+                    <div class="formRow">
+                        <label class="button">Align:</label>
+                        <select id="fontalign" name="fontalign">
+                            <option value="left">left</option>
+                            <option value="center">center</option>
+                            <option value="right">right</option>
+                        </select>
+                    </div>
+                    <br>
+                    <input id='updateFont' name="updateFont" type="button" value="Update" />
+                    <input id='fontBack' name="fontBack" type="button" value="Done" />
+                </div>
+
+                <div id='shapeEditWrapper' style="display:none;">
+                    Edit shape:<br/>
+                    Doubleclick on stage to draw the path.
+                    <input id='removePoint' name="removePoint" type="button" value="Remove Point" /><br><br>
+    
+                    <input id='shapeBack' name="shapeBack" type="button" value="Done" />
+                </div>
+            </div>
+         </div>
+    </div>
+</div>
