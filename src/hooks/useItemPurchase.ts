@@ -25,7 +25,7 @@ export const useItemPurchase = () => {
         throw new Error('Vous possédez déjà cet item');
       }
 
-      // Get item price
+      // Get item price and name
       const { data: item } = await supabase
         .from('store_items')
         .select('price, name')
@@ -36,67 +36,30 @@ export const useItemPurchase = () => {
         throw new Error('Item introuvable');
       }
 
-      // Get user wallet
-      const { data: wallet } = await supabase
-        .from('wallets')
-        .select('real_balance, id')
-        .eq('user_id', user.id)
-        .single();
+      // Update wallet balance and record the purchase in a single transaction
+      const { data: updatedWallet, error: updateError } = await supabase.rpc(
+        'purchase_item',
+        { 
+          p_item_id: itemId,
+          p_user_id: user.id,
+          p_price: item.price,
+          p_item_name: item.name
+        }
+      );
 
-      if (!wallet) {
-        throw new Error('Wallet not found');
+      if (updateError) {
+        console.error('Purchase error:', updateError);
+        if (updateError.message.includes('insufficient_balance')) {
+          throw new Error('Solde insuffisant');
+        }
+        throw new Error("Erreur lors de l'achat");
       }
 
-      if (wallet.real_balance < item.price) {
-        throw new Error('Solde insuffisant');
-      }
-
-      // Disable RPC function approach and use direct database operations with error handling
-      
-      // 1. Record the purchase first
-      const { error: purchaseError } = await supabase
-        .from('user_items')
-        .insert({
-          item_id: itemId,
-          user_id: user.id,
-        });
-
-      if (purchaseError) {
-        console.error('Error recording purchase:', purchaseError);
-        throw new Error("Erreur lors de l'enregistrement de l'achat");
-      }
-
-      // 2. Update wallet balance directly
-      const newBalance = wallet.real_balance - item.price;
-      
-      const { error: walletError } = await supabase
-        .from('wallets')
-        .update({ real_balance: newBalance })
-        .eq('id', wallet.id);
-
-      if (walletError) {
-        console.error('Error updating wallet:', walletError);
-        throw new Error('Erreur lors de la mise à jour du solde');
-      }
-
-      // 3. Record transaction
-      const { error: transactionError } = await supabase
-        .from('transactions')
-        .insert({
-          amount: -item.price,
-          type: 'StorePurchase',
-          wallet_id: wallet.id,
-          source_balance: 'real',
-          status: 'Success',
-          description: `Achat: ${item.name || 'Item de la boutique'}`,
-        });
-
-      if (transactionError) {
-        console.error('Error recording transaction:', transactionError);
-      }
-
-      // Return data for onSuccess callback
-      return { itemId, price: item.price, newBalance };
+      return { 
+        itemId, 
+        price: item.price,
+        newBalance: updatedWallet.new_balance 
+      };
     },
     onSuccess: (data) => {
       toast({
