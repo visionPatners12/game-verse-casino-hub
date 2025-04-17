@@ -9,10 +9,11 @@ export const useItemPurchase = () => {
 
   const purchaseMutation = useMutation({
     mutationFn: async ({ itemId }: { itemId: string }) => {
+      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Vérifier si l'utilisateur a déjà acheté cet item
+      // Check if user already owns this item
       const { data: existingItem } = await supabase
         .from('user_items')
         .select('id')
@@ -24,10 +25,10 @@ export const useItemPurchase = () => {
         throw new Error('Vous possédez déjà cet item');
       }
 
-      // Vérifier le prix de l'item et le solde du portefeuille
+      // Get item price
       const { data: item } = await supabase
         .from('store_items')
-        .select('price')
+        .select('price, name')
         .eq('id', itemId)
         .single();
 
@@ -35,25 +36,22 @@ export const useItemPurchase = () => {
         throw new Error('Item introuvable');
       }
 
+      // Get user wallet
       const { data: wallet } = await supabase
         .from('wallets')
         .select('real_balance, id')
         .eq('user_id', user.id)
         .single();
 
-      if (!wallet || wallet.real_balance < item.price) {
+      if (!wallet) {
+        throw new Error('Wallet not found');
+      }
+
+      if (wallet.real_balance < item.price) {
         throw new Error('Solde insuffisant');
       }
 
-      // Mettre à jour le solde du portefeuille
-      const { error: walletError } = await supabase
-        .from('wallets')
-        .update({ real_balance: wallet.real_balance - item.price })
-        .eq('id', wallet.id);
-
-      if (walletError) throw walletError;
-
-      // Insertion de l'achat
+      // Begin transaction - Insert purchase first
       const { error: purchaseError } = await supabase
         .from('user_items')
         .insert({
@@ -63,7 +61,20 @@ export const useItemPurchase = () => {
 
       if (purchaseError) throw purchaseError;
 
-      // Insérer une transaction pour garder trace de l'achat
+      // Update wallet balance
+      const newBalance = wallet.real_balance - item.price;
+      
+      const { error: walletError } = await supabase
+        .from('wallets')
+        .update({ real_balance: newBalance })
+        .eq('id', wallet.id);
+
+      if (walletError) {
+        console.error('Error updating wallet:', walletError);
+        throw new Error('Erreur lors de la mise à jour du solde');
+      }
+
+      // Create transaction record
       const { error: transactionError } = await supabase
         .from('transactions')
         .insert({
@@ -72,22 +83,27 @@ export const useItemPurchase = () => {
           wallet_id: wallet.id,
           source_balance: 'real',
           status: 'Success',
-          description: `Achat d'un item dans la boutique`,
+          description: `Achat: ${item.name || 'Item de la boutique'}`,
         });
 
-      if (transactionError) throw transactionError;
+      if (transactionError) {
+        console.error('Error recording transaction:', transactionError);
+      }
+
+      return { itemId, price: item.price };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Achat réussi",
         description: "L'item a été ajouté à votre inventaire",
       });
-      // Invalider les requêtes pour actualiser les données
+      
+      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['user-items'] });
       queryClient.invalidateQueries({ queryKey: ['wallet'] });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Erreur lors de l'achat",
         description: error.message,
@@ -96,5 +112,8 @@ export const useItemPurchase = () => {
     },
   });
 
-  return { purchaseItem: purchaseMutation.mutate, isPurchasing: purchaseMutation.isPending };
+  return { 
+    purchaseItem: purchaseMutation.mutate, 
+    isPurchasing: purchaseMutation.isPending 
+  };
 };
