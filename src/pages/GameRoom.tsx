@@ -1,34 +1,18 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import GameChat from "@/components/GameChat";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { isValidGameType, gameCodeToType } from "@/lib/gameTypes";
 import { useToast } from "@/components/ui/use-toast";
-import { Copy, Share2, ExternalLink, DollarSign, Loader2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-
-interface RoomData {
-  id: string;
-  game_type: string;
-  max_players: number;
-  current_players: number;
-  room_type: string;
-  entry_fee: number;
-  commission_rate: number;
-  room_id: string;
-  pot: number;
-  status: string;
-  created_at: string;
-  game_players: {
-    id: string;
-    display_name: string;
-    user_id: string;
-    current_score: number;
-  }[];
-}
+import { isValidGameType, gameCodeToType } from "@/lib/gameTypes";
+import { RoomData } from "@/components/game/types";
+import PlayersList from "@/components/game/PlayersList";
+import RoomInfo from "@/components/game/RoomInfo";
+import GameCanvas from "@/components/game/GameCanvas";
+import RoomHeader from "@/components/game/RoomHeader";
+import LoadingState from "@/components/game/LoadingState";
 
 const GameRoom = () => {
   const { gameType, roomId } = useParams<{ gameType: string; roomId: string }>();
@@ -176,31 +160,6 @@ const GameRoom = () => {
     };
   }, [roomId]);
   
-  const copyRoomLink = () => {
-    const roomUrl = `${window.location.origin}/games/${gameType}/room/${roomId}`;
-    navigator.clipboard.writeText(roomUrl);
-    
-    toast({
-      title: "Link Copied",
-      description: "Room link copied to clipboard!",
-    });
-  };
-  
-  // Show loading spinner while fetching data
-  if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <h2 className="text-xl font-medium">Loading game room...</h2>
-          </div>
-        </main>
-      </div>
-    );
-  }
-  
   // Calculate winner takes amount (total pot including commission adjustment)
   const gameName = gameType ? gameType.charAt(0).toUpperCase() + gameType.slice(1) : "Unknown Game";
   const totalPot = roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0;
@@ -214,118 +173,37 @@ const GameRoom = () => {
           <div className="w-full lg:w-2/3">
             <Card className="mb-6">
               <CardHeader className="pb-3">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center gap-2">
-                    {gameName} Room
-                    {roomData && (
-                      <span className="text-sm font-normal text-muted-foreground">
-                        (Room Code: <span className="font-mono bg-muted px-1 py-0.5 rounded">{roomData.room_id}</span>)
-                      </span>
-                    )}
+                {!loading && roomData && (
+                  <CardTitle>
+                    <RoomHeader 
+                      gameName={gameName} 
+                      roomId={roomData.room_id}
+                    />
                   </CardTitle>
-                  
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1"
-                      onClick={copyRoomLink}
-                    >
-                      <Copy className="h-4 w-4" />
-                      <span className="hidden sm:inline">Copy Link</span>
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1"
-                      onClick={() => {
-                        toast({
-                          title: "Sharing",
-                          description: "Opening share dialog",
-                        });
-                      }}
-                    >
-                      <Share2 className="h-4 w-4" />
-                      <span className="hidden sm:inline">Share</span>
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1"
-                      onClick={() => {
-                        toast({
-                          title: "Opening in New Window",
-                          description: "Game opened in fullscreen mode",
-                        });
-                      }}
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      <span className="hidden sm:inline">Fullscreen</span>
-                    </Button>
-                  </div>
-                </div>
+                )}
               </CardHeader>
               <CardContent>
-                {roomData && (
-                  <>
-                    <div className="flex justify-between items-center mb-4 p-3 bg-muted rounded-md">
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-5 w-5 text-accent" />
-                        <div>
-                          <div className="text-sm font-medium">Bet Amount</div>
-                          <div className="text-xl font-semibold">${roomData.entry_fee}</div>
-                        </div>
-                      </div>
+                {loading ? (
+                  <LoadingState />
+                ) : (
+                  roomData && (
+                    <>
+                      <RoomInfo 
+                        entryFee={roomData.entry_fee} 
+                        totalPot={totalPot}
+                        roomId={roomData.room_id}
+                      />
                       
-                      <div>
-                        <div className="text-sm font-medium text-right">Prize Pool</div>
-                        <div className="text-xl font-semibold text-accent">
-                          ${totalPot.toFixed(2)}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="mb-6">
-                      <h3 className="text-sm font-medium mb-2 flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        Players ({roomData.current_players}/{roomData.max_players})
-                      </h3>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {roomData.game_players.map(player => (
-                          <div 
-                            key={player.id} 
-                            className={`px-3 py-2 rounded-md ${player.user_id === currentUserId ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
-                          >
-                            <span className="font-medium">{player.display_name}</span>
-                            {player.current_score > 0 && (
-                              <span className="ml-2 text-sm">({player.current_score} pts)</span>
-                            )}
-                          </div>
-                        ))}
-                        
-                        {Array.from({ length: roomData.max_players - roomData.current_players }).map((_, index) => (
-                          <div 
-                            key={`empty-${index}`}
-                            className="px-3 py-2 rounded-md border border-dashed border-muted-foreground text-muted-foreground text-center"
-                          >
-                            Waiting for player...
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
+                      <PlayersList 
+                        players={roomData.game_players}
+                        maxPlayers={roomData.max_players}
+                        currentUserId={currentUserId}
+                      />
+                      
+                      <GameCanvas />
+                    </>
+                  )
                 )}
-                
-                <div className="game-container">
-                  <div className="bg-accent/10 rounded-lg border border-border aspect-video flex items-center justify-center">
-                    <div className="text-center">
-                      <h3 className="text-2xl font-bold mb-2">Game Canvas</h3>
-                      <p className="text-muted-foreground">Custom game implementation will be displayed here</p>
-                    </div>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </div>
