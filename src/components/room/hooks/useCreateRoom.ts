@@ -10,6 +10,15 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
 
   const createRoom = async (values: CreateRoomFormData) => {
     try {
+      // First, check if user is authenticated
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) {
+        toast.error("You must be logged in to create a room");
+        return;
+      }
+
+      console.log("Authenticated user:", authData.user.id);
+      
       if (!isValidGameType(gameType)) {
         toast.error("Invalid game type");
         return;
@@ -17,6 +26,13 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       
       const safeGameType = gameType as GameCode;
       const gameTypeEnum: GameVariant = gameCodeToType[safeGameType];
+      
+      console.log("Creating room with data:", {
+        game_type: gameTypeEnum,
+        room_type: 'private',
+        max_players: values.maxPlayers,
+        entry_fee: values.bet,
+      });
       
       const { data, error } = await supabase
         .from('game_sessions')
@@ -32,6 +48,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         .single();
 
       if (error) {
+        console.error("Full error details:", error);
         toast.error("Error creating room: " + error.message);
         throw error;
       }
@@ -41,15 +58,24 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         return;
       }
 
+      console.log("Room created successfully:", data);
+
+      console.log("Adding player to room:", {
+        session_id: data.id,
+        display_name: username,
+        user_id: authData.user.id
+      });
+
       const { error: playerError } = await supabase
         .from('game_players')
         .insert({
           session_id: data.id,
           display_name: username,
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: authData.user.id
         });
 
       if (playerError) {
+        console.error("Full player error details:", playerError);
         toast.error("Error joining room: " + playerError.message);
         throw playerError;
       }
