@@ -20,5 +20,6 @@ export interface LudoGameData {
 declare global {
   interface Window {
     LUDO_GAME_DATA: LudoGameData;
+    goPage?: (page: string) => void;
   }
 }

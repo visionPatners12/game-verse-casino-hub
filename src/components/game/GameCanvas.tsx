@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef } from "react";
 import { RoomData } from "./types";
 import { LudoGameData } from "../../game-implementation/Ludo/types";
-import JSZip from "jszip";
 
 interface GameCanvasProps {
   roomData: RoomData;
@@ -24,43 +23,42 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     totalPot: roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0
   };
 
-  // Initialiser le jeu Ludo quand il y a assez de joueurs
+  // Set game state to 'playing' immediately when component mounts
   useEffect(() => {
-    if (gameState === 'waiting' && players.length >= 2) {
-      console.log("Ready to play with", players.length, "players");
+    if (gameState === 'loading' && !gameScriptLoaded.current) {
       setGameState('playing');
     }
-  }, [players.length, gameState]);
+  }, []);
 
-  // Initialiser le jeu quand on est en état 'playing'
+  // Initialize Ludo game when in 'playing' state
   useEffect(() => {
     const initializeLudoGame = async () => {
       if (gameState === 'playing' && canvasRef.current && !gameScriptLoaded.current) {
         try {
           console.log("Initializing Ludo game...");
           
-          // Créer le conteneur de jeu
+          // Create game container
           const gameContainer = document.createElement('div');
           gameContainer.id = 'mainHolder';
           gameContainer.style.width = '100%';
           gameContainer.style.height = '100%';
           
-          // Créer le canvas
+          // Create canvas
           const canvas = document.createElement('canvas');
           canvas.id = 'gameCanvas';
           canvas.width = 1280;
           canvas.height = 768;
           
-          // Créer le conteneur de canvas
+          // Create canvas holder
           const canvasHolder = document.createElement('div');
           canvasHolder.id = 'canvasHolder';
           canvasHolder.appendChild(canvas);
           
-          // Ajouter les éléments au DOM
+          // Add elements to DOM
           gameContainer.appendChild(canvasHolder);
           canvasRef.current.appendChild(gameContainer);
           
-          // Injecter les scripts nécessaires dans l'ordre
+          // Add required scripts in sequence
           const scripts = [
             '/src/game-implementation/Ludo/js/vendor/jquery.min.js',
             '/src/game-implementation/Ludo/js/vendor/createjs.min.js',
@@ -77,7 +75,7 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
             '/src/game-implementation/Ludo/js/init.js'
           ];
 
-          // Ajouter les styles CSS
+          // Add CSS styles
           const style = document.createElement('style');
           style.textContent = `
             #mainHolder { position: relative; width: 100%; height: 100%; }
@@ -86,7 +84,7 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
           `;
           document.head.appendChild(style);
 
-          // Injecter les scripts séquentiellement
+          // Load scripts sequentially
           for (const scriptSrc of scripts) {
             await new Promise((resolve, reject) => {
               const script = document.createElement('script');
@@ -97,12 +95,19 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
             });
           }
 
-          // Configurer les données du jeu
+          // Configure game data
           window.LUDO_GAME_DATA = {
             currentPlayerId: currentUserId,
             allPlayers: players,
             gameParams: gameParameters
           };
+
+          // Force game to start immediately after initialization
+          window.setTimeout(() => {
+            if (window.goPage) {
+              window.goPage('game');
+            }
+          }, 500);
 
           gameScriptLoaded.current = true;
           console.log("Ludo game initialized successfully!");
@@ -115,7 +120,7 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
 
     initializeLudoGame();
 
-    // Nettoyage lors du démontage
+    // Cleanup when component unmounts
     return () => {
       if (gameScriptLoaded.current) {
         console.log("Cleaning up Ludo game...");
@@ -139,22 +144,11 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
           </div>
         )}
 
-        {gameState === 'waiting' && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <h3 className="text-2xl font-bold mb-2">Waiting for Players</h3>
-              <p className="text-muted-foreground">Need at least 2 players to start</p>
-            </div>
-          </div>
-        )}
-
-        {(gameState === 'playing' || gameState === 'finished') && (
-          <div 
-            ref={canvasRef} 
-            id="ludo-canvas-container" 
-            className="absolute inset-0"
-          ></div>
-        )}
+        <div 
+          ref={canvasRef} 
+          id="ludo-canvas-container" 
+          className="absolute inset-0"
+        ></div>
       </div>
     </div>
   );
