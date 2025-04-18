@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,7 @@ interface JoinGameDialogProps {
 
 export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
   const [roomCode, setRoomCode] = useState("");
+  const [currentPlayers, setCurrentPlayers] = useState<any[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -55,6 +56,45 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
     enabled: roomCode.length === 6,
     retry: false
   });
+
+  // Subscribe to realtime updates when a room code is entered
+  useEffect(() => {
+    if (!roomCode || roomCode.length !== 6) return;
+
+    // Subscribe to changes in game_players table for this room
+    const playersChannel = supabase.channel('players-list')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'game_players',
+          filter: `session_id=eq.${room?.id}`
+        },
+        async (payload) => {
+          // Fetch updated players list
+          const { data: updatedPlayers } = await supabase
+            .from('game_players')
+            .select(`
+              id,
+              display_name,
+              user_id,
+              current_score,
+              users:users!inner(username)
+            `)
+            .eq('session_id', room?.id);
+            
+          if (updatedPlayers) {
+            setCurrentPlayers(updatedPlayers);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(playersChannel);
+    };
+  }, [roomCode, room?.id]);
   
   const handleJoin = async () => {
     if (!room) return;
@@ -88,8 +128,15 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
         .eq('id', user.id)
         .single();
       
-      const displayName = userData?.username || "Player";
-      
+      if (!userData?.username) {
+        toast({
+          variant: "destructive",
+          title: "Profile incomplete",
+          description: "Please set up your username in your profile."
+        });
+        return;
+      }
+
       // Check if user is already in the room
       const existingPlayerCheck = await supabase
         .from('game_players')
@@ -98,34 +145,27 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
         .eq('user_id', user.id)
         .single();
         
-      if (existingPlayerCheck.data) {
+      if (!existingPlayerCheck.error) {
         // User is already in the room, just navigate there
         console.log("User already in room, navigating...");
       } else {
         // Add user to the room
-        const { error } = await supabase
+        const { error: joinError } = await supabase
           .from('game_players')
           .insert({
             session_id: room.id,
-            display_name: displayName,
+            display_name: userData.username,
             user_id: user.id
           });
           
-        if (error) throw error;
+        if (joinError) throw joinError;
       }
       
-      // Handle game_type safely - it could be an enum value like "Ludo" from the database
-      let gameType = "";
+      // Get game type and validate
+      const gameType = typeof room.game_type === 'string' 
+        ? room.game_type.toLowerCase()
+        : String(room.game_type).toLowerCase();
       
-      if (typeof room.game_type === 'string') {
-        // Convert game type like "Ludo" or "Checkers" to lowercase code like "ludo"
-        gameType = room.game_type.toLowerCase();
-      } else if (room.game_type) {
-        // Fallback to string conversion
-        gameType = String(room.game_type).toLowerCase();
-      }
-      
-      // Validate game type
       if (!isValidGameType(gameType)) {
         console.error("Invalid game type:", gameType, "Room data:", room);
         toast({
@@ -138,6 +178,7 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
       
       // Navigate to the game room
       navigate(`/games/${gameType}/room/${room.id}`);
+      onOpenChange(false);
     } catch (error) {
       console.error("Join error:", error);
       toast({
@@ -193,12 +234,12 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
               </div>
               
               <div className="grid grid-cols-2 gap-2">
-                {room.game_players.map((player: any) => (
+                {(currentPlayers.length > 0 ? currentPlayers : room.game_players).map((player: any) => (
                   <div 
                     key={player.id}
                     className="flex items-center gap-2 p-2 rounded-md bg-muted"
                   >
-                    {player.display_name}
+                    {player.users?.username || player.display_name}
                   </div>
                 ))}
                 {Array.from({ length: room.max_players - room.current_players }).map((_, i) => (
