@@ -1,25 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { ProfileData } from './types';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useProfile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const { user } = useAuth();
 
   const getUserProfile = async () => {
     try {
       setLoading(true);
       console.log('Fetching user profile...');
-      
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
-      if (authError) {
-        console.error('Auth error:', authError);
-        throw authError;
-      }
       
       if (!user) {
         console.log('No authenticated user found, redirecting to login');
@@ -80,6 +75,12 @@ export const useProfile = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      getUserProfile();
+    }
+  }, [user]);
 
   const updateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
