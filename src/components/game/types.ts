@@ -27,7 +27,7 @@ export interface RoomData {
 }
 
 // Define the session status type to match the database enum
-export type SessionStatus = 'Waiting' | 'Playing' | 'Completed';
+export type SessionStatus = 'Waiting' | 'Active' | 'Finished';
 
 // Define the presence data type for type safety
 export interface PresenceData {
@@ -35,3 +35,6 @@ export interface PresenceData {
   online_at: string;
   is_ready: boolean;
 }
+
+// Additional type for database enum values for game session status
+export type DatabaseSessionStatus = 'Waiting' | 'Playing' | 'Completed';
