@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Navigation from "@/components/Navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +18,7 @@ const Store = () => {
   const { purchaseItem, isPurchasing } = useItemPurchase();
   const { equipAvatar, isEquipping } = useEquipItem();
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
+  const pendingPurchaseRef = useRef<string | null>(null);
   
   const { data: storeItems, isLoading: isLoadingItems } = useQuery({
     queryKey: ['store-items'],
@@ -95,6 +95,11 @@ const Store = () => {
   });
 
   const handlePurchase = (itemId: string, price: number) => {
+    if (pendingPurchaseRef.current === itemId) {
+      console.log('Purchase already pending for item:', itemId);
+      return; // Skip if already processing this item
+    }
+    
     setPurchaseError(null);
     
     if (!wallet) {
@@ -107,8 +112,17 @@ const Store = () => {
       return;
     }
     
-    // Nous passons simplement l'ID de l'article - la logique complète est dans useItemPurchase
-    purchaseItem({ itemId });
+    pendingPurchaseRef.current = itemId;
+    console.log('Setting pending purchase for item:', itemId);
+    
+    purchaseItem({ itemId }, {
+      onSettled: () => {
+        setTimeout(() => {
+          console.log('Clearing pending purchase for item:', itemId);
+          pendingPurchaseRef.current = null;
+        }, 1000);
+      }
+    });
   };
   
   const isItemOwned = (itemId: string) => {
