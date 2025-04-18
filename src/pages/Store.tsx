@@ -1,12 +1,11 @@
-
 import { useState, useRef } from "react";
-import Navigation from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useItemPurchase } from "@/hooks/useItemPurchase";
 import { useEquipItem } from "@/hooks/useEquipItem";
 import { useStoreData } from "@/hooks/store/useStoreData";
 import { StoreHeader } from "@/components/store/StoreHeader";
 import { StoreItems } from "@/components/store/StoreItems";
+import { Layout } from "@/components/Layout";
 
 const Store = () => {
   const { toast } = useToast();
@@ -65,35 +64,25 @@ const Store = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
+    <Layout>
+      <StoreHeader 
+        balance={wallet?.real_balance}
+        bonusBalance={wallet?.bonus_balance}
+        purchaseError={purchaseError}
+      />
       
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <StoreHeader 
-          balance={wallet?.real_balance}
-          bonusBalance={wallet?.bonus_balance}
-          purchaseError={purchaseError}
-        />
-        
-        <StoreItems
-          isLoading={isLoadingItems}
-          items={storeItems || []}
-          isItemOwned={isItemOwned}
-          onPurchase={handlePurchase}
-          isPurchasing={isPurchasing}
-          canAffordItem={canAffordItem}
-          onEquipAvatar={handleEquipAvatar}
-          isItemEquipped={isItemEquipped}
-          isEquipping={isEquipping}
-        />
-      </main>
-      
-      <footer className="bg-card border-t border-border py-6">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} GameVerse Casino. All rights reserved.
-        </div>
-      </footer>
-    </div>
+      <StoreItems
+        isLoading={isLoadingItems}
+        items={storeItems || []}
+        isItemOwned={isItemOwned}
+        onPurchase={handlePurchase}
+        isPurchasing={isPurchasing}
+        canAffordItem={canAffordItem}
+        onEquipAvatar={handleEquipAvatar}
+        isItemEquipped={isItemEquipped}
+        isEquipping={isEquipping}
+      />
+    </Layout>
   );
 };
 

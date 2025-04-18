@@ -1,6 +1,4 @@
-
 import { useState } from "react";
-import Navigation from "@/components/Navigation";
 import { useNavigate } from "react-router-dom";
 import GamesList from "@/components/games/GamesList";
 import { useQuery } from "@tanstack/react-query";
@@ -8,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 import { JoinGameDialog } from "@/components/games/JoinGameDialog";
+import { Layout } from "@/components/Layout";
 
 const Games = () => {
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
@@ -36,42 +35,32 @@ const Games = () => {
   });
   
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
+    <Layout>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Games</h1>
+        <Button 
+          onClick={() => setIsJoinDialogOpen(true)}
+          variant="outline"
+          className="gap-2"
+        >
+          <Users className="h-4 w-4" />
+          Join a Room
+        </Button>
+      </div>
       
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Games</h1>
-          <Button 
-            onClick={() => setIsJoinDialogOpen(true)}
-            variant="outline"
-            className="gap-2"
-          >
-            <Users className="h-4 w-4" />
-            Join a Room
-          </Button>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <p>Loading games...</p>
         </div>
-        
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <p>Loading games...</p>
-          </div>
-        ) : games ? (
-          <GamesList games={games} />
-        ) : null}
-      </main>
-      
-      <footer className="bg-card border-t border-border py-6">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} GameVerse Casino. All rights reserved.
-        </div>
-      </footer>
+      ) : games ? (
+        <GamesList games={games} />
+      ) : null}
 
       <JoinGameDialog 
         open={isJoinDialogOpen} 
         onOpenChange={setIsJoinDialogOpen} 
       />
-    </div>
+    </Layout>
   );
 };
 
