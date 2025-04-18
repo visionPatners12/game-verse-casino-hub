@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { roomService } from "@/services/roomWebSocketService";
+import { roomService } from "@/services/room";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { RoomData, SessionStatus, PresenceData, DatabaseSessionStatus } from "@/components/game/types";
