@@ -12,6 +12,7 @@ export const useProfile = () => {
 
   const getUserProfile = async () => {
     try {
+      setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -19,14 +20,19 @@ export const useProfile = () => {
         return;
       }
 
+      // Fetch user data from the public.users table, not auth.users
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('first_name, last_name, email, phone, country, username, avatar_url')
         .eq('id', user.id)
         .single();
 
-      if (userError) throw userError;
+      if (userError) {
+        console.error('Error details:', userError);
+        throw userError;
+      }
       
+      console.log('Fetched user profile data:', userData);
       setProfile(userData);
     } catch (error) {
       console.error('Error loading user profile:', error);
@@ -50,6 +56,8 @@ export const useProfile = () => {
       
       if (!user) throw new Error('No user found');
 
+      console.log('Updating profile with data:', profile);
+      
       const { error: userError } = await supabase
         .from('users')
         .update({

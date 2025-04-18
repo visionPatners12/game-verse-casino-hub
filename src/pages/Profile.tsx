@@ -3,12 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { useProfile } from "@/components/profile/useProfile";
+import { Loader2 } from "lucide-react";
 
 export default function Profile() {
   const { profile, loading, updateProfile, handleFieldChange } = useProfile();
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin mr-2" />
+        <span>Loading profile...</span>
+      </div>
+    );
   }
 
   return (
@@ -25,12 +31,14 @@ export default function Profile() {
               lastName={profile?.last_name}
             />
           </div>
-          <ProfileForm
-            profile={profile!}
-            loading={loading}
-            onSubmit={updateProfile}
-            onChange={handleFieldChange}
-          />
+          {profile && (
+            <ProfileForm
+              profile={profile}
+              loading={loading}
+              onSubmit={updateProfile}
+              onChange={handleFieldChange}
+            />
+          )}
         </CardContent>
       </Card>
     </div>
