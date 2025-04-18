@@ -42,6 +42,7 @@ export const useRoomData = (roomId: string | undefined) => {
               user_id,
               current_score,
               is_connected,
+              is_ready,
               users:user_id(username, avatar_url)
             )
           `)
