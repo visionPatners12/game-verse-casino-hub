@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
 import Games from "./pages/Games";
 import GameRoom from "./pages/GameRoom";
 import Dashboard from "./pages/Dashboard";
@@ -29,7 +28,6 @@ const App = () => (
           <Sonner />
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
             <Route path="/games" element={<Games />} />
             <Route path="/games/:gameType/room/:roomId" element={<GameRoom />} />
             <Route path="/games/:gameType/create" element={<CreateRoom />} />

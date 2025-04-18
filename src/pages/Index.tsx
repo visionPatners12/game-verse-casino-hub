@@ -1,11 +1,25 @@
 
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 import AuthForms from "@/components/AuthForms";
 import { GamepadIcon, Users, TrophyIcon, DicesIcon, Shield, CreditCard, Clock } from "lucide-react";
 import placeholderBackground from "../assets/ludo-background.jpg";
-// If the image import fails, we'll use a solid color as fallback
-const backgroundImage = placeholderBackground || "linear-gradient(to right, #4f46e5, #7c3aed)";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const { session } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (session) {
+      navigate('/games');
+    }
+  }, [session, navigate]);
+
+  // If the image import fails, we'll use a solid color as fallback
+  const backgroundImage = placeholderBackground || "linear-gradient(to right, #4f46e5, #7c3aed)";
+
   return (
     <div className="min-h-screen flex relative bg-background overflow-hidden">
       {/* Background Image with Overlay */}
@@ -99,7 +113,7 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Auth Forms Section - Now on the right */}
+        {/* Auth Forms Section */}
         <div className="w-full lg:w-4/12 sticky top-8">
           <div className="backdrop-blur-sm bg-card/90 p-6 rounded-xl border border-border/50 shadow-xl">
             <AuthForms />
@@ -147,4 +161,3 @@ const TrustFactor = ({ icon, title, description }: {
 };
 
 export default Index;
-
