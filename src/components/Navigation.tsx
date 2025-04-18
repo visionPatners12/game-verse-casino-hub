@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { GamepadIcon, Store, BarChart3, Wallet, Package2 } from "lucide-react";
@@ -23,22 +22,13 @@ const Navigation = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('first_name, last_name, avatar_url')
-        .eq('id', user.id)
-        .single();
-        
       const { data: userData } = await supabase
         .from('users')
-        .select('username')
+        .select('username, first_name, last_name, avatar_url')
         .eq('id', user.id)
         .single();
         
-      return {
-        ...profile,
-        username: userData?.username
-      };
+      return userData;
     },
   });
   

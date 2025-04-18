@@ -50,6 +50,7 @@ export const useWallet = () => {
       const { data, error } = await supabase
         .from('wallets')
         .select('*')
+        .eq('user_id', session.user.id)
         .single();
 
       if (error) {
@@ -79,6 +80,7 @@ export const useWallet = () => {
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
+        .eq('wallet_id', wallet?.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -93,7 +95,7 @@ export const useWallet = () => {
 
       return data as Transaction[];
     },
-    enabled: !!session, // Only run this query if we have a session
+    enabled: !!session && !!wallet?.id, // Only run this query if we have a session and wallet
   });
 
   return {

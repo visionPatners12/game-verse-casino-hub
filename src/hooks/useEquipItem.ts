@@ -25,17 +25,10 @@ export const useEquipItem = () => {
       }
 
       // Mettre à jour le profil de l'utilisateur avec l'URL de l'avatar
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: imageUrl })
-        .eq('id', user.id);
-
-      if (profileError) throw profileError;
-
-      // Mettre à jour la table users pour stocker l'ID de l'item équipé
       const { error: userError } = await supabase
         .from('users')
         .update({ 
+          avatar_url: imageUrl,
           equipped_avatar_id: itemId,
           updated_at: new Date().toISOString()
         })
