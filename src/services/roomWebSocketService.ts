@@ -223,11 +223,12 @@ class RoomWebSocketService {
     if (!roomId || !this.channels[roomId]) return;
     
     try {
-      // Update game status in database
+      // Update game status in database - map to database status string
+      const dbStatus: DatabaseSessionStatus = 'Playing';
       const { data, error } = await supabase
         .from('game_sessions')
         .update({ 
-          status: 'Playing' as DatabaseSessionStatus,
+          status: dbStatus,
           start_time: new Date().toISOString()
         })
         .eq('id', roomId)
@@ -267,11 +268,12 @@ class RoomWebSocketService {
     if (!roomId || !this.channels[roomId]) return;
     
     try {
-      // Update game status in database
+      // Update game status in database - map to database status string
+      const dbStatus: DatabaseSessionStatus = 'Completed';
       const { data, error } = await supabase
         .from('game_sessions')
         .update({
-          status: 'Completed' as DatabaseSessionStatus,
+          status: dbStatus,
           end_time: new Date().toISOString()
         })
         .eq('id', roomId)
