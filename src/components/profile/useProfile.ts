@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +12,7 @@ export const useProfile = () => {
   const getUserProfile = async () => {
     try {
       setLoading(true);
+      console.log('Fetching user profile...');
       
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
@@ -27,13 +27,21 @@ export const useProfile = () => {
         return;
       }
 
-      console.log('Fetching profile for user:', user.id);
+      console.log('Current user ID:', user.id);
       
       const { data: userData, error: profileError } = await supabase
         .from('users')
-        .select('*')
+        .select(`
+          first_name,
+          last_name,
+          email,
+          phone,
+          country,
+          username,
+          avatar_url
+        `)
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error('Error fetching profile:', profileError);
@@ -43,8 +51,8 @@ export const useProfile = () => {
       if (!userData) {
         console.error('No profile found for user:', user.id);
         toast({
-          title: "Error",
-          description: "Could not load profile data",
+          title: "Erreur",
+          description: "Impossible de charger les données du profil",
           variant: "destructive",
         });
         return;
@@ -64,8 +72,8 @@ export const useProfile = () => {
     } catch (error) {
       console.error('Profile loading error:', error);
       toast({
-        title: "Error",
-        description: "Could not load profile data",
+        title: "Erreur",
+        description: "Impossible de charger les données du profil",
         variant: "destructive",
       });
     } finally {
@@ -113,7 +121,6 @@ export const useProfile = () => {
         description: "Profile updated successfully",
       });
       
-      // Refresh profile data
       getUserProfile();
     } catch (error) {
       console.error('Error updating profile:', error);
