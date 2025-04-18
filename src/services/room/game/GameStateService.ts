@@ -8,12 +8,14 @@ export class GameStateService {
     if (!roomId || !channel) return null;
     
     try {
+      // Update session status and calculate prize pool
       const dbStatus: DatabaseSessionStatus = 'Active';
       const { data, error } = await supabase
         .from('game_sessions')
         .update({ 
           status: dbStatus,
-          start_time: new Date().toISOString()
+          start_time: new Date().toISOString(),
+          pot: supabase.rpc('calculate_prize_pool', { session_id: roomId })
         })
         .eq('id', roomId)
         .select()
