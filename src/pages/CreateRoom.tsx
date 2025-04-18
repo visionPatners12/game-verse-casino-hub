@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Navigation from "@/components/Navigation";
+import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,40 +69,30 @@ const CreateRoom = () => {
   });
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
-      
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <Card className="max-w-xl mx-auto">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              Create a Room 
-              {gameConfig && <span className="text-primary">- {gameConfig.name}</span>}
-            </CardTitle>
-          </CardHeader>
-          
-          <CardContent className="space-y-6">
-            {isLoading ? (
-              <div className="flex justify-center">
-                <Loader2 className="h-6 w-6 animate-spin" />
-              </div>
-            ) : (
-              <CreateRoomForm 
-                username={username} 
-                gameType={gameType} 
-                gameConfig={gameConfig} 
-              />
-            )}
-          </CardContent>
-        </Card>
-      </main>
-
-      <footer className="bg-card border-t border-border py-6">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} GameVerse Casino. All rights reserved.
-        </div>
-      </footer>
-    </div>
+    <Layout>
+      <Card className="max-w-xl mx-auto">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            Create a Room 
+            {gameConfig && <span className="text-primary">- {gameConfig.name}</span>}
+          </CardTitle>
+        </CardHeader>
+        
+        <CardContent className="space-y-6">
+          {isLoading ? (
+            <div className="flex justify-center">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : (
+            <CreateRoomForm 
+              username={username} 
+              gameType={gameType} 
+              gameConfig={gameConfig} 
+            />
+          )}
+        </CardContent>
+      </Card>
+    </Layout>
   );
 };
 

@@ -1,5 +1,4 @@
-
-import Navigation from "@/components/Navigation";
+import { Layout } from "@/components/Layout";
 import { GameRoomLayout } from "@/components/game/GameRoomLayout";
 import { useParams } from "react-router-dom";
 import { gameCodeToType, isValidGameType } from "@/lib/gameTypes";
@@ -24,8 +23,7 @@ const GameRoom = () => {
     : (gameType ? gameType.charAt(0).toUpperCase() + gameType.slice(1) : "Unknown Game");
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
+    <Layout>
       <GameRoomLayout
         loading={isLoading}
         roomData={roomData}
@@ -36,12 +34,7 @@ const GameRoom = () => {
         onToggleReady={toggleReady}
         onStartGame={startGame}
       />
-      <footer className="bg-card border-t border-border py-6">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} GameVerse Casino. All rights reserved.
-        </div>
-      </footer>
-    </div>
+    </Layout>
   );
 };
 

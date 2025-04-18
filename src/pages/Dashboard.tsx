@@ -1,6 +1,5 @@
-
 import { useEffect, useState } from "react";
-import Navigation from "@/components/Navigation";
+import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -202,13 +201,10 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
+    <Layout>
+      <h1 className="text-3xl font-bold mb-8">Player Dashboard</h1>
       
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Player Dashboard</h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat) => (
             <Card key={stat.title}>
               <CardContent className="p-6">
@@ -247,8 +243,8 @@ const Dashboard = () => {
             </Card>
           ))}
         </div>
-        
-        <div className="grid gap-8 md:grid-cols-2 mb-8">
+      
+      <div className="grid gap-8 md:grid-cols-2 mb-8">
           <Card>
             <CardHeader>
               <CardTitle>Weekly Winnings</CardTitle>
@@ -309,8 +305,8 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
-        
-        <Tabs defaultValue="history" className="mb-8">
+      
+      <Tabs defaultValue="history" className="mb-8">
           <TabsList>
             <TabsTrigger value="history">Game History</TabsTrigger>
             <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
@@ -415,14 +411,7 @@ const Dashboard = () => {
             </Card>
           </TabsContent>
         </Tabs>
-      </main>
-      
-      <footer className="bg-card border-t border-border py-6">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} GameVerse Casino. All rights reserved.
-        </div>
-      </footer>
-    </div>
+    </Layout>
   );
 };
 

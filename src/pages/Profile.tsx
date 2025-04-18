@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
@@ -8,6 +7,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Layout } from "@/components/Layout";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -24,24 +24,26 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className="absolute top-4 left-4"
-          onClick={handleGoBack}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <Loader2 className="h-12 w-12 animate-spin mb-4 text-primary" />
-        <span className="text-lg">Loading profile...</span>
-      </div>
+      <Layout>
+        <div className="flex flex-col items-center justify-center">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="absolute top-4 left-4"
+            onClick={handleGoBack}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <Loader2 className="h-12 w-12 animate-spin mb-4 text-primary" />
+          <span className="text-lg">Loading profile...</span>
+        </div>
+      </Layout>
     );
   }
 
   if (!profile) {
     return (
-      <div className="container mx-auto px-4 py-8 flex flex-col items-center">
+      <Layout>
         <Card className="w-full max-w-2xl">
           <CardHeader className="flex flex-row items-center justify-between">
             <Button 
@@ -70,12 +72,12 @@ export default function Profile() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <Layout>
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader className="flex flex-row items-center justify-between">
           <Button 
@@ -112,7 +114,6 @@ export default function Profile() {
           />
         </CardContent>
       </Card>
-    </div>
+    </Layout>
   );
 }
-
