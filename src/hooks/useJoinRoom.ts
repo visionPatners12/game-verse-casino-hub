@@ -25,7 +25,8 @@ export const useJoinRoom = (roomCode: string, onSuccess: () => void) => {
             display_name,
             user_id,
             current_score,
-            is_connected
+            is_connected,
+            users:user_id(username, avatar_url)
           )
         `)
         .eq('room_id', roomCode)
@@ -42,6 +43,8 @@ export const useJoinRoom = (roomCode: string, onSuccess: () => void) => {
         throw error;
       }
       
+      // Log the user data to ensure it's being properly fetched
+      console.log("Room data with user details:", data);
       return data;
     },
     enabled: roomCode.length === 6,
@@ -80,7 +83,7 @@ export const useJoinRoom = (roomCode: string, onSuccess: () => void) => {
       
       const { data: userData } = await supabase
         .from('users')
-        .select('username')
+        .select('username, avatar_url')
         .eq('id', user.id)
         .single();
       

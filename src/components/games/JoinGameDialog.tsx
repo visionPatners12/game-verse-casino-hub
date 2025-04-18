@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -27,7 +28,7 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
       return;
     }
 
-    // Create a new channel for this room
+    // Create a new channel for this room with presence enabled
     const channel = supabase.channel(`players-list-${room.id}`, {
       config: {
         broadcast: { self: true },
@@ -50,9 +51,10 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
         async (payload) => {
           console.log('Player update received:', payload);
           try {
+            // Important: Join with the users table to get username and avatar
             const { data: updatedPlayers, error } = await supabase
               .from('game_players')
-              .select('*, users:user_id(username)')
+              .select('*, users:user_id(username, avatar_url)')
               .eq('session_id', room.id);
               
             if (error) {
@@ -61,6 +63,7 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
             }
             
             if (updatedPlayers) {
+              console.log("Updated players with user data:", updatedPlayers);
               setCurrentPlayers(updatedPlayers);
             }
           } catch (err) {
@@ -73,6 +76,30 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
       });
 
     setPlayersChannel(channel);
+
+    // Initial fetch with user data
+    const fetchInitialPlayers = async () => {
+      try {
+        const { data: initialPlayers, error } = await supabase
+          .from('game_players')
+          .select('*, users:user_id(username, avatar_url)')
+          .eq('session_id', room.id);
+          
+        if (error) {
+          console.error("Error fetching initial players:", error);
+          return;
+        }
+        
+        if (initialPlayers) {
+          console.log("Initial players with user data:", initialPlayers);
+          setCurrentPlayers(initialPlayers);
+        }
+      } catch (err) {
+        console.error("Error fetching initial players:", err);
+      }
+    };
+    
+    fetchInitialPlayers();
 
     // Cleanup function
     return () => {

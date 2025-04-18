@@ -27,6 +27,39 @@ export const useGameRoom = () => {
     }
   }, [gameType, navigate, toast]);
 
+  // Mark the user as connected when they enter the room
+  useEffect(() => {
+    const markUserConnected = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && roomId) {
+        // Update the user's connected status in game_players
+        await supabase
+          .from('game_players')
+          .update({ is_connected: true })
+          .eq('session_id', roomId)
+          .eq('user_id', user.id);
+      }
+    };
+    
+    markUserConnected();
+    
+    // Cleanup: Mark user as disconnected when leaving
+    return () => {
+      const markUserDisconnected = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && roomId) {
+          await supabase
+            .from('game_players')
+            .update({ is_connected: false })
+            .eq('session_id', roomId)
+            .eq('user_id', user.id);
+        }
+      };
+      
+      markUserDisconnected();
+    };
+  }, [roomId]);
+
   useEffect(() => {
     const fetchRoomData = async () => {
       if (!roomId) return;
@@ -55,7 +88,9 @@ export const useGameRoom = () => {
               id,
               display_name,
               user_id,
-              current_score
+              current_score,
+              is_connected,
+              users:user_id(username, avatar_url)
             )
           `)
           .eq('id', roomId)
@@ -138,7 +173,7 @@ export const useGameRoom = () => {
     const fetchUpdatedPlayers = async () => {
       const { data, error } = await supabase
         .from('game_players')
-        .select('*')
+        .select('*, users:user_id(username, avatar_url)')
         .eq('session_id', roomId);
       
       if (!error && data) {
