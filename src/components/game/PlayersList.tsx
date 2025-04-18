@@ -9,6 +9,7 @@ interface Player {
   display_name: string;
   user_id: string;
   current_score: number;
+  is_connected?: boolean;
 }
 
 interface PlayerWithUsername extends Player {
@@ -28,7 +29,7 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
     // Fetch usernames for each player from the users table
     const fetchUsernames = async () => {
       // Only proceed if we have players
-      if (!players.length) return;
+      if (!players?.length) return;
       
       try {
         // Extract unique user IDs to fetch
@@ -42,7 +43,7 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
           return;
         }
         
-        // Fetch user data from the users table
+        // Fetch user data from the public.users table (not auth.users)
         const { data, error } = await supabase
           .from('users')
           .select('id, username')
@@ -84,7 +85,13 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
         {playersWithUsernames.map(player => (
           <div 
             key={player.id} 
-            className={`flex items-center px-3 py-2 rounded-md ${player.user_id === currentUserId ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
+            className={`flex items-center px-3 py-2 rounded-md ${
+              player.user_id === currentUserId 
+                ? 'bg-primary text-primary-foreground' 
+                : player.is_connected === false 
+                  ? 'bg-muted/50 text-muted-foreground' 
+                  : 'bg-muted'
+            }`}
           >
             <Avatar className="h-6 w-6 mr-2">
               <AvatarFallback>
@@ -96,6 +103,7 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
             <div className="overflow-hidden">
               <span className="font-medium truncate block">
                 {player.username || player.display_name}
+                {player.is_connected === false && ' (Disconnected)'}
               </span>
               {player.current_score > 0 && (
                 <span className="text-xs">{player.current_score} pts</span>

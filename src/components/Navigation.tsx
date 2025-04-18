@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { GamepadIcon, Store, BarChart3, Wallet, Package2 } from "lucide-react";
@@ -22,12 +23,18 @@ const Navigation = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      const { data: userData } = await supabase
+      // Use the 'public.users' table instead of trying to access auth.users directly
+      const { data: userData, error } = await supabase
         .from('users')
         .select('username, first_name, last_name, avatar_url')
         .eq('id', user.id)
         .single();
         
+      if (error) {
+        console.error("Error fetching user profile:", error);
+        return null;
+      }
+      
       return userData;
     },
   });
