@@ -103,10 +103,11 @@ const Store = () => {
     }
     
     if (wallet.real_balance < price) {
-      setPurchaseError(`Solde insuffisant pour cet achat. Vous avez $${wallet.real_balance}, l'article coûte $${price}`);
+      setPurchaseError(`Solde insuffisant pour cet achat. Vous avez $${wallet.real_balance.toFixed(2)}, l'article coûte $${price.toFixed(2)}`);
       return;
     }
     
+    // Nous passons simplement l'ID de l'article - la logique complète est dans useItemPurchase
     purchaseItem({ itemId });
   };
   
