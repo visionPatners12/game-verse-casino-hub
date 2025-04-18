@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -23,7 +24,8 @@ export const useJoinRoom = (roomCode: string, onSuccess: () => void) => {
             id,
             display_name,
             user_id,
-            current_score
+            current_score,
+            is_connected
           )
         `)
         .eq('room_id', roomCode)
@@ -70,6 +72,7 @@ export const useJoinRoom = (roomCode: string, onSuccess: () => void) => {
         return;
       }
       
+      // Update user connection status
       await supabase
         .from('users')
         .update({ is_connected: true })
@@ -90,16 +93,29 @@ export const useJoinRoom = (roomCode: string, onSuccess: () => void) => {
         return;
       }
 
-      const existingPlayerCheck = await supabase
+      // Check if player already exists in this room
+      const { data: existingPlayer, error: checkError } = await supabase
         .from('game_players')
-        .select('id')
+        .select('id, is_connected')
         .eq('session_id', room.id)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
         
-      if (!existingPlayerCheck.error) {
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+      
+      if (existingPlayer) {
+        // Player exists, just update connection status if needed
+        if (!existingPlayer.is_connected) {
+          await supabase
+            .from('game_players')
+            .update({ is_connected: true })
+            .eq('id', existingPlayer.id);
+        }
         console.log("User already in room, navigating...");
       } else {
+        // Player doesn't exist, insert new record
         const { error: joinError } = await supabase
           .from('game_players')
           .insert({
@@ -109,7 +125,10 @@ export const useJoinRoom = (roomCode: string, onSuccess: () => void) => {
             is_connected: true
           });
           
-        if (joinError) throw joinError;
+        if (joinError) {
+          console.error("Error joining room:", joinError);
+          throw joinError;
+        }
       }
       
       const gameType = typeof room.game_type === 'string' 
