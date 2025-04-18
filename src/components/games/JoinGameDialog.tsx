@@ -51,10 +51,17 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
         async (payload) => {
           console.log('Player update received:', payload);
           try {
-            // Important: Join with the users table to get username and avatar
+            // Important: Use the join syntax to get user data
             const { data: updatedPlayers, error } = await supabase
               .from('game_players')
-              .select('*, users:user_id(username, avatar_url)')
+              .select(`
+                id, 
+                display_name, 
+                user_id, 
+                current_score, 
+                is_connected,
+                users:user_id(username, avatar_url)
+              `)
               .eq('session_id', room.id);
               
             if (error) {
@@ -80,9 +87,17 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
     // Initial fetch with user data
     const fetchInitialPlayers = async () => {
       try {
+        // Use the join syntax to get user data
         const { data: initialPlayers, error } = await supabase
           .from('game_players')
-          .select('*, users:user_id(username, avatar_url)')
+          .select(`
+            id, 
+            display_name, 
+            user_id, 
+            current_score, 
+            is_connected,
+            users:user_id(username, avatar_url)
+          `)
           .eq('session_id', room.id);
           
         if (error) {
