@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Users, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { GameCode, isValidGameType } from "@/lib/gameTypes";
 
 interface JoinGameDialogProps {
   open: boolean;
@@ -99,13 +100,20 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
         
       if (error) throw error;
       
-      // Determine game type from ENUM value
-      // Convert enum value (e.g., "Ludo") to code (e.g., "ludo")
-      const gameTypeCode = Object.entries(room).find(([key, value]) => 
-        key === 'game_type'
-      )?.[1].toLowerCase();
+      // Fix: Safely convert game_type to string and then to lowercase
+      const gameType = room.game_type ? String(room.game_type).toLowerCase() : "";
       
-      navigate(`/games/${gameTypeCode}/room/${room.id}`);
+      // Verify it's a valid game type
+      if (!isValidGameType(gameType)) {
+        toast({
+          variant: "destructive",
+          title: "Invalid game type",
+          description: "This game type is not supported."
+        });
+        return;
+      }
+      
+      navigate(`/games/${gameType}/room/${room.id}`);
     } catch (error) {
       console.error("Join error:", error);
       toast({
