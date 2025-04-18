@@ -1,8 +1,10 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wallet, PlusCircle, ArrowDownCircle, Clock, DollarSign } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
 import { format } from "date-fns";
+import { Link } from "react-router-dom";
 
 const WalletInfo = () => {
   const { wallet, transactions, isLoading } = useWallet();
@@ -19,6 +21,23 @@ const WalletInfo = () => {
         return <DollarSign className="h-4 w-4" />;
     }
   };
+
+  if (!wallet && !isLoading) {
+    return (
+      <Card className="p-6">
+        <div className="text-center">
+          <Wallet className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-lg font-medium mb-2">No Wallet Found</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            You need to sign in to view your wallet information.
+          </p>
+          <Button asChild>
+            <Link to="/login">Sign In</Link>
+          </Button>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -38,7 +57,7 @@ const WalletInfo = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Real Balance</p>
                 <p className="balance-amount">
-                  ${isLoading ? "..." : wallet?.real_balance}
+                  ${isLoading ? "..." : wallet?.real_balance || 0}
                 </p>
               </div>
             </div>
@@ -49,19 +68,23 @@ const WalletInfo = () => {
               <div>
                 <p className="text-sm text-muted-foreground">Bonus Balance</p>
                 <p className="balance-amount">
-                  ${isLoading ? "..." : wallet?.bonus_balance}
+                  ${isLoading ? "..." : wallet?.bonus_balance || 0}
                 </p>
               </div>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-3 sm:flex-row">
-            <Button className="flex-1">
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Deposit
+            <Button className="flex-1" asChild>
+              <Link to="/wallet?tab=deposit">
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Deposit
+              </Link>
             </Button>
-            <Button variant="outline" className="flex-1">
-              <ArrowDownCircle className="h-4 w-4 mr-2" />
-              Withdraw
+            <Button variant="outline" className="flex-1" asChild>
+              <Link to="/wallet?tab=withdraw">
+                <ArrowDownCircle className="h-4 w-4 mr-2" />
+                Withdraw
+              </Link>
             </Button>
           </CardFooter>
         </Card>
@@ -75,10 +98,10 @@ const WalletInfo = () => {
           <div className="space-y-1">
             {isLoading ? (
               <p className="text-center text-muted-foreground py-4">Loading transactions...</p>
-            ) : transactions?.length === 0 ? (
+            ) : !transactions || transactions.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">No transactions yet</p>
             ) : (
-              transactions?.slice(0, 5).map((tx) => (
+              transactions.slice(0, 5).map((tx) => (
                 <div key={tx.id} className="transaction-item">
                   <div className="flex items-center gap-3">
                     <div className={`bg-${tx.type === 'Winnings' ? 'green' : tx.type === 'Stake' ? 'red' : 'blue'}-500/10 p-2 rounded-full`}>
@@ -93,7 +116,7 @@ const WalletInfo = () => {
                   </div>
                   <div className="text-right">
                     <p className={`font-medium ${tx.amount > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {tx.amount > 0 ? '+' : ''}{tx.amount} {wallet?.currency}
+                      {tx.amount > 0 ? '+' : ''}{tx.amount} {wallet?.currency || 'USD'}
                     </p>
                     <p className="text-xs flex items-center justify-end gap-1 text-muted-foreground">
                       <Clock className="h-3 w-3" />
@@ -106,7 +129,9 @@ const WalletInfo = () => {
           </div>
         </CardContent>
         <CardFooter>
-          <Button variant="outline" className="w-full">View All Transactions</Button>
+          <Button variant="outline" className="w-full" asChild>
+            <Link to="/wallet?tab=history">View All Transactions</Link>
+          </Button>
         </CardFooter>
       </Card>
     </div>
