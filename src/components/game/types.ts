@@ -18,6 +18,7 @@ export interface RoomData {
     user_id: string;
     current_score: number;
     is_connected: boolean;
+    is_ready?: boolean;
     users?: {
       username: string;
       avatar_url?: string;

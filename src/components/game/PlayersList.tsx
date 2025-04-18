@@ -63,7 +63,7 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
             </div>
             <div className="flex items-center gap-1">
               {player.is_ready && player.is_connected && (
-                <Badge variant="success" className="flex items-center gap-1">
+                <Badge variant="default" className="flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" />
                 </Badge>
               )}

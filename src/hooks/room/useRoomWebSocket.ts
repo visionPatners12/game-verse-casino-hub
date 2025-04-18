@@ -42,8 +42,11 @@ export function useRoomWebSocket(roomId: string | undefined) {
       if (roomError) throw roomError;
       
       console.log('Fetched room data:', roomData);
-      setRoomData(roomData as RoomData);
-      setPlayers(roomData.game_players || []);
+      
+      // Cast the roomData to RoomData type after validation
+      const typedRoomData = roomData as unknown as RoomData;
+      setRoomData(typedRoomData);
+      setPlayers(typedRoomData.game_players || []);
       
       // Set game status based on room status
       if (roomData.status === 'Playing') {
@@ -96,7 +99,7 @@ export function useRoomWebSocket(roomId: string | undefined) {
         .find((presence: any) => presence.user_id === currentUserId);
         
       if (currentUserPresence) {
-        setIsReady(!!currentUserPresence.is_ready);
+        setIsReady(currentUserPresence.is_ready === true);
       }
     });
     

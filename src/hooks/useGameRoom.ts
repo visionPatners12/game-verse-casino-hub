@@ -1,25 +1,29 @@
 
-import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { RoomData } from "@/components/game/types";
-import { useRoomValidation } from "./room/useRoomValidation";
-import { usePlayerConnection } from "./room/usePlayerConnection";
-import { useRoomData } from "./room/useRoomData";
-import { useRoomSubscription } from "./room/useRoomSubscription";
+import { useRoomWebSocket } from "@/hooks/room/useRoomWebSocket";
+import { gameCodeToType, isValidGameType } from "@/lib/gameTypes";
 
 export const useGameRoom = () => {
   const { gameType, roomId } = useParams<{ gameType: string; roomId: string }>();
-  const [roomData, setRoomData] = useState<RoomData | null>(null);
   
-  useRoomValidation(gameType);
-  usePlayerConnection(roomId);
-  const { loading, currentUserId } = useRoomData(roomId);
-  useRoomSubscription(roomId, setRoomData);
+  const {
+    roomData,
+    isLoading,
+    currentUserId,
+    gameStatus,
+  } = useRoomWebSocket(roomId);
+  
+  // Safely get the game name from the type
+  const gameName = gameType && isValidGameType(gameType)
+    ? gameCodeToType[gameType]
+    : (gameType ? gameType.charAt(0).toUpperCase() + gameType.slice(1) : "Unknown Game");
 
   return {
-    loading,
+    loading: isLoading,
     roomData,
     currentUserId,
-    gameType
+    gameType,
+    gameName,
+    gameStatus
   };
 };
