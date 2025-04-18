@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { roomService } from "@/services/roomWebSocketService";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { RoomData, SessionStatus, PresenceData } from "@/components/game/types";
+import { RoomData, SessionStatus, PresenceData, DatabaseSessionStatus } from "@/components/game/types";
 
 export function useRoomWebSocket(roomId: string | undefined) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -49,10 +49,12 @@ export function useRoomWebSocket(roomId: string | undefined) {
       setPlayers(typedRoomData.game_players || []);
       
       // Set game status based on room status
-      const status = roomData.status as string;
-      if (status === 'Playing') {
+      const dbStatus = roomData.status as DatabaseSessionStatus;
+      
+      // Map database status to client status
+      if (dbStatus === 'Playing') {
         setGameStatus('playing');
-      } else if (status === 'Completed') {
+      } else if (dbStatus === 'Completed') {
         setGameStatus('ended');
       } else {
         setGameStatus('waiting');
