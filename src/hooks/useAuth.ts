@@ -1,13 +1,22 @@
 
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthContext } from "@/contexts/AuthContext";
 
 export const useAuth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Import the auth context
+  const authContext = useContext(AuthContext);
+  
+  // If this hook is used outside of an auth provider, throw an error
+  if (!authContext) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -80,5 +89,10 @@ export const useAuth = () => {
     }
   };
 
-  return { login, signup, isLoading };
+  return { 
+    ...authContext,
+    login, 
+    signup, 
+    isLoading 
+  };
 };

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +25,7 @@ export const useProfile = () => {
 
       console.log('Current user ID:', user.id);
       
+      // Check if the user exists in the users table, if not, create a profile
       const { data: userData, error: profileError } = await supabase
         .from('users')
         .select(`
@@ -44,26 +46,68 @@ export const useProfile = () => {
       }
       
       if (!userData) {
-        console.error('No profile found for user:', user.id);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les données du profil",
-          variant: "destructive",
+        console.log('No profile found, creating one for user:', user.id);
+        
+        // Create a default profile for the user
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({
+            id: user.id,
+            first_name: '',
+            last_name: '',
+            email: user.email || '',
+            username: `user_${user.id.substring(0, 8)}`
+          });
+          
+        if (insertError) {
+          console.error('Error creating profile:', insertError);
+          throw insertError;
+        }
+        
+        // Fetch the newly created profile
+        const { data: newUserData, error: newProfileError } = await supabase
+          .from('users')
+          .select(`
+            first_name,
+            last_name,
+            email,
+            phone,
+            country,
+            username,
+            avatar_url
+          `)
+          .eq('id', user.id)
+          .single();
+          
+        if (newProfileError) {
+          console.error('Error fetching new profile:', newProfileError);
+          throw newProfileError;
+        }
+        
+        setProfile({
+          first_name: newUserData.first_name || '',
+          last_name: newUserData.last_name || '',
+          email: newUserData.email || '',
+          phone: newUserData.phone || '',
+          country: newUserData.country || '',
+          username: newUserData.username || '',
+          avatar_url: newUserData.avatar_url,
         });
-        return;
+        
+        console.log('New profile created successfully:', newUserData);
+      } else {
+        console.log('Profile loaded successfully:', userData);
+        
+        setProfile({
+          first_name: userData.first_name || '',
+          last_name: userData.last_name || '',
+          email: userData.email || '',
+          phone: userData.phone || '',
+          country: userData.country || '',
+          username: userData.username || '',
+          avatar_url: userData.avatar_url,
+        });
       }
-      
-      console.log('Profile loaded successfully:', userData);
-      
-      setProfile({
-        first_name: userData.first_name,
-        last_name: userData.last_name,
-        email: userData.email,
-        phone: userData.phone || '',
-        country: userData.country || '',
-        username: userData.username,
-        avatar_url: userData.avatar_url,
-      });
     } catch (error) {
       console.error('Profile loading error:', error);
       toast({
@@ -88,11 +132,6 @@ export const useProfile = () => {
 
     try {
       setLoading(true);
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
-      if (authError) {
-        throw authError;
-      }
       
       if (!user) {
         navigate('/auth');
