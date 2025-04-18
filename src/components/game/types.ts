@@ -38,4 +38,4 @@ export interface PresenceData {
 
 // Additional type for database enum values for game session status
 // These should match exactly what's in the database
-export type DatabaseSessionStatus = 'Waiting' | 'Playing' | 'Completed';
+export type DatabaseSessionStatus = 'Waiting' | 'Active' | 'Finished';

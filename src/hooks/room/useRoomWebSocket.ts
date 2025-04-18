@@ -52,9 +52,9 @@ export function useRoomWebSocket(roomId: string | undefined) {
       const dbStatus = roomData.status as DatabaseSessionStatus;
       
       // Map database status to client status
-      if (dbStatus === 'Playing') {
+      if (dbStatus === 'Active') {
         setGameStatus('playing');
-      } else if (dbStatus === 'Completed') {
+      } else if (dbStatus === 'Finished') {
         setGameStatus('ended');
       } else {
         setGameStatus('waiting');

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { RoomData, PresenceData, DatabaseSessionStatus, SessionStatus } from "@/components/game/types";
@@ -224,7 +223,7 @@ class RoomWebSocketService {
     
     try {
       // Update game status in database - map to database status string
-      const dbStatus: DatabaseSessionStatus = 'Playing';
+      const dbStatus: DatabaseSessionStatus = 'Active';
       const { data, error } = await supabase
         .from('game_sessions')
         .update({ 
@@ -269,7 +268,7 @@ class RoomWebSocketService {
     
     try {
       // Update game status in database - map to database status string
-      const dbStatus: DatabaseSessionStatus = 'Completed';
+      const dbStatus: DatabaseSessionStatus = 'Finished';
       const { data, error } = await supabase
         .from('game_sessions')
         .update({
