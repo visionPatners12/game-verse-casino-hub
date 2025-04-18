@@ -68,18 +68,46 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
     }
     
     try {
+      // Get user info
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Authentication required",
+          description: "Please sign in to join a game room."
+        });
+        return;
+      }
+      
+      // Fetch username from users table
+      const { data: userData } = await supabase
+        .from('users')
+        .select('username')
+        .eq('id', user.id)
+        .single();
+      
+      const displayName = userData?.username || "Player";
+      
       const { error } = await supabase
         .from('game_players')
         .insert({
           session_id: room.id,
-          display_name: "Player", // You might want to get this from user profile
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          display_name: displayName,
+          user_id: user.id
         });
         
       if (error) throw error;
       
-      navigate(`/games/${room.game_type}/room/${room.id}`);
+      // Determine game type from ENUM value
+      // Convert enum value (e.g., "Ludo") to code (e.g., "ludo")
+      const gameTypeCode = Object.entries(room).find(([key, value]) => 
+        key === 'game_type'
+      )?.[1].toLowerCase();
+      
+      navigate(`/games/${gameTypeCode}/room/${room.id}`);
     } catch (error) {
+      console.error("Join error:", error);
       toast({
         variant: "destructive",
         title: "Failed to join room",

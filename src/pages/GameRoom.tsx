@@ -5,7 +5,7 @@ import GameChat from "@/components/GameChat";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { isValidGameType, gameCodeToType } from "@/lib/gameTypes";
+import { gameCodeToType } from "@/lib/gameTypes";
 import { RoomData } from "@/components/game/types";
 import PlayersList from "@/components/game/PlayersList";
 import RoomInfo from "@/components/game/RoomInfo";
@@ -22,7 +22,9 @@ const GameRoom = () => {
   const { toast } = useToast();
   
   useEffect(() => {
-    if (!isValidGameType(gameType)) {
+    // Check if gameType is valid by looking it up in gameCodeToType
+    // rather than using isValidGameType which may have incorrect logic
+    if (gameType && !Object.keys(gameCodeToType).includes(gameType)) {
       toast({
         title: "Invalid Game Type",
         description: "The requested game does not exist.",
@@ -150,7 +152,7 @@ const GameRoom = () => {
     };
   }, [roomId]);
   
-  const gameName = gameType ? gameType.charAt(0).toUpperCase() + gameType.slice(1) : "Unknown Game";
+  const gameName = gameType ? gameCodeToType[gameType as keyof typeof gameCodeToType] || gameType.charAt(0).toUpperCase() + gameType.slice(1) : "Unknown Game";
   const totalPot = roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0;
   
   return (

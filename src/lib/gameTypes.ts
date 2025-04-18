@@ -1,3 +1,4 @@
+
 export const gameCodeToType = {
   ludo: "Ludo",
   checkers: "Checkers",
