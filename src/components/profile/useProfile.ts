@@ -25,8 +25,7 @@ export const useProfile = () => {
 
       console.log('Current user ID:', user.id);
       
-      // Check if the user exists in the users table, if not, create a profile
-      const { data: userData, error: profileError } = await supabase
+      const { data: userData, error } = await supabase
         .from('users')
         .select(`
           first_name,
@@ -38,93 +37,40 @@ export const useProfile = () => {
           avatar_url
         `)
         .eq('id', user.id)
-        .maybeSingle();
+        .single();
 
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        throw profileError;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        toast({
+          title: "Error",
+          description: "Could not load profile data",
+          variant: "destructive",
+        });
+        return;
       }
       
-      if (!userData) {
-        console.log('No profile found, creating one for user:', user.id);
-        
-        // Create a default profile for the user
-        const { error: insertError } = await supabase
-          .from('users')
-          .insert({
-            id: user.id,
-            first_name: '',
-            last_name: '',
-            email: user.email || '',
-            username: `user_${user.id.substring(0, 8)}`
-          });
-          
-        if (insertError) {
-          console.error('Error creating profile:', insertError);
-          throw insertError;
-        }
-        
-        // Fetch the newly created profile
-        const { data: newUserData, error: newProfileError } = await supabase
-          .from('users')
-          .select(`
-            first_name,
-            last_name,
-            email,
-            phone,
-            country,
-            username,
-            avatar_url
-          `)
-          .eq('id', user.id)
-          .single();
-          
-        if (newProfileError) {
-          console.error('Error fetching new profile:', newProfileError);
-          throw newProfileError;
-        }
-        
-        setProfile({
-          first_name: newUserData.first_name || '',
-          last_name: newUserData.last_name || '',
-          email: newUserData.email || '',
-          phone: newUserData.phone || '',
-          country: newUserData.country || '',
-          username: newUserData.username || '',
-          avatar_url: newUserData.avatar_url,
-        });
-        
-        console.log('New profile created successfully:', newUserData);
-      } else {
-        console.log('Profile loaded successfully:', userData);
-        
-        setProfile({
-          first_name: userData.first_name || '',
-          last_name: userData.last_name || '',
-          email: userData.email || '',
-          phone: userData.phone || '',
-          country: userData.country || '',
-          username: userData.username || '',
-          avatar_url: userData.avatar_url,
-        });
-      }
+      console.log('Profile loaded successfully:', userData);
+      
+      setProfile({
+        first_name: userData.first_name || '',
+        last_name: userData.last_name || '',
+        email: userData.email || '',
+        phone: userData.phone || '',
+        country: userData.country || '',
+        username: userData.username || '',
+        avatar_url: userData.avatar_url,
+      });
     } catch (error) {
       console.error('Profile loading error:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de charger les données du profil",
+        title: "Error",
+        description: "Could not load profile data",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (user) {
-      getUserProfile();
-    }
-  }, [user]);
 
   const updateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -138,9 +84,7 @@ export const useProfile = () => {
         return;
       }
 
-      console.log('Updating profile with data:', profile);
-      
-      const { error: updateError } = await supabase
+      const { error } = await supabase
         .from('users')
         .update({
           first_name: profile.first_name,
@@ -152,9 +96,7 @@ export const useProfile = () => {
         })
         .eq('id', user.id);
 
-      if (updateError) {
-        throw updateError;
-      }
+      if (error) throw error;
 
       toast({
         title: "Success",
