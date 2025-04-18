@@ -26,14 +26,36 @@ export const useItemPurchase = () => {
       }
 
       // Get item price and name
-      const { data: item } = await supabase
+      const { data: item, error: itemError } = await supabase
         .from('store_items')
         .select('price, name')
         .eq('id', itemId)
         .single();
 
-      if (!item) {
+      if (itemError || !item) {
+        console.error('Item fetch error:', itemError);
         throw new Error('Item introuvable');
+      }
+
+      // Get wallet balance to check before purchase
+      const { data: wallet, error: walletError } = await supabase
+        .from('wallets')
+        .select('real_balance')
+        .eq('user_id', user.id)
+        .single();
+        
+      if (walletError || !wallet) {
+        console.error('Wallet fetch error:', walletError);
+        throw new Error('Erreur lors de la récupération du solde');
+      }
+      
+      // Check balance client-side before attempting purchase
+      if (wallet.real_balance < item.price) {
+        console.log('Balance check failed:', { 
+          balance: wallet.real_balance, 
+          price: item.price 
+        });
+        throw new Error('Solde insuffisant pour acheter cet item');
       }
 
       // Call the purchase_item function
@@ -48,7 +70,7 @@ export const useItemPurchase = () => {
       if (error) {
         console.error('Purchase error:', error);
         if (error.message.includes('insufficient_balance')) {
-          throw new Error('Solde insuffisant');
+          throw new Error('Solde insuffisant pour acheter cet item');
         }
         throw new Error("Erreur lors de l'achat");
       }

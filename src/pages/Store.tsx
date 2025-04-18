@@ -10,11 +10,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { AvatarItem } from "@/components/store/AvatarItem";
 import { ChatWordItem } from "@/components/store/ChatWordItem";
 import { StoreItem } from "@/types/store";
+import { Link } from "react-router-dom";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Store = () => {
   const { toast } = useToast();
   const { purchaseItem, isPurchasing } = useItemPurchase();
   const { equipAvatar, isEquipping } = useEquipItem();
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
   
   const { data: storeItems, isLoading: isLoadingItems } = useQuery({
     queryKey: ['store-items'],
@@ -91,14 +95,18 @@ const Store = () => {
   });
 
   const handlePurchase = (itemId: string, price: number) => {
-    if (!wallet || wallet.real_balance < price) {
-      toast({
-        title: "Solde insuffisant",
-        description: "Vous n'avez pas assez d'argent pour acheter cet item",
-        variant: "destructive",
-      });
+    setPurchaseError(null);
+    
+    if (!wallet) {
+      setPurchaseError("Impossible d'accéder à votre portefeuille");
       return;
     }
+    
+    if (wallet.real_balance < price) {
+      setPurchaseError(`Solde insuffisant pour cet achat. Vous avez $${wallet.real_balance}, l'article coûte $${price}`);
+      return;
+    }
+    
     purchaseItem({ itemId });
   };
   
@@ -135,6 +143,23 @@ const Store = () => {
             </div>
           </div>
         </div>
+        
+        {purchaseError && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erreur d'achat</AlertTitle>
+            <AlertDescription>
+              {purchaseError}
+              {wallet && wallet.real_balance < 10 && (
+                <div className="mt-2">
+                  <Link to="/wallet?tab=deposit" className="underline">
+                    Recharger votre portefeuille
+                  </Link>
+                </div>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
         
         <Tabs defaultValue="avatars">
           <TabsList className="mb-6">
