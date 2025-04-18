@@ -1,9 +1,11 @@
 
 import { Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface Player {
   id: string;
   display_name: string;
+  is_connected?: boolean;
   users?: {
     username: string;
   };
@@ -40,9 +42,12 @@ export const RoomPlayersList = ({ players, maxPlayers, currentPlayers }: RoomPla
         {players.map((player: Player) => (
           <div 
             key={player.id}
-            className="flex items-center gap-2 p-2 rounded-md bg-muted"
+            className="flex items-center justify-between p-2 rounded-md bg-muted"
           >
-            {player.users?.username || player.display_name}
+            <span>{player.users?.username || player.display_name}</span>
+            <Badge variant={player.is_connected ? "default" : "destructive"}>
+              {player.is_connected ? "Connected" : "Disconnected"}
+            </Badge>
           </div>
         ))}
         {Array.from({ length: maxPlayers - currentPlayers }).map((_, i) => (

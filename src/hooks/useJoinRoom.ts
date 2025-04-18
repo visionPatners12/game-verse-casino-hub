@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -71,6 +70,11 @@ export const useJoinRoom = (roomCode: string, onSuccess: () => void) => {
         return;
       }
       
+      await supabase
+        .from('users')
+        .update({ is_connected: true })
+        .eq('id', user.id);
+      
       const { data: userData } = await supabase
         .from('users')
         .select('username')
@@ -86,7 +90,6 @@ export const useJoinRoom = (roomCode: string, onSuccess: () => void) => {
         return;
       }
 
-      // Check if user is already in the room
       const existingPlayerCheck = await supabase
         .from('game_players')
         .select('id')
@@ -102,7 +105,8 @@ export const useJoinRoom = (roomCode: string, onSuccess: () => void) => {
           .insert({
             session_id: room.id,
             display_name: userData.username,
-            user_id: user.id
+            user_id: user.id,
+            is_connected: true
           });
           
         if (joinError) throw joinError;
