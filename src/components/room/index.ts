@@ -1,7 +1,6 @@
 
 // Export components
 export { CreateRoomForm } from './CreateRoomForm';
-export { PlayerNameField } from './components/PlayerNameField';
 export { BetAmountField } from './components/BetAmountField';
 export { PlayersField } from './components/PlayersField';
 export { WinnersField } from './components/WinnersField';
