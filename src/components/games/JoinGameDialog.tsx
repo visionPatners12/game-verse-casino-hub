@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,57 +15,73 @@ interface JoinGameDialogProps {
 export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
   const [roomCode, setRoomCode] = useState("");
   const { room, isLoading, currentPlayers, setCurrentPlayers, handleJoin } = useJoinRoom(roomCode, () => onOpenChange(false));
+  const [playersChannel, setPlayersChannel] = useState<ReturnType<typeof supabase.channel> | null>(null);
 
   // Subscribe to realtime updates when a room code is entered
   useEffect(() => {
-    if (!roomCode || roomCode.length !== 6 || !room?.id) return;
-
-    let playersChannel;
-    
-    // Small delay to ensure connection is established properly
-    const initializeChannel = setTimeout(() => {
-      playersChannel = supabase.channel(`players-list-${room.id}`)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'game_players',
-            filter: `session_id=eq.${room.id}`
-          },
-          async (payload) => {
-            console.log('Player update received:', payload);
-            try {
-              const { data: updatedPlayers, error } = await supabase
-                .from('game_players')
-                .select('*')
-                .eq('session_id', room.id);
-                
-              if (error) {
-                console.error("Error fetching updated players:", error);
-                return;
-              }
-              
-              if (updatedPlayers) {
-                setCurrentPlayers(updatedPlayers);
-              }
-            } catch (err) {
-              console.error("Error processing player update:", err);
-            }
-          }
-        )
-        .subscribe((status) => {
-          console.log(`Realtime subscription status: ${status}`);
-        });
-    }, 500);
-
-    return () => {
-      clearTimeout(initializeChannel);
+    if (!roomCode || roomCode.length !== 6 || !room?.id) {
       if (playersChannel) {
         supabase.removeChannel(playersChannel);
+        setPlayersChannel(null);
+      }
+      return;
+    }
+
+    // Create a new channel for this room
+    const channel = supabase.channel(`players-list-${room.id}`, {
+      config: {
+        broadcast: { self: true },
+        presence: {
+          key: room.id,
+        },
+      },
+    });
+
+    // Subscribe to all changes in the game_players table for this session
+    channel
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'game_players',
+          filter: `session_id=eq.${room.id}`
+        },
+        async (payload) => {
+          console.log('Player update received:', payload);
+          try {
+            const { data: updatedPlayers, error } = await supabase
+              .from('game_players')
+              .select('*, users:user_id(username)')
+              .eq('session_id', room.id);
+              
+            if (error) {
+              console.error("Error fetching updated players:", error);
+              return;
+            }
+            
+            if (updatedPlayers) {
+              setCurrentPlayers(updatedPlayers);
+            }
+          } catch (err) {
+            console.error("Error processing player update:", err);
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log(`Realtime subscription status for room ${room.id}:`, status);
+      });
+
+    setPlayersChannel(channel);
+
+    // Cleanup function
+    return () => {
+      console.log("Cleaning up channel for room:", room.id);
+      if (channel) {
+        supabase.removeChannel(channel);
       }
     };
-  }, [roomCode, room?.id, setCurrentPlayers]);
+  }, [roomCode, room?.id]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
