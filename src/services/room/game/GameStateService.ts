@@ -8,14 +8,28 @@ export class GameStateService {
     if (!roomId || !channel) return null;
     
     try {
-      // Update session status and calculate prize pool
+      // Update session status
       const dbStatus: DatabaseSessionStatus = 'Active';
+      
+      // First get the current session data to calculate prize pool
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('game_sessions')
+        .select('entry_fee, current_players, commission_rate')
+        .eq('id', roomId)
+        .single();
+        
+      if (sessionError) throw sessionError;
+      
+      // Calculate prize pool - total entry fees minus commission
+      const prizePot = sessionData.entry_fee * sessionData.current_players * (1 - sessionData.commission_rate/100);
+      
+      // Update session status with calculated prize pool
       const { data, error } = await supabase
         .from('game_sessions')
         .update({ 
           status: dbStatus,
           start_time: new Date().toISOString(),
-          pot: supabase.rpc('calculate_prize_pool', { session_id: roomId })
+          pot: prizePot
         })
         .eq('id', roomId)
         .select()

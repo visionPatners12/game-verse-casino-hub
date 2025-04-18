@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { WebSocketBase } from "./webSocket/WebSocketBase";
 import { RoomPresenceService } from "./presence/RoomPresenceService";
@@ -36,7 +35,8 @@ export class RoomWebSocketService extends WebSocketBase {
         this.triggerCallback('presenceSync', roomId, state);
         
         // Check if all players are ready and connected
-        const presences = Object.values(state).flat() as PresenceData[];
+        // Type assertion to convert the presence state to the expected format
+        const presences = Object.values(state).flat() as unknown as PresenceData[];
         const allPlayersReady = presences.every(p => p.is_ready);
         const connectedCount = presences.length;
         
