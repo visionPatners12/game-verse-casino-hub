@@ -16,49 +16,69 @@ export const useJoinRoom = (roomCode: string, onSuccess: () => void) => {
     queryFn: async () => {
       if (roomCode.length !== 6) return null;
       
-      const { data, error } = await supabase
-        .from('game_sessions')
-        .select(`
-          *,
-          game_players:game_players(
-            id,
-            display_name,
-            user_id,
-            current_score,
-            is_connected,
-            users:user_id(username, avatar_url)
-          )
-        `)
-        .eq('room_id', roomCode)
-        .single();
-        
-      if (error) {
-        if (error.code === 'PGRST116') {
+      try {
+        const { data, error } = await supabase
+          .from('game_sessions')
+          .select(`
+            *,
+            game_players:game_players(
+              id,
+              display_name,
+              user_id,
+              current_score,
+              is_connected,
+              users:user_id(username, avatar_url)
+            )
+          `)
+          .eq('room_id', roomCode)
+          .maybeSingle(); // Utilisation de maybeSingle() au lieu de single()
+          
+        if (error) {
+          console.error("Room fetch error:", error);
           toast({
             variant: "destructive",
-            title: "Room not found",
-            description: "Please check the room code and try again."
+            title: "Erreur",
+            description: "Impossible de trouver cette salle de jeu"
           });
+          throw error;
         }
-        throw error;
+        
+        if (!data) {
+          toast({
+            variant: "destructive",
+            title: "Salle introuvable",
+            description: "Veuillez vérifier le code de la salle et réessayer."
+          });
+          return null;
+        }
+        
+        // Log the user data to ensure it's being properly fetched
+        console.log("Room data with user details:", data);
+        return data;
+      } catch (error) {
+        console.error("Room fetch error:", error);
+        return null;
       }
-      
-      // Log the user data to ensure it's being properly fetched
-      console.log("Room data with user details:", data);
-      return data;
     },
     enabled: roomCode.length === 6,
     retry: false
   });
 
   const handleJoin = async () => {
-    if (!room) return;
+    if (!room) {
+      toast({
+        variant: "destructive",
+        title: "Salle introuvable",
+        description: "Veuillez vérifier le code de la salle et réessayer."
+      });
+      return;
+    }
     
     if (room.current_players >= room.max_players) {
       toast({
         variant: "destructive",
-        title: "Room is full",
-        description: "Please try another room."
+        title: "Salle complète",
+        description: "Veuillez essayer une autre salle."
       });
       return;
     }
@@ -69,33 +89,47 @@ export const useJoinRoom = (roomCode: string, onSuccess: () => void) => {
       if (!user) {
         toast({
           variant: "destructive",
-          title: "Authentication required",
-          description: "Please sign in to join a game room."
+          title: "Authentification requise",
+          description: "Veuillez vous connecter pour rejoindre une salle de jeu."
         });
         return;
       }
       
+      // Vérification du profil utilisateur avant de continuer
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('username, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      if (userError) {
+        console.error("User profile fetch error:", userError);
+        toast({
+          variant: "destructive",
+          title: "Erreur de profil",
+          description: "Impossible de récupérer votre profil."
+        });
+        return;
+      }
+      
+      if (!userData || !userData.username) {
+        toast({
+          variant: "destructive",
+          title: "Profil incomplet",
+          description: "Veuillez configurer votre nom d'utilisateur dans votre profil.",
+        });
+        
+        // Rediriger vers la page de profil
+        navigate('/profile');
+        return;
+      }
+
       // Update user connection status
       await supabase
         .from('users')
         .update({ is_connected: true })
         .eq('id', user.id);
       
-      const { data: userData } = await supabase
-        .from('users')
-        .select('username, avatar_url')
-        .eq('id', user.id)
-        .single();
-      
-      if (!userData?.username) {
-        toast({
-          variant: "destructive",
-          title: "Profile incomplete",
-          description: "Please set up your username in your profile."
-        });
-        return;
-      }
-
       // Check if player already exists in this room
       const { data: existingPlayer, error: checkError } = await supabase
         .from('game_players')
@@ -105,7 +139,13 @@ export const useJoinRoom = (roomCode: string, onSuccess: () => void) => {
         .maybeSingle();
         
       if (checkError && checkError.code !== 'PGRST116') {
-        throw checkError;
+        console.error("Check player error:", checkError);
+        toast({
+          variant: "destructive",
+          title: "Erreur de vérification",
+          description: "Impossible de vérifier votre statut dans cette salle."
+        });
+        return;
       }
       
       if (existingPlayer) {
@@ -130,7 +170,12 @@ export const useJoinRoom = (roomCode: string, onSuccess: () => void) => {
           
         if (joinError) {
           console.error("Error joining room:", joinError);
-          throw joinError;
+          toast({
+            variant: "destructive",
+            title: "Erreur d'inscription",
+            description: "Impossible de vous ajouter à cette salle."
+          });
+          return;
         }
       }
       
@@ -142,8 +187,8 @@ export const useJoinRoom = (roomCode: string, onSuccess: () => void) => {
         console.error("Invalid game type:", gameType, "Room data:", room);
         toast({
           variant: "destructive",
-          title: "Invalid game type",
-          description: "This game type is not supported."
+          title: "Type de jeu invalide",
+          description: "Ce type de jeu n'est pas pris en charge."
         });
         return;
       }
@@ -154,8 +199,8 @@ export const useJoinRoom = (roomCode: string, onSuccess: () => void) => {
       console.error("Join error:", error);
       toast({
         variant: "destructive",
-        title: "Failed to join room",
-        description: "Please try again later."
+        title: "Échec de l'inscription",
+        description: "Veuillez réessayer plus tard."
       });
     }
   };
