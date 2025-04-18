@@ -13,6 +13,8 @@ export const useItemPurchase = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      console.log('Attempting purchase by user:', user.id);
+
       // Check if user already owns this item
       const { data: existingItem } = await supabase
         .from('user_items')
@@ -37,10 +39,12 @@ export const useItemPurchase = () => {
         throw new Error('Item introuvable');
       }
 
+      console.log('Item to purchase:', { itemId, name: item.name, price: item.price });
+
       // Get wallet balance to check before purchase
       const { data: wallet, error: walletError } = await supabase
         .from('wallets')
-        .select('real_balance')
+        .select('*')
         .eq('user_id', user.id)
         .single();
         
@@ -49,14 +53,24 @@ export const useItemPurchase = () => {
         throw new Error('Erreur lors de la récupération du solde');
       }
       
+      console.log('Wallet details:', { 
+        walletId: wallet.id,
+        realBalance: wallet.real_balance, 
+        bonusBalance: wallet.bonus_balance,
+        itemPrice: item.price
+      });
+      
       // Check balance client-side before attempting purchase
       if (wallet.real_balance < item.price) {
-        console.log('Balance check failed:', { 
+        console.error('Balance check failed:', { 
           balance: wallet.real_balance, 
-          price: item.price 
+          price: item.price,
+          difference: item.price - wallet.real_balance
         });
-        throw new Error('Solde insuffisant pour acheter cet item');
+        throw new Error(`Solde insuffisant pour acheter cet item. Vous avez $${wallet.real_balance.toFixed(2)}, l'article coûte $${item.price.toFixed(2)}`);
       }
+
+      console.log('Balance check passed, proceeding with purchase');
 
       // Call the purchase_item function
       const { data, error } = await supabase
@@ -68,12 +82,16 @@ export const useItemPurchase = () => {
         });
 
       if (error) {
-        console.error('Purchase error:', error);
+        console.error('Purchase error from RPC:', error);
+        console.error('Error details:', error.message, error.code, error.details, error.hint);
+        
         if (error.message.includes('insufficient_balance')) {
-          throw new Error('Solde insuffisant pour acheter cet item');
+          throw new Error(`Solde insuffisant pour acheter cet item. Vérifiez votre solde.`);
         }
-        throw new Error("Erreur lors de l'achat");
+        throw new Error(`Erreur lors de l'achat: ${error.message}`);
       }
+
+      console.log('Purchase successful, server response:', data);
 
       return { 
         itemId, 
