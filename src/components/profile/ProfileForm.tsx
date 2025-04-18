@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ProfileData } from "./types";
+import { Save } from "lucide-react";
 
 interface ProfileFormProps {
   profile: ProfileData;
@@ -12,10 +13,10 @@ interface ProfileFormProps {
 
 export const ProfileForm = ({ profile, loading, onSubmit, onChange }: ProfileFormProps) => {
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form onSubmit={onSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <label htmlFor="username" className="text-sm font-medium">Username</label>
+          <label htmlFor="username" className="text-sm font-medium">Nom d'utilisateur</label>
           <Input
             id="username"
             type="text"
@@ -31,10 +32,11 @@ export const ProfileForm = ({ profile, loading, onSubmit, onChange }: ProfileFor
             type="email"
             value={profile?.email || ''}
             disabled
+            className="bg-muted"
           />
         </div>
         <div className="space-y-2">
-          <label htmlFor="firstName" className="text-sm font-medium">First Name</label>
+          <label htmlFor="firstName" className="text-sm font-medium">Prénom</label>
           <Input
             id="firstName"
             type="text"
@@ -44,7 +46,7 @@ export const ProfileForm = ({ profile, loading, onSubmit, onChange }: ProfileFor
           />
         </div>
         <div className="space-y-2">
-          <label htmlFor="lastName" className="text-sm font-medium">Last Name</label>
+          <label htmlFor="lastName" className="text-sm font-medium">Nom</label>
           <Input
             id="lastName"
             type="text"
@@ -54,7 +56,7 @@ export const ProfileForm = ({ profile, loading, onSubmit, onChange }: ProfileFor
           />
         </div>
         <div className="space-y-2">
-          <label htmlFor="phone" className="text-sm font-medium">Phone</label>
+          <label htmlFor="phone" className="text-sm font-medium">Téléphone</label>
           <Input
             id="phone"
             type="tel"
@@ -63,7 +65,7 @@ export const ProfileForm = ({ profile, loading, onSubmit, onChange }: ProfileFor
           />
         </div>
         <div className="space-y-2">
-          <label htmlFor="country" className="text-sm font-medium">Country</label>
+          <label htmlFor="country" className="text-sm font-medium">Pays</label>
           <Input
             id="country"
             type="text"
@@ -73,8 +75,18 @@ export const ProfileForm = ({ profile, loading, onSubmit, onChange }: ProfileFor
         </div>
       </div>
       <div className="flex justify-end">
-        <Button type="submit" disabled={loading}>
-          {loading ? 'Saving...' : 'Save Changes'}
+        <Button type="submit" disabled={loading} className="flex items-center gap-2">
+          {loading ? (
+            <>
+              <span className="animate-spin h-4 w-4 border-2 border-white border-opacity-50 border-t-white rounded-full"></span>
+              Enregistrement...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4" />
+              Enregistrer
+            </>
+          )}
         </Button>
       </div>
     </form>

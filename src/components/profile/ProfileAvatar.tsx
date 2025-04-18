@@ -11,11 +11,21 @@ export const ProfileAvatar = ({ avatarUrl, firstName, lastName }: ProfileAvatarP
   const initials = `${firstName?.[0] || ''}${lastName?.[0] || ''}`;
   
   return (
-    <Avatar className="w-24 h-24">
+    <Avatar className="w-24 h-24 border-2 border-primary">
       {avatarUrl ? (
-        <AvatarImage src={avatarUrl} alt={`${firstName} ${lastName}`} />
+        <AvatarImage 
+          src={avatarUrl} 
+          alt={`${firstName} ${lastName}`} 
+          className="object-cover"
+          onError={(e) => {
+            console.error('Failed to load avatar image:', e);
+            (e.target as HTMLImageElement).style.display = 'none';
+          }}
+        />
       ) : (
-        <AvatarFallback>{initials}</AvatarFallback>
+        <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+          {initials || '?'}
+        </AvatarFallback>
       )}
     </Avatar>
   );

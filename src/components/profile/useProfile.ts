@@ -13,32 +13,61 @@ export const useProfile = () => {
   const getUserProfile = async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Vérifier si l'utilisateur est connecté
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        console.error('Auth error:', authError);
+        throw authError;
+      }
       
       if (!user) {
+        console.log('No authenticated user found, redirecting to auth page');
         navigate('/auth');
         return;
       }
 
-      // Fetch user data from the public.users table, not auth.users
+      console.log('Authenticated user ID:', user.id);
+      
+      // Récupérer les données utilisateur de la table public.users
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('first_name, last_name, email, phone, country, username, avatar_url')
+        .select('*')
         .eq('id', user.id)
         .single();
 
       if (userError) {
-        console.error('Error details:', userError);
+        console.error('Error fetching user data:', userError);
         throw userError;
       }
       
-      console.log('Fetched user profile data:', userData);
-      setProfile(userData);
+      if (!userData) {
+        console.error('No user data found for ID:', user.id);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les informations du profil",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      console.log('Successfully loaded user profile:', userData);
+      
+      setProfile({
+        first_name: userData.first_name || '',
+        last_name: userData.last_name || '',
+        email: userData.email || '',
+        phone: userData.phone || '',
+        country: userData.country || '',
+        username: userData.username || '',
+        avatar_url: userData.avatar_url,
+      });
     } catch (error) {
-      console.error('Error loading user profile:', error);
+      console.error('Profile loading error:', error);
       toast({
-        title: "Error",
-        description: "Could not load profile information",
+        title: "Erreur",
+        description: "Impossible de charger les informations du profil",
         variant: "destructive",
       });
     } finally {
@@ -52,13 +81,20 @@ export const useProfile = () => {
 
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
       
-      if (!user) throw new Error('No user found');
+      if (authError) {
+        throw authError;
+      }
+      
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
 
       console.log('Updating profile with data:', profile);
       
-      const { error: userError } = await supabase
+      const { error: updateError } = await supabase
         .from('users')
         .update({
           first_name: profile.first_name,
@@ -71,17 +107,22 @@ export const useProfile = () => {
         })
         .eq('id', user.id);
 
-      if (userError) throw userError;
+      if (updateError) {
+        throw updateError;
+      }
 
       toast({
-        title: "Success",
-        description: "Profile updated successfully",
+        title: "Succès",
+        description: "Profil mis à jour avec succès",
       });
+      
+      // Recharger les données du profil après la mise à jour
+      getUserProfile();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
-        title: "Error",
-        description: "Could not update profile",
+        title: "Erreur",
+        description: "Impossible de mettre à jour le profil",
         variant: "destructive",
       });
     } finally {
@@ -101,6 +142,7 @@ export const useProfile = () => {
     profile,
     loading,
     updateProfile,
-    handleFieldChange
+    handleFieldChange,
+    refreshProfile: getUserProfile
   };
 };
