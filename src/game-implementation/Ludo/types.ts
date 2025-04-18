@@ -1,5 +1,5 @@
 
-export interface LudoGameData {
+export interface GameData {
   currentPlayerId: string | null;
   allPlayers: Array<{
     id: string;
@@ -15,11 +15,4 @@ export interface LudoGameData {
     roomId: string;
     totalPot: number;
   };
-}
-
-declare global {
-  interface Window {
-    LUDO_GAME_DATA: LudoGameData;
-    goPage?: (page: string) => void;
-  }
 }
