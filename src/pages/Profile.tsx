@@ -12,15 +12,16 @@ export default function Profile() {
   const { profile, loading, updateProfile, handleFieldChange, refreshProfile } = useProfile();
 
   useEffect(() => {
-    // S'assurer que les données du profil sont chargées au montage du composant
+    // Make sure profile data is loaded when component mounts
     console.log("Profile component mounted");
+    refreshProfile();
   }, []);
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <Loader2 className="h-12 w-12 animate-spin mb-4 text-primary" />
-        <span className="text-lg">Chargement du profil...</span>
+        <span className="text-lg">Loading profile...</span>
       </div>
     );
   }
@@ -30,7 +31,7 @@ export default function Profile() {
       <div className="container mx-auto px-4 py-8 flex flex-col items-center">
         <Card className="w-full max-w-2xl">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Profil</CardTitle>
+            <CardTitle>Profile</CardTitle>
             <Button onClick={refreshProfile} variant="outline" size="icon">
               <RefreshCw className="h-4 w-4" />
             </Button>
@@ -39,10 +40,10 @@ export default function Profile() {
             <div className="flex flex-col items-center justify-center py-12">
               <div className="text-center space-y-4">
                 <p className="text-lg text-muted-foreground">
-                  Impossible de charger les données du profil
+                  Could not load profile data
                 </p>
                 <Button onClick={refreshProfile}>
-                  Essayer à nouveau
+                  Try again
                 </Button>
               </div>
             </div>
@@ -56,7 +57,7 @@ export default function Profile() {
     <div className="container mx-auto px-4 py-8">
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Paramètres du profil</CardTitle>
+          <CardTitle>Profile Settings</CardTitle>
           <Button onClick={refreshProfile} variant="outline" size="icon">
             <RefreshCw className="h-4 w-4" />
           </Button>

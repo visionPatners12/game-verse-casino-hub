@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -14,7 +14,6 @@ export const useProfile = () => {
     try {
       setLoading(true);
       
-      // Vérifier si l'utilisateur est connecté
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
       if (authError) {
@@ -23,51 +22,50 @@ export const useProfile = () => {
       }
       
       if (!user) {
-        console.log('No authenticated user found, redirecting to auth page');
+        console.log('No authenticated user found, redirecting to login');
         navigate('/auth');
         return;
       }
 
-      console.log('Authenticated user ID:', user.id);
+      console.log('Fetching profile for user:', user.id);
       
-      // Récupérer les données utilisateur de la table public.users
-      const { data: userData, error: userError } = await supabase
+      const { data: userData, error: profileError } = await supabase
         .from('users')
         .select('*')
         .eq('id', user.id)
         .single();
 
-      if (userError) {
-        console.error('Error fetching user data:', userError);
-        throw userError;
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        throw profileError;
       }
       
       if (!userData) {
-        console.error('No user data found for ID:', user.id);
+        console.error('No profile found for user:', user.id);
         toast({
-          title: "Erreur",
-          description: "Impossible de charger les informations du profil",
+          title: "Error",
+          description: "Could not load profile data",
           variant: "destructive",
         });
         return;
       }
       
-      console.log('Successfully loaded user profile:', userData);
+      console.log('Profile loaded successfully:', userData);
       
       setProfile({
-        first_name: userData.first_name || '',
-        last_name: userData.last_name || '',
-        email: userData.email || '',
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        email: userData.email,
         phone: userData.phone || '',
         country: userData.country || '',
-        username: userData.username || '',
+        username: userData.username,
         avatar_url: userData.avatar_url,
       });
     } catch (error) {
       console.error('Profile loading error:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de charger les informations du profil",
+        title: "Error",
+        description: "Could not load profile data",
         variant: "destructive",
       });
     } finally {
@@ -102,7 +100,6 @@ export const useProfile = () => {
           phone: profile.phone,
           country: profile.country,
           username: profile.username,
-          avatar_url: profile.avatar_url,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
@@ -112,27 +109,23 @@ export const useProfile = () => {
       }
 
       toast({
-        title: "Succès",
-        description: "Profil mis à jour avec succès",
+        title: "Success",
+        description: "Profile updated successfully",
       });
       
-      // Recharger les données du profil après la mise à jour
+      // Refresh profile data
       getUserProfile();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le profil",
+        title: "Error",
+        description: "Could not update profile",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    getUserProfile();
-  }, []);
 
   const handleFieldChange = (field: keyof ProfileData, value: string) => {
     setProfile(prev => prev ? { ...prev, [field]: value } : null);
