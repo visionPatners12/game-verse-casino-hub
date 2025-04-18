@@ -11,10 +11,16 @@ export interface RoomData {
   pot: number;
   status: string;
   created_at: string;
+  connected_players: string[];
   game_players: {
     id: string;
     display_name: string;
     user_id: string;
     current_score: number;
+    is_connected: boolean;
+    users?: {
+      username: string;
+      avatar_url?: string;
+    };
   }[];
 }

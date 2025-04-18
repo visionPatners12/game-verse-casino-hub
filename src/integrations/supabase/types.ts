@@ -342,6 +342,7 @@ export type Database = {
       game_sessions: {
         Row: {
           commission_rate: number
+          connected_players: string[] | null
           created_at: string | null
           current_players: number
           end_time: string | null
@@ -358,6 +359,7 @@ export type Database = {
         }
         Insert: {
           commission_rate: number
+          connected_players?: string[] | null
           created_at?: string | null
           current_players?: number
           end_time?: string | null
@@ -374,6 +376,7 @@ export type Database = {
         }
         Update: {
           commission_rate?: number
+          connected_players?: string[] | null
           created_at?: string | null
           current_players?: number
           end_time?: string | null
