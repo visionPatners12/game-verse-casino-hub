@@ -9,6 +9,7 @@ import { PlayersField } from "./components/PlayersField";
 import { WinnersField } from "./components/WinnersField";
 import { GridSizeField } from "./components/GridSizeField";
 import { useCreateRoom } from "./hooks/useCreateRoom";
+import { PlayerNameField } from "./components/PlayerNameField";
 
 type CreateRoomFormProps = {
   username: string;
@@ -32,6 +33,7 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(createRoom)} className="space-y-4">
+        <PlayerNameField username={username} />
         <BetAmountField form={form} disableControls={true} />
         <PlayersField form={form} gameConfig={gameConfig} />
         <WinnersField form={form} />
@@ -40,7 +42,11 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
           <GridSizeField form={form} />
         )}
 
-        <Button type="submit" className="w-full">
+        <Button 
+          type="submit" 
+          className="w-full"
+          disabled={!username}
+        >
           Create Room
         </Button>
       </form>

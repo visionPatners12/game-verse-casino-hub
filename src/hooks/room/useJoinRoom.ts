@@ -32,9 +32,10 @@ export function useJoinRoom() {
         .from('users')
         .select('username')
         .eq('id', user.id)
-        .maybeSingle();
+        .single();
         
-      if (userError && userError.code !== 'PGRST116') {
+      if (userError) {
+        console.error("Error fetching user data:", userError);
         throw userError;
       }
       
@@ -90,13 +91,17 @@ export function useJoinRoom() {
           .from('game_players')
           .insert({
             session_id: room.id,
-            display_name: userData.username,
+            display_name: userData.username, // Explicitly set display_name to username
             user_id: user.id,
             is_connected: true,
             is_ready: false
           });
           
-        if (joinError) throw joinError;
+        if (joinError) {
+          console.error("Error joining room:", joinError);
+          toast.error("Error joining room: " + joinError.message);
+          throw joinError;
+        }
       }
       
       // Find game type for navigation

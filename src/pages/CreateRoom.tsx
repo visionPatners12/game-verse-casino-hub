@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
@@ -8,31 +8,49 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { CreateRoomForm } from "@/components/room/CreateRoomForm";
 import { GameCode, isValidGameType } from "@/lib/gameTypes";
+import { toast } from "sonner";
 
 const CreateRoom = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const [username, setUsername] = useState("");
+  const navigate = useNavigate();
 
   // Get a type-safe gameType or null
   const validGameType = isValidGameType(gameType) ? gameType : null;
 
   useEffect(() => {
     const getUsername = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          toast.error("You must be logged in to create a room");
+          navigate("/auth");
+          return;
+        }
+
+        const { data: profile, error } = await supabase
           .from('users')
           .select('username')
           .eq('id', user.id)
           .single();
         
-        if (profile) {
-          setUsername(profile.username);
+        if (error) {
+          console.error("Error fetching username:", error);
+          return;
         }
+        
+        if (profile && profile.username) {
+          setUsername(profile.username);
+        } else {
+          toast.warning("Please set up your username in your profile to create rooms");
+          navigate("/profile");
+        }
+      } catch (error) {
+        console.error("Error getting user:", error);
       }
     };
     getUsername();
-  }, []);
+  }, [navigate]);
 
   const { data: gameConfig, isLoading } = useQuery({
     queryKey: ['game-type', validGameType],

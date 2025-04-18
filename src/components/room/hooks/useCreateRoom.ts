@@ -60,9 +60,27 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
 
       console.log("Room created successfully:", data);
 
+      // Get the username from the users table to ensure it's not null
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('username')
+        .eq('id', authData.user.id)
+        .single();
+        
+      if (userError) {
+        console.error("Error fetching username:", userError);
+        toast.error("Error joining room: " + userError.message);
+        throw userError;
+      }
+      
+      if (!userData || !userData.username) {
+        toast.error("Username not found. Please set up your profile first.");
+        return;
+      }
+
       console.log("Adding player to room:", {
         session_id: data.id,
-        display_name: username,
+        display_name: userData.username,
         user_id: authData.user.id
       });
 
@@ -70,7 +88,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         .from('game_players')
         .insert({
           session_id: data.id,
-          display_name: username,
+          display_name: userData.username,
           user_id: authData.user.id
         });
 
