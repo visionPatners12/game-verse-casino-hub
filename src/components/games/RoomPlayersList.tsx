@@ -1,13 +1,16 @@
 
 import { Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Player {
   id: string;
   display_name: string;
   is_connected?: boolean;
+  user_id: string;
   users?: {
     username: string;
+    avatar_url?: string;
   };
 }
 
@@ -42,9 +45,21 @@ export const RoomPlayersList = ({ players, maxPlayers, currentPlayers }: RoomPla
         {players.map((player: Player) => (
           <div 
             key={player.id}
-            className="flex items-center justify-between p-2 rounded-md bg-muted"
+            className="flex items-center justify-between p-3 rounded-md bg-muted"
           >
-            <span>{player.users?.username || player.display_name}</span>
+            <div className="flex items-center gap-3">
+              <Avatar className="h-8 w-8">
+                {player.users?.avatar_url && (
+                  <AvatarImage src={player.users.avatar_url} alt={player.users?.username || player.display_name} />
+                )}
+                <AvatarFallback>
+                  {(player.users?.username || player.display_name).charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="font-medium">
+                {player.users?.username || player.display_name}
+              </span>
+            </div>
             <Badge variant={player.is_connected ? "default" : "destructive"}>
               {player.is_connected ? "Connected" : "Disconnected"}
             </Badge>
@@ -53,9 +68,12 @@ export const RoomPlayersList = ({ players, maxPlayers, currentPlayers }: RoomPla
         {Array.from({ length: maxPlayers - currentPlayers }).map((_, i) => (
           <div 
             key={`empty-${i}`}
-            className="flex items-center gap-2 p-2 rounded-md border border-dashed"
+            className="flex items-center gap-2 p-3 rounded-md border border-dashed border-muted-foreground/20"
           >
-            Waiting...
+            <Avatar className="h-8 w-8">
+              <AvatarFallback>?</AvatarFallback>
+            </Avatar>
+            <span className="text-muted-foreground">Waiting...</span>
           </div>
         ))}
       </div>
