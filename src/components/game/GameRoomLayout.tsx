@@ -1,5 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import GameChat from "@/components/GameChat";
 import { RoomData } from "@/components/game/types";
 import RoomHeader from "@/components/game/RoomHeader";
@@ -7,22 +8,35 @@ import LoadingState from "@/components/game/LoadingState";
 import RoomInfo from "@/components/game/RoomInfo";
 import PlayersList from "@/components/game/PlayersList";
 import GameCanvas from "@/components/game/GameCanvas";
-import { gameCodeToType } from "@/lib/gameTypes";
+import { PlayCircle, PauseCircle } from "lucide-react";
 
 interface GameRoomLayoutProps {
   loading: boolean;
   roomData: RoomData | null;
   currentUserId: string | null;
   gameName: string;
+  isReady: boolean;
+  gameStatus: 'waiting' | 'starting' | 'playing' | 'ended';
+  onToggleReady: () => void;
+  onStartGame: () => void;
 }
 
 export const GameRoomLayout = ({ 
   loading, 
   roomData, 
   currentUserId,
-  gameName 
+  gameName,
+  isReady,
+  gameStatus,
+  onToggleReady,
+  onStartGame
 }: GameRoomLayoutProps) => {
   const totalPot = roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0;
+  
+  const allPlayersReady = roomData?.game_players?.every(player => player.is_ready || !player.is_connected);
+  const enoughPlayers = roomData?.game_players?.filter(player => player.is_connected).length >= 2;
+  const canStartGame = allPlayersReady && enoughPlayers && gameStatus === 'waiting';
+  const isPlaying = gameStatus === 'playing' || gameStatus === 'starting';
 
   return (
     <main className="flex-1 container mx-auto px-4 py-8">
@@ -31,12 +45,42 @@ export const GameRoomLayout = ({
           <Card className="mb-6">
             <CardHeader className="pb-3">
               {!loading && roomData && (
-                <CardTitle>
-                  <RoomHeader 
-                    gameName={gameName} 
-                    roomId={roomData.room_id}
-                  />
-                </CardTitle>
+                <div className="flex justify-between items-center">
+                  <CardTitle>
+                    <RoomHeader 
+                      gameName={gameName} 
+                      roomId={roomData.room_id}
+                    />
+                  </CardTitle>
+                  
+                  {gameStatus === 'waiting' && (
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        onClick={onToggleReady}
+                        variant={isReady ? "default" : "outline"}
+                        className="flex items-center gap-2"
+                      >
+                        {isReady ? (
+                          <>
+                            <PauseCircle className="h-4 w-4" />
+                            Ready
+                          </>
+                        ) : (
+                          <>
+                            <PlayCircle className="h-4 w-4" />
+                            Get Ready
+                          </>
+                        )}
+                      </Button>
+                      
+                      {isReady && canStartGame && (
+                        <Button onClick={onStartGame}>
+                          Start Game
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </CardHeader>
             <CardContent>
@@ -57,10 +101,12 @@ export const GameRoomLayout = ({
                       currentUserId={currentUserId}
                     />
                     
-                    <GameCanvas 
-                      roomData={roomData}
-                      currentUserId={currentUserId}
-                    />
+                    {isPlaying && (
+                      <GameCanvas 
+                        roomData={roomData}
+                        currentUserId={currentUserId}
+                      />
+                    )}
                   </>
                 )
               )}
