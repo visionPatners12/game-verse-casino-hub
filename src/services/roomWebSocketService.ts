@@ -163,7 +163,10 @@ class RoomWebSocketService {
       // Update database (persistent)
       const { error } = await supabase
         .from('game_players')
-        .update({ is_ready: isReady })
+        .update({ 
+          is_ready: isReady,
+          display_name: await this.getUserUsername(userId)
+        })
         .eq('session_id', roomId)
         .eq('user_id', userId);
         
@@ -181,6 +184,18 @@ class RoomWebSocketService {
       console.error('Error marking player ready:', error);
       toast.error('Could not update ready status. Please try again.');
     }
+  }
+
+  // Helper function to get username
+  private async getUserUsername(userId: string): Promise<string> {
+    const { data, error } = await supabase
+      .from('users')
+      .select('username')
+      .eq('id', userId)
+      .single();
+      
+    if (error) throw error;
+    return data?.username || '';
   }
   
   // Update connection status in database

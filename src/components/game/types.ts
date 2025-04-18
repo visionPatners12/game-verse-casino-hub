@@ -18,7 +18,7 @@ export interface RoomData {
     user_id: string;
     current_score: number;
     is_connected: boolean;
-    is_ready?: boolean;
+    is_ready: boolean;
     users?: {
       username: string;
       avatar_url?: string;
@@ -39,3 +39,4 @@ export interface PresenceData {
 // Additional type for database enum values for game session status
 // These should match exactly what's in the database
 export type DatabaseSessionStatus = 'Waiting' | 'Active' | 'Finished';
+

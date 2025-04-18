@@ -298,6 +298,7 @@ export type Database = {
           display_name: string
           id: string
           is_connected: boolean | null
+          is_ready: boolean | null
           session_id: string
           updated_at: string | null
           user_id: string
@@ -308,6 +309,7 @@ export type Database = {
           display_name: string
           id?: string
           is_connected?: boolean | null
+          is_ready?: boolean | null
           session_id: string
           updated_at?: string | null
           user_id: string
@@ -318,6 +320,7 @@ export type Database = {
           display_name?: string
           id?: string
           is_connected?: boolean | null
+          is_ready?: boolean | null
           session_id?: string
           updated_at?: string | null
           user_id?: string
