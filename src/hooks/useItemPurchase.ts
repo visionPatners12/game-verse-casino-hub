@@ -72,9 +72,8 @@ export const useItemPurchase = () => {
 
       console.log('Balance check passed, proceeding with purchase');
 
-      // Call the purchase_item function
-      // IMPORTANT: Nous utilisons uniquement la fonction RPC pour faire l'achat
-      // La fonction gère déjà la mise à jour du solde et l'insertion de la transaction
+      // IMPORTANT: Nous utilisons UNIQUEMENT la fonction RPC pour faire l'achat
+      // La fonction gère déjà la mise à jour du solde, l'insertion de l'item et l'ajout de la transaction
       const { data, error } = await supabase
         .rpc('purchase_item', { 
           p_item_id: itemId,
