@@ -10,6 +10,7 @@ interface Player {
   user_id: string;
   current_score: number;
   is_connected?: boolean;
+  username?: string;
 }
 
 interface PlayerWithUsername extends Player {
@@ -28,22 +29,18 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
   useEffect(() => {
     // Fetch usernames for each player from the users table
     const fetchUsernames = async () => {
-      // Only proceed if we have players
       if (!players?.length) return;
       
       try {
-        // Extract unique user IDs to fetch
         const userIds = players
           .map(player => player.user_id)
           .filter(Boolean);
         
         if (userIds.length === 0) {
-          // If there are no valid user IDs, just use the original players
           setPlayersWithUsernames(players);
           return;
         }
         
-        // Fetch user data from the public.users table (not auth.users)
         const { data, error } = await supabase
           .from('users')
           .select('id, username')
@@ -55,7 +52,6 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
           return;
         }
         
-        // Map usernames to players
         const enhancedPlayers = players.map(player => {
           const userData = data?.find(user => user.id === player.user_id);
           return {
@@ -65,7 +61,7 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
         });
         
         setPlayersWithUsernames(enhancedPlayers);
-        console.log("Fetched player data:", enhancedPlayers);
+        console.log("Players data with connection status:", enhancedPlayers);
       } catch (error) {
         console.error("Error in username fetching:", error);
         setPlayersWithUsernames(players);
@@ -79,7 +75,7 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
     <div className="mb-6">
       <h3 className="text-sm font-medium mb-2 flex items-center gap-1">
         <Users className="h-4 w-4" />
-        Players ({playersWithUsernames.length}/{maxPlayers})
+        Joueurs ({playersWithUsernames.length}/{maxPlayers})
       </h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {playersWithUsernames.map(player => (
@@ -88,9 +84,9 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
             className={`flex items-center px-3 py-2 rounded-md ${
               player.user_id === currentUserId 
                 ? 'bg-primary text-primary-foreground' 
-                : player.is_connected === false 
-                  ? 'bg-muted/50 text-muted-foreground' 
-                  : 'bg-muted'
+                : player.is_connected 
+                  ? 'bg-muted' 
+                  : 'bg-muted/50 text-muted-foreground'
             }`}
           >
             <Avatar className="h-6 w-6 mr-2">
@@ -103,7 +99,7 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
             <div className="overflow-hidden">
               <span className="font-medium truncate block">
                 {player.username || player.display_name}
-                {player.is_connected === false && ' (Disconnected)'}
+                {!player.is_connected && ' (Déconnecté)'}
               </span>
               {player.current_score > 0 && (
                 <span className="text-xs">{player.current_score} pts</span>
@@ -117,7 +113,7 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
             key={`empty-${index}`}
             className="px-3 py-2 rounded-md border border-dashed border-muted-foreground text-muted-foreground text-center"
           >
-            Waiting for player...
+            En attente de joueur...
           </div>
         ))}
       </div>

@@ -10,6 +10,7 @@ export const useRoomSubscription = (
   useEffect(() => {
     if (!roomId) return;
     
+    // Canal pour les mises à jour de la salle
     const roomChannel = supabase
       .channel('room-updates')
       .on(
@@ -25,6 +26,24 @@ export const useRoomSubscription = (
           if (payload.new) {
             fetchRoomData(roomId);
           }
+        }
+      )
+      .subscribe();
+
+    // Canal pour les mises à jour des joueurs
+    const playersChannel = supabase
+      .channel('players-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'game_players',
+          filter: `session_id=eq.${roomId}`
+        },
+        (payload) => {
+          console.log('Players updated:', payload);
+          fetchRoomData(roomId);
         }
       )
       .subscribe();
@@ -47,15 +66,27 @@ export const useRoomSubscription = (
         .single();
 
       if (room) {
-        setRoomData(room as RoomData);
+        // Vérifier si le joueur est connecté en utilisant la liste connected_players
+        const roomWithConnectedStatus = {
+          ...room,
+          game_players: room.game_players.map(player => ({
+            ...player,
+            is_connected: room.connected_players?.includes(player.user_id) || false
+          }))
+        };
+        
+        console.log('Updated room data:', roomWithConnectedStatus);
+        setRoomData(roomWithConnectedStatus as RoomData);
       }
     };
 
-    // Initial fetch
+    // Récupération initiale des données
     fetchRoomData(roomId);
     
     return () => {
       supabase.removeChannel(roomChannel);
+      supabase.removeChannel(playersChannel);
     };
   }, [roomId, setRoomData]);
 };
+
