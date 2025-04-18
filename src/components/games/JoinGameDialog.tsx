@@ -90,21 +90,44 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
       
       const displayName = userData?.username || "Player";
       
-      const { error } = await supabase
+      // Check if user is already in the room
+      const existingPlayerCheck = await supabase
         .from('game_players')
-        .insert({
-          session_id: room.id,
-          display_name: displayName,
-          user_id: user.id
-        });
+        .select('id')
+        .eq('session_id', room.id)
+        .eq('user_id', user.id)
+        .single();
         
-      if (error) throw error;
+      if (existingPlayerCheck.data) {
+        // User is already in the room, just navigate there
+        console.log("User already in room, navigating...");
+      } else {
+        // Add user to the room
+        const { error } = await supabase
+          .from('game_players')
+          .insert({
+            session_id: room.id,
+            display_name: displayName,
+            user_id: user.id
+          });
+          
+        if (error) throw error;
+      }
       
-      // Fix: Safely convert game_type to string and then to lowercase
-      const gameType = room.game_type ? String(room.game_type).toLowerCase() : "";
+      // Handle game_type safely - it could be an enum value like "Ludo" from the database
+      let gameType = "";
       
-      // Verify it's a valid game type
+      if (typeof room.game_type === 'string') {
+        // Convert game type like "Ludo" or "Checkers" to lowercase code like "ludo"
+        gameType = room.game_type.toLowerCase();
+      } else if (room.game_type) {
+        // Fallback to string conversion
+        gameType = String(room.game_type).toLowerCase();
+      }
+      
+      // Validate game type
       if (!isValidGameType(gameType)) {
+        console.error("Invalid game type:", gameType, "Room data:", room);
         toast({
           variant: "destructive",
           title: "Invalid game type",
@@ -113,6 +136,7 @@ export const JoinGameDialog = ({ open, onOpenChange }: JoinGameDialogProps) => {
         return;
       }
       
+      // Navigate to the game room
       navigate(`/games/${gameType}/room/${room.id}`);
     } catch (error) {
       console.error("Join error:", error);

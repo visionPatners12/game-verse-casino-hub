@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
@@ -5,7 +6,7 @@ import GameChat from "@/components/GameChat";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { gameCodeToType } from "@/lib/gameTypes";
+import { gameCodeToType, isValidGameType } from "@/lib/gameTypes";
 import { RoomData } from "@/components/game/types";
 import PlayersList from "@/components/game/PlayersList";
 import RoomInfo from "@/components/game/RoomInfo";
@@ -22,15 +23,16 @@ const GameRoom = () => {
   const { toast } = useToast();
   
   useEffect(() => {
-    // Check if gameType is valid by looking it up in gameCodeToType
-    // rather than using isValidGameType which may have incorrect logic
-    if (gameType && !Object.keys(gameCodeToType).includes(gameType)) {
+    // Validate the game type early
+    if (gameType && !isValidGameType(gameType)) {
+      console.error("Invalid game type detected:", gameType);
       toast({
         title: "Invalid Game Type",
         description: "The requested game does not exist.",
         variant: "destructive"
       });
       navigate("/games");
+      return;
     }
   }, [gameType, navigate, toast]);
   
@@ -43,6 +45,16 @@ const GameRoom = () => {
         
         const { data: { user } } = await supabase.auth.getUser();
         setCurrentUserId(user?.id || null);
+        
+        if (!user) {
+          toast({
+            title: "Authentication Required",
+            description: "Please sign in to join a game room.",
+            variant: "destructive"
+          });
+          navigate("/");
+          return;
+        }
         
         const { data, error } = await supabase
           .from('game_sessions')
@@ -81,6 +93,7 @@ const GameRoom = () => {
           description: "Could not load game room data. Please try again.",
           variant: "destructive"
         });
+        navigate("/games");
       } finally {
         setLoading(false);
       }
@@ -152,7 +165,11 @@ const GameRoom = () => {
     };
   }, [roomId]);
   
-  const gameName = gameType ? gameCodeToType[gameType as keyof typeof gameCodeToType] || gameType.charAt(0).toUpperCase() + gameType.slice(1) : "Unknown Game";
+  // Safely get the game name from the type
+  const gameName = gameType && isValidGameType(gameType) 
+    ? gameCodeToType[gameType as keyof typeof gameCodeToType] 
+    : (gameType ? gameType.charAt(0).toUpperCase() + gameType.slice(1) : "Unknown Game");
+  
   const totalPot = roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0;
   
   return (

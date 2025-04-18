@@ -30,16 +30,18 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
       // Only proceed if we have players
       if (!players.length) return;
       
-      // Extract unique user IDs to fetch
-      const userIds = players.map(player => player.user_id).filter(Boolean);
-      
-      if (userIds.length === 0) {
-        // If there are no valid user IDs, just use the original players
-        setPlayersWithUsernames(players);
-        return;
-      }
-      
       try {
+        // Extract unique user IDs to fetch
+        const userIds = players
+          .map(player => player.user_id)
+          .filter(Boolean);
+        
+        if (userIds.length === 0) {
+          // If there are no valid user IDs, just use the original players
+          setPlayersWithUsernames(players);
+          return;
+        }
+        
         // Fetch user data from the users table
         const { data, error } = await supabase
           .from('users')
@@ -62,6 +64,7 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
         });
         
         setPlayersWithUsernames(enhancedPlayers);
+        console.log("Fetched player data:", enhancedPlayers);
       } catch (error) {
         console.error("Error in username fetching:", error);
         setPlayersWithUsernames(players);
@@ -85,7 +88,9 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
           >
             <Avatar className="h-6 w-6 mr-2">
               <AvatarFallback>
-                {player.username ? player.username.charAt(0).toUpperCase() : player.display_name.charAt(0).toUpperCase()}
+                {player.username 
+                  ? player.username.charAt(0).toUpperCase() 
+                  : player.display_name.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="overflow-hidden">
