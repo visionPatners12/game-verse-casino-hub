@@ -3,14 +3,14 @@ import { useState, useEffect, useCallback } from "react";
 import { roomService } from "@/services/roomWebSocketService";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { RoomData } from "@/components/game/types";
+import { RoomData, SessionStatus, PresenceData } from "@/components/game/types";
 
 export function useRoomWebSocket(roomId: string | undefined) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [roomData, setRoomData] = useState<RoomData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [players, setPlayers] = useState<any[]>([]);
-  const [presenceState, setPresenceState] = useState<any>(null);
+  const [presenceState, setPresenceState] = useState<Record<string, PresenceData[]>>({});
   const [isReady, setIsReady] = useState(false);
   const [gameStatus, setGameStatus] = useState<'waiting' | 'starting' | 'playing' | 'ended'>('waiting');
   const { toast } = useToast();
@@ -49,9 +49,10 @@ export function useRoomWebSocket(roomId: string | undefined) {
       setPlayers(typedRoomData.game_players || []);
       
       // Set game status based on room status
-      if (roomData.status === 'Playing') {
+      const status = roomData.status as string;
+      if (status === 'Playing') {
         setGameStatus('playing');
-      } else if (roomData.status === 'Completed') {
+      } else if (status === 'Completed') {
         setGameStatus('ended');
       } else {
         setGameStatus('waiting');
@@ -89,17 +90,20 @@ export function useRoomWebSocket(roomId: string | undefined) {
     roomService.connectToRoom(roomId, currentUserId);
     
     // Set up event listeners
-    roomService.onEvent('presenceSync', (id: string, state: any) => {
+    roomService.onEvent('presenceSync', (id: string, state: Record<string, PresenceData[]>) => {
       console.log('Presence state updated:', state);
       setPresenceState(state);
       
       // Check if current user is ready
       const currentUserPresence = Object.values(state)
         .flat()
-        .find((presence: any) => presence.user_id === currentUserId);
+        .find((presence) => {
+          const typedPresence = presence as PresenceData;
+          return typedPresence.user_id === currentUserId;
+        });
         
       if (currentUserPresence) {
-        setIsReady(currentUserPresence.is_ready === true);
+        setIsReady((currentUserPresence as PresenceData).is_ready === true);
       }
     });
     

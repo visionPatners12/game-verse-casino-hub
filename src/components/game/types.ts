@@ -25,3 +25,13 @@ export interface RoomData {
     };
   }[];
 }
+
+// Define the session status type to match the database enum
+export type SessionStatus = 'Waiting' | 'Playing' | 'Completed';
+
+// Define the presence data type for type safety
+export interface PresenceData {
+  user_id: string;
+  online_at: string;
+  is_ready: boolean;
+}

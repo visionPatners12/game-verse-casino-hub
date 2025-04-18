@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { RoomData } from "@/components/game/types";
+import { RoomData, PresenceData } from "@/components/game/types";
 
 // Types for WebSocket events
 export interface RoomEvent {
@@ -80,7 +80,7 @@ class RoomWebSocketService {
     roomChannel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
         // Mark user as connected in the presence system
-        const presenceData = {
+        const presenceData: PresenceData = {
           user_id: userId,
           online_at: new Date().toISOString(),
           is_ready: false
@@ -157,7 +157,7 @@ class RoomWebSocketService {
           user_id: userId,
           online_at: new Date().toISOString(),
           is_ready: isReady
-        });
+        } as PresenceData);
       }
       
       // Update database (persistent)
@@ -226,7 +226,7 @@ class RoomWebSocketService {
       const { data, error } = await supabase
         .from('game_sessions')
         .update({ 
-          status: 'Playing',
+          status: 'Playing' as string,
           start_time: new Date().toISOString()
         })
         .eq('id', roomId)
@@ -270,7 +270,7 @@ class RoomWebSocketService {
       const { data, error } = await supabase
         .from('game_sessions')
         .update({
-          status: 'Completed',
+          status: 'Completed' as string,
           end_time: new Date().toISOString()
         })
         .eq('id', roomId)
