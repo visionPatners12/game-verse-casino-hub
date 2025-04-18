@@ -23,10 +23,8 @@ export const useRoomSubscription = (
         (payload) => {
           console.log('Room updated:', payload);
           if (payload.new) {
-            setRoomData(prev => ({
-              ...prev,
-              ...payload.new
-            } as RoomData));
+            // Get current room data and merge with new data
+            fetchAndUpdateRoomData(payload.new);
           }
         }
       )
@@ -49,6 +47,35 @@ export const useRoomSubscription = (
       )
       .subscribe();
     
+    const fetchAndUpdateRoomData = async (newRoomData: any) => {
+      // Fetch current room data to merge with new updates
+      const { data: currentRoom } = await supabase
+        .from('game_sessions')
+        .select(`
+          *,
+          game_players(
+            id,
+            display_name,
+            user_id,
+            current_score,
+            is_connected,
+            users:user_id(username, avatar_url)
+          )
+        `)
+        .eq('id', roomId)
+        .single();
+
+      if (currentRoom) {
+        // Create a new RoomData object with merged data
+        const updatedRoomData: RoomData = {
+          ...currentRoom,
+          ...newRoomData
+        };
+        
+        setRoomData(updatedRoomData);
+      }
+    };
+    
     const fetchUpdatedPlayers = async () => {
       const { data, error } = await supabase
         .from('game_players')
@@ -56,13 +83,28 @@ export const useRoomSubscription = (
         .eq('session_id', roomId);
       
       if (!error && data) {
-        setRoomData(prev => prev ? {
-          ...prev,
-          game_players: data,
-          current_players: data.length
-        } as RoomData : null);
+        // Fetch the current room data
+        const { data: currentRoom } = await supabase
+          .from('game_sessions')
+          .select('*')
+          .eq('id', roomId)
+          .single();
+          
+        if (currentRoom) {
+          // Create a new complete room data object
+          const updatedRoomData: RoomData = {
+            ...currentRoom,
+            game_players: data,
+            current_players: data.length
+          };
+          
+          setRoomData(updatedRoomData);
+        }
       }
     };
+    
+    // Initial fetch to set room data
+    fetchUpdatedPlayers();
     
     return () => {
       supabase.removeChannel(roomChannel);
