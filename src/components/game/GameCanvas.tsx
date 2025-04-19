@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useState } from "react";
-import { RoomData } from "./types";
+import { RoomData, GameData } from "./types";
 import { useRoomWebSocket } from "@/hooks/room/useRoomWebSocket";
 import { useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
@@ -23,14 +23,26 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
   } = useRoomWebSocket(roomId);
   
   // Extract game data
-  const players = roomData?.game_players || [];
-  const gameParameters = {
+  const players = roomData?.game_players?.map(player => ({
+    id: player.id,
+    display_name: player.display_name,
+    user_id: player.user_id,
+    current_score: player.current_score,
+  })) || [];
+
+  const gameParams = {
     gameType: roomData?.game_type,
     betAmount: roomData?.entry_fee,
     maxPlayers: roomData?.max_players,
     currentPlayers: roomData?.current_players,
     roomId: roomData?.room_id,
     totalPot: roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0
+  };
+
+  const gameData: GameData = {
+    currentPlayerId: currentUserId,
+    allPlayers: players,
+    gameParams: gameParams
   };
 
   // Initialize game canvas
@@ -40,15 +52,27 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     const initializeGame = async () => {
       try {
         setGameState('loading');
-        console.log('Initializing game canvas with data:', { roomData, currentUserId });
+        console.log('Initializing game canvas with data:', gameData);
         
-        // This is where we would initialize the canvas game engine
-        // For now, we'll just set a timeout to simulate loading
-        setTimeout(() => {
-          console.log('Game canvas initialized');
+        // This is where we make the data available to the game implementation
+        if (window.$ && typeof window.$.game !== 'undefined') {
+          window.$.game = {
+            ...window.$.game,
+            gameData: gameData,
+            sendMove: broadcastMove
+          };
+        }
+        
+        // Initialize the canvas game
+        if (window.initGameCanvas && window.buildGameCanvas) {
+          window.initGameCanvas(1280, 768);
+          window.buildGameCanvas();
           gameInitialized.current = true;
           setGameState('ready');
-        }, 1500);
+        } else {
+          console.error('Game canvas functions not found');
+          setGameState('error');
+        }
         
       } catch (error) {
         console.error('Error initializing game canvas:', error);
@@ -59,27 +83,35 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     initializeGame();
     
     return () => {
-      // Cleanup code for game canvas (if needed)
+      // Cleanup code for game canvas
       console.log('Cleaning up game canvas');
       gameInitialized.current = false;
+      if (window.removeGameCanvas) {
+        window.removeGameCanvas();
+      }
     };
-  }, [canvasRef, currentUserId, roomData]);
+  }, [canvasRef, currentUserId, gameData, broadcastMove]);
   
   // Listen for game events
   useEffect(() => {
     if (!roomId || !currentUserId || !gameInitialized.current) return;
     
-    // This is where we would listen for game events and update the canvas
     console.log('Setting up game event listeners');
     
     // When a move is received, update the canvas
     const handleGameMove = (event: any) => {
       console.log('Game move received:', event);
       // Update canvas based on the move
+      if (window.$ && window.$.game && typeof window.$.game.handleMove === 'function') {
+        window.$.game.handleMove(event);
+      }
     };
     
     return () => {
       // Remove event listeners
+      if (window.$ && window.$.game) {
+        window.$.game = undefined;
+      }
     };
   }, [roomId, currentUserId, gameStatus]);
 
