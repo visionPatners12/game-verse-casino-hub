@@ -1,9 +1,26 @@
 
 import { useEffect, useRef, useState } from "react";
-import { RoomData, GameData } from "./types";
+import { RoomData } from "./types";
+import { GameData } from "@/game-implementation/Ludo/types";
 import { useRoomWebSocket } from "@/hooks/room/useRoomWebSocket";
 import { useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+
+// Add TypeScript declarations for window global properties
+declare global {
+  interface Window {
+    $: {
+      game: {
+        gameData?: GameData;
+        sendMove?: (moveData: any) => void;
+        handleMove?: (event: any) => void;
+      };
+    };
+    initGameCanvas: (width: number, height: number) => void;
+    buildGameCanvas: () => void;
+    removeGameCanvas: () => void;
+  }
+}
 
 interface GameCanvasProps {
   roomData: RoomData;
