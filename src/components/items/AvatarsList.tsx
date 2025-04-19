@@ -19,6 +19,10 @@ export const AvatarsList = ({ items }: AvatarsListProps) => {
     );
   }
 
+  const handleEquipAvatar = (itemId: string, imageUrl: string) => {
+    equipAvatar({ itemId, imageUrl });
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {items.map((item) => {
@@ -49,7 +53,7 @@ export const AvatarsList = ({ items }: AvatarsListProps) => {
             onPurchase={() => {}}
             isPurchasing={false}
             canAfford={true}
-            onEquip={equipAvatar}
+            onEquip={handleEquipAvatar}
             isEquipped={item.equipped}
             isEquipping={isEquipping}
           />
