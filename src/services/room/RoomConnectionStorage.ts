@@ -2,9 +2,10 @@
 export class RoomConnectionStorage {
   save(roomId: string, userId: string, gameType?: string) {
     try {
+      console.log(`Saving room connection data: roomId=${roomId}, userId=${userId}, gameType=${gameType}`);
       sessionStorage.setItem('activeRoomId', roomId);
       sessionStorage.setItem('activeUserId', userId);
-      // Utiliser explicitement le gameType si fourni
+      // Always store the gameType if provided
       if (gameType) {
         sessionStorage.setItem('activeGameType', gameType);
       }
@@ -16,6 +17,7 @@ export class RoomConnectionStorage {
 
   clear() {
     try {
+      console.log('Clearing room connection data from session storage');
       sessionStorage.removeItem('activeRoomId');
       sessionStorage.removeItem('activeUserId');
       sessionStorage.removeItem('activeGameType');
@@ -39,5 +41,10 @@ export class RoomConnectionStorage {
       console.error('Failed to get room data from session storage:', error);
       return { roomId: null, userId: null, gameType: null };
     }
+  }
+
+  hasStoredConnection() {
+    const { roomId, userId } = this.getStored();
+    return Boolean(roomId && userId);
   }
 }

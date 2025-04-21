@@ -1,3 +1,4 @@
+
 export { roomService } from './RoomWebSocketService';
 export type { WebSocketBase } from './webSocket/WebSocketBase';
 export { RoomPresenceService } from './presence/RoomPresenceService';
@@ -6,21 +7,23 @@ export { RoomHeartbeatManager } from './RoomHeartbeatManager';
 export { RoomConnectionStorage } from './RoomConnectionStorage';
 export { RoomReconnectionManager } from './RoomReconnectionManager';
 
-// Helper functions to be used app-wide
+// Helper functions to be used app-wide - these delegate to the RoomConnectionStorage class
 export const getStoredRoomConnection = () => {
   if (typeof window !== 'undefined') {
-    return {
-      roomId: sessionStorage.getItem('activeRoomId'),
-      userId: sessionStorage.getItem('activeUserId'),
-      gameType: sessionStorage.getItem('activeGameType'),
-    };
+    const roomId = sessionStorage.getItem('activeRoomId');
+    const userId = sessionStorage.getItem('activeUserId');
+    const gameType = sessionStorage.getItem('activeGameType');
+    
+    console.log(`getStoredRoomConnection called, found: roomId=${roomId}, userId=${userId}, gameType=${gameType}`);
+    
+    return { roomId, userId, gameType };
   }
   return { roomId: null, userId: null, gameType: null };
 };
 
-// Nouveau : rendre la sauvegarde du gameType explicite
 export const saveActiveRoomToStorage = (roomId: string, userId: string, gameType?: string) => {
   try {
+    console.log(`saveActiveRoomToStorage called with: roomId=${roomId}, userId=${userId}, gameType=${gameType}`);
     sessionStorage.setItem('activeRoomId', roomId);
     sessionStorage.setItem('activeUserId', userId);
     if (gameType) {
@@ -33,6 +36,7 @@ export const saveActiveRoomToStorage = (roomId: string, userId: string, gameType
 
 export const clearActiveRoomFromStorage = () => {
   try {
+    console.log('clearActiveRoomFromStorage called');
     sessionStorage.removeItem('activeRoomId');
     sessionStorage.removeItem('activeUserId');
     sessionStorage.removeItem('activeGameType');
