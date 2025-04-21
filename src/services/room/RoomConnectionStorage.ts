@@ -1,17 +1,14 @@
 
 export class RoomConnectionStorage {
-  save(roomId: string, userId: string) {
+  save(roomId: string, userId: string, gameType?: string) {
     try {
       sessionStorage.setItem('activeRoomId', roomId);
       sessionStorage.setItem('activeUserId', userId);
-      
-      // Also save game type to allow proper routing on reconnection
-      const gameType = roomId.split('-')[0];
+      // Utiliser explicitement le gameType si fourni
       if (gameType) {
         sessionStorage.setItem('activeGameType', gameType);
       }
-      
-      console.log(`Saved room ${roomId} and user ${userId} to session storage for reconnection`);
+      console.log(`Saved room ${roomId} and user ${userId} to session storage for reconnection. Game type: ${gameType}`);
     } catch (error) {
       console.error('Failed to save room data to session storage:', error);
     }

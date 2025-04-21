@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { WebSocketBase } from "./webSocket/WebSocketBase";
 import { RoomPresenceService } from "./presence/RoomPresenceService";
@@ -27,7 +26,6 @@ export class RoomWebSocketService extends WebSocketBase {
     this.connectionStorage = new RoomConnectionStorage();
     this.reconnectionManager = new RoomReconnectionManager(this, this.maxReconnectAttempts);
     
-    // Setup visibility change handler for better reconnection
     this.visibilityChangeHandler = this.handleVisibilityChange.bind(this);
     document.addEventListener('visibilitychange', this.visibilityChangeHandler);
   }
@@ -37,7 +35,6 @@ export class RoomWebSocketService extends WebSocketBase {
     
     if (document.visibilityState === 'visible' && roomId && userId) {
       console.log(`Document became visible, checking connection to room ${roomId}`);
-      // If we have stored room data and the page becomes visible, ensure connection
       if (!this.channels[roomId]) {
         console.log(`No active channel for room ${roomId}, reconnecting...`);
         this.isReconnecting = true;
@@ -48,7 +45,11 @@ export class RoomWebSocketService extends WebSocketBase {
     }
   }
 
-  connectToRoom(roomId: string, userId: string | null) {
+  saveActiveRoomToStorage(roomId: string, userId: string, gameType?: string) {
+    this.connectionStorage.save(roomId, userId, gameType);
+  }
+
+  connectToRoom(roomId: string, userId: string | null, gameType?: string) {
     if (!roomId || !userId) return null;
     
     if (this.channels[roomId]) {
@@ -56,7 +57,7 @@ export class RoomWebSocketService extends WebSocketBase {
       return this.channels[roomId];
     }
     
-    console.log(`Connecting to room ${roomId} as user ${userId}`);
+    console.log(`Connecting to room ${roomId} as user ${userId} (Game type: ${gameType})`);
     const roomChannel = supabase
       .channel(`room:${roomId}`)
       .on('presence', { event: 'sync' }, async () => {
@@ -117,17 +118,21 @@ export class RoomWebSocketService extends WebSocketBase {
         await roomChannel.track(presenceData);
         console.log('Subscribed to room channel', status);
         
-        // Save room info to session storage for potential reconnection
-        this.saveActiveRoomToStorage(roomId, userId);
+        let storedGameType = gameType;
+        if (!storedGameType) {
+          const { data: sessionData } = await supabase
+            .from('game_sessions')
+            .select('game_type')
+            .eq('id', roomId)
+            .single();
+          storedGameType = sessionData?.game_type || sessionStorage.getItem('activeGameType') || undefined;
+        }
+        this.saveActiveRoomToStorage(roomId, userId, storedGameType);
         
-        // Mark player as connected in the database
         await this.presenceService.markPlayerConnected(roomId, userId);
-        
-        // Reset reconnection flag
         this.isReconnecting = false;
       } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
         console.log('Connection closed/error, attempting reconnect...');
-        // Only try to reconnect if the document is visible (user is active on the page)
         if (document.visibilityState === 'visible') {
           this.reconnectionManager.handleDisconnect(roomId, userId);
         }
@@ -138,10 +143,6 @@ export class RoomWebSocketService extends WebSocketBase {
 
     this.channels[roomId] = roomChannel;
     return roomChannel;
-  }
-
-  saveActiveRoomToStorage(roomId: string, userId: string) {
-    this.connectionStorage.save(roomId, userId);
   }
 
   getStoredRoomConnection() {
@@ -161,8 +162,6 @@ export class RoomWebSocketService extends WebSocketBase {
       delete this.channels[roomId];
     }
 
-    // Only clear session storage if not a page refresh/visibility change
-    // We check if document.visibilityState is 'hidden' to determine if this might be a refresh
     if (!this.isReconnecting && document.visibilityState === 'visible') {
       this.connectionStorage.clear();
       this.presenceService.markPlayerDisconnected(roomId, userId);
@@ -191,5 +190,4 @@ export class RoomWebSocketService extends WebSocketBase {
   }
 }
 
-// Export a singleton instance
 export const roomService = new RoomWebSocketService();

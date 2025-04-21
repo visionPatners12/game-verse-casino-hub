@@ -1,4 +1,3 @@
-
 export { roomService } from './RoomWebSocketService';
 export type { WebSocketBase } from './webSocket/WebSocketBase';
 export { RoomPresenceService } from './presence/RoomPresenceService';
@@ -19,13 +18,11 @@ export const getStoredRoomConnection = () => {
   return { roomId: null, userId: null, gameType: null };
 };
 
-export const saveActiveRoomToStorage = (roomId: string, userId: string) => {
+// Nouveau : rendre la sauvegarde du gameType explicite
+export const saveActiveRoomToStorage = (roomId: string, userId: string, gameType?: string) => {
   try {
     sessionStorage.setItem('activeRoomId', roomId);
     sessionStorage.setItem('activeUserId', userId);
-    
-    // Also save game type to allow proper routing on reconnection
-    const gameType = roomId.split('-')[0];
     if (gameType) {
       sessionStorage.setItem('activeGameType', gameType);
     }
