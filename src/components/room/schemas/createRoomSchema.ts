@@ -11,7 +11,8 @@ export const createRoomSchema = z.object({
     .min(1, "La durée doit être au moins de 1 minute")
     .max(60, "Maximum 60 minutes")
     .optional(),
-  eaId: z.string()
+  eaId: z.string().optional(),
+  _gameType: z.string().optional() // Added this field to the schema
 }).superRefine((data, ctx) => {
   // Only required for futarena
   if (data._gameType === "futarena") {
@@ -32,6 +33,4 @@ export const createRoomSchema = z.object({
   }
 });
 
-export type CreateRoomFormData = z.infer<typeof createRoomSchema> & {
-  _gameType?: string; // Ajoute pour le contexte du schéma conditionnel
-};
+export type CreateRoomFormData = z.infer<typeof createRoomSchema>;
