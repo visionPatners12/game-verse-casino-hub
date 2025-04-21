@@ -1,12 +1,11 @@
-
 import { useEffect, useRef, useState } from "react";
 import { RoomData } from "./types";
 import { GameData } from "@/game-implementation/Ludo/types";
 import { useRoomWebSocket } from "@/hooks/room/useRoomWebSocket";
 import { useParams } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, Timer } from "lucide-react";
 
-// Add TypeScript declarations for window global properties
+// Ajout TypeScript global pour Window
 declare global {
   interface Window {
     $: {
@@ -29,6 +28,9 @@ interface GameCanvasProps {
 
 const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
   const [gameState, setGameState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [remainingTime, setRemainingTime] = useState<number | null>(null);
+  const timerInterval = useRef<NodeJS.Timeout | null>(null);
+
   const canvasRef = useRef<HTMLDivElement>(null);
   const gameInitialized = useRef<boolean>(false);
   const { roomId } = useParams<{ roomId: string }>();
@@ -38,13 +40,14 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     gameStatus, 
     broadcastMove 
   } = useRoomWebSocket(roomId);
-  
+
   // Extract game data
   const players = roomData?.game_players?.map(player => ({
     id: player.id,
     display_name: player.display_name,
     user_id: player.user_id,
     current_score: player.current_score,
+    ea_id: player.ea_id,
   })) || [];
 
   const gameParams = {
@@ -53,7 +56,8 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     maxPlayers: roomData?.max_players,
     currentPlayers: roomData?.current_players,
     roomId: roomData?.room_id,
-    totalPot: roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0
+    totalPot: roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0,
+    matchDuration: roomData?.match_duration,
   };
 
   const gameData: GameData = {
@@ -62,16 +66,13 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     gameParams: gameParams
   };
 
-  // Initialize game canvas
+  // Initialiser canvas du jeu + transmettre le gameData
   useEffect(() => {
     if (!canvasRef.current || !currentUserId || gameInitialized.current) return;
     
     const initializeGame = async () => {
       try {
         setGameState('loading');
-        console.log('Initializing game canvas with data:', gameData);
-        
-        // This is where we make the data available to the game implementation
         if (window.$ && typeof window.$.game !== 'undefined') {
           window.$.game = {
             ...window.$.game,
@@ -79,35 +80,56 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
             sendMove: broadcastMove
           };
         }
-        
-        // Initialize the canvas game
         if (window.initGameCanvas && window.buildGameCanvas) {
           window.initGameCanvas(1280, 768);
           window.buildGameCanvas();
           gameInitialized.current = true;
           setGameState('ready');
         } else {
-          console.error('Game canvas functions not found');
           setGameState('error');
         }
-        
       } catch (error) {
-        console.error('Error initializing game canvas:', error);
         setGameState('error');
       }
     };
-    
+
     initializeGame();
-    
+
     return () => {
-      // Cleanup code for game canvas
-      console.log('Cleaning up game canvas');
       gameInitialized.current = false;
       if (window.removeGameCanvas) {
         window.removeGameCanvas();
       }
     };
-  }, [canvasRef, currentUserId, gameData, broadcastMove]);
+  }, [canvasRef, currentUserId, JSON.stringify(gameData), broadcastMove]);
+  
+  // Timer pour l'Arena Football
+  useEffect(() => {
+    if (roomData?.game_type !== "futarena" || !roomData.match_duration) {
+      setRemainingTime(null);
+      if (timerInterval.current) clearInterval(timerInterval.current);
+      return;
+    }
+
+    if (gameStatus === 'playing') {
+      setRemainingTime(roomData.match_duration * 60);
+      timerInterval.current = setInterval(() => {
+        setRemainingTime(prev => {
+          if (prev === null) return null;
+          if (prev > 0) return prev - 1;
+          if (timerInterval.current) clearInterval(timerInterval.current);
+          return 0;
+        });
+      }, 1000);
+    } else if (gameStatus !== 'playing') {
+      setRemainingTime(null);
+      if (timerInterval.current) clearInterval(timerInterval.current);
+    }
+    return () => {
+      if (timerInterval.current) clearInterval(timerInterval.current);
+    };
+  }, [roomData?.match_duration, roomData?.game_type, gameStatus]);
+
   
   // Listen for game events
   useEffect(() => {
@@ -140,6 +162,17 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
           id="game-canvas-container" 
           className="absolute inset-0 flex items-center justify-center"
         >
+          {roomData.game_type === "futarena" && remainingTime !== null && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-background bg-opacity-70 rounded px-4 py-2 shadow font-bold text-lg border">
+              <Timer className="h-5 w-5 mr-2" />
+              <span>
+                {Math.floor(remainingTime / 60)
+                  .toString()
+                  .padStart(2, '0')}:
+                {(remainingTime % 60).toString().padStart(2, '0')}
+              </span>
+            </div>
+          )}
           {gameState === 'loading' && (
             <div className="text-center">
               <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" />
@@ -147,7 +180,6 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
               <p className="text-muted-foreground">Preparing canvas...</p>
             </div>
           )}
-          
           {gameState === 'error' && (
             <div className="text-center text-destructive">
               <h3 className="text-2xl font-bold mb-2">Error</h3>
@@ -159,5 +191,4 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     </div>
   );
 };
-
 export default GameCanvas;

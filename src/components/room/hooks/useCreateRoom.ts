@@ -17,8 +17,6 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         return;
       }
 
-      console.log("Authenticated user:", authData.user.id);
-      
       if (!isValidGameType(gameType)) {
         toast.error("Invalid game type");
         return;
@@ -26,29 +24,28 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       
       const safeGameType = gameType as GameCode;
       const gameTypeEnum: GameVariant = gameCodeToType[safeGameType];
-      
-      console.log("Creating room with data:", {
+
+      const insertData: any = {
         game_type: gameTypeEnum,
         room_type: 'private',
+        room_id: Math.random().toString(36).substring(2, 8).toUpperCase(),
         max_players: values.maxPlayers,
         entry_fee: values.bet,
-      });
-      
+        commission_rate: 5,
+      };
+
+      // Ajout des champs spécifiques pour ArenaPlay Football
+      if (gameType === "futarena") {
+        insertData["match_duration"] = values.matchDuration || 12;
+      }
+
       const { data, error } = await supabase
         .from('game_sessions')
-        .insert({
-          game_type: gameTypeEnum,
-          room_type: 'private',
-          room_id: Math.random().toString(36).substring(2, 8).toUpperCase(),
-          max_players: values.maxPlayers,
-          entry_fee: values.bet,
-          commission_rate: 5,
-        })
+        .insert(insertData)
         .select()
         .single();
 
       if (error) {
-        console.error("Full error details:", error);
         toast.error("Error creating room: " + error.message);
         throw error;
       }
@@ -58,8 +55,6 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         return;
       }
 
-      console.log("Room created successfully:", data);
-
       // Get the username from the users table to ensure it's not null
       const { data: userData, error: userError } = await supabase
         .from('users')
@@ -68,7 +63,6 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         .single();
         
       if (userError) {
-        console.error("Error fetching username:", userError);
         toast.error("Error joining room: " + userError.message);
         throw userError;
       }
@@ -78,29 +72,27 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         return;
       }
 
-      console.log("Adding player to room:", {
+      // Ajout du joueur à la room avec son EA-ID pour FUT Arena
+      const playerInsert: any = {
         session_id: data.id,
         display_name: userData.username,
         user_id: authData.user.id
-      });
+      };
+
+      if (gameType === "futarena" && values.eaId) {
+        playerInsert.ea_id = values.eaId;
+      }
 
       const { error: playerError } = await supabase
         .from('game_players')
-        .insert({
-          session_id: data.id,
-          display_name: userData.username,
-          user_id: authData.user.id
-        });
+        .insert(playerInsert);
 
       if (playerError) {
-        console.error("Full player error details:", playerError);
         toast.error("Error joining room: " + playerError.message);
         throw playerError;
       }
       
       toast.success("Room created successfully!");
-
-      // Navigate to the game room with the generated room ID
       navigate(`/games/${gameType}/room/${data.id}`);
     } catch (error) {
       console.error('Error creating room:', error);

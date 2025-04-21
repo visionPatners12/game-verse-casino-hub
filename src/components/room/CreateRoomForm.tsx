@@ -2,13 +2,15 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { createRoomSchema, type CreateRoomFormData } from "./schemas/createRoomSchema";
 import { BetAmountField } from "./components/BetAmountField";
 import { PlayersField } from "./components/PlayersField";
 import { WinnersField } from "./components/WinnersField";
 import { GridSizeField } from "./components/GridSizeField";
 import { useCreateRoom } from "./hooks/useCreateRoom";
+import { Input } from "@/components/ui/input";
+import { Timer, Input as InputIcon } from "lucide-react";
 
 type CreateRoomFormProps = {
   username: string;
@@ -24,6 +26,8 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
       maxPlayers: gameConfig?.min_players || 2,
       winnerCount: 1,
       gridSize: gameType === 'tictactoe' ? 3 : undefined,
+      matchDuration: 12, // 12 min par défaut pour FUT
+      eaId: "",
     },
   });
 
@@ -35,9 +39,58 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
         <BetAmountField form={form} disableControls={true} />
         <PlayersField form={form} gameConfig={gameConfig} />
         <WinnersField form={form} />
-        
+
         {gameType === 'tictactoe' && gameConfig?.is_configurable && (
           <GridSizeField form={form} />
+        )}
+
+        {/* Si jeu futarena, afficher la durée du match */}
+        {gameType === "futarena" && (
+          <>
+            <FormField
+              control={form.control}
+              name="matchDuration"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <Timer className="h-4 w-4" />
+                    Durée du match (minutes)
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={60}
+                      {...field}
+                      onChange={e => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="eaId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <InputIcon className="h-4 w-4" />
+                    Ton EA - ID
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="Ton identifiant EA"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
         )}
 
         <Button 

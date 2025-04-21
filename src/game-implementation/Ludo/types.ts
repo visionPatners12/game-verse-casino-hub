@@ -5,6 +5,7 @@ export interface GameData {
     id: string;
     display_name: string;
     user_id: string;
+    ea_id?: string;
     current_score: number;
   }>;
   gameParams: {
@@ -14,5 +15,6 @@ export interface GameData {
     currentPlayers: number;
     roomId: string;
     totalPot: number;
+    matchDuration?: number;
   };
 }

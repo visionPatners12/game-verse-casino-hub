@@ -1,10 +1,11 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Globe, PlusCircle } from "lucide-react";
+import { Users, Globe, PlusCircle, Football } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export type GameType = "ludo" | "checkers" | "tictactoe" | "checkgame";
+// Ajout du type pour ArenaPlay Football
+export type GameType = "ludo" | "checkers" | "tictactoe" | "checkgame" | "futarena";
 
 interface GameCardProps {
   id: string;
@@ -46,7 +47,11 @@ const GameCard = ({
         className="absolute top-3 right-3 z-10 bg-background/50 hover:bg-background/80"
         onClick={handlePublicRoomClick}
       >
-        <Globe className="h-4 w-4" />
+        {type === "futarena" ? (
+          <Football className="h-4 w-4" />
+        ) : (
+          <Globe className="h-4 w-4" />
+        )}
       </Button>
 
       <div className="relative overflow-hidden">
@@ -94,4 +99,3 @@ const GameCard = ({
 };
 
 export default GameCard;
-
