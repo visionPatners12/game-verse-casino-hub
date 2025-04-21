@@ -2,6 +2,7 @@
 export const gameCodeToType = {
   ludo: "Ludo",
   checkers: "Checkers",
+  tictactoe: "TicTacToe",
   checkgame: "CheckGame",
   futarena: "FUT - ArenaPlay Football"
 } as const;

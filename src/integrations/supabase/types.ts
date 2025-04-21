@@ -927,7 +927,7 @@ export type Database = {
       balance_source: "real" | "bonus"
       document_type: "ID" | "ProofOfAddress" | "Passport"
       game_type: "Ludo" | "Checkers" | "TicTacToe" | "CheckGame"
-      game_variant: "ludo" | "checkers" | "tictactoe" | "checkgame"
+      game_variant: "ludo" | "checkers" | "tictactoe" | "checkgame" | "futarena"
       kyc_status: "Pending" | "Approved" | "Rejected"
       room_type: "public" | "private"
       session_status: "Waiting" | "Active" | "Finished"
@@ -1061,7 +1061,7 @@ export const Constants = {
       balance_source: ["real", "bonus"],
       document_type: ["ID", "ProofOfAddress", "Passport"],
       game_type: ["Ludo", "Checkers", "TicTacToe", "CheckGame"],
-      game_variant: ["ludo", "checkers", "tictactoe", "checkgame"],
+      game_variant: ["ludo", "checkers", "tictactoe", "checkgame", "futarena"],
       kyc_status: ["Pending", "Approved", "Rejected"],
       room_type: ["public", "private"],
       session_status: ["Waiting", "Active", "Finished"],
