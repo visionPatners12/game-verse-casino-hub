@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Globe, PlusCircle, Football } from "lucide-react";
+import { Users, Globe, PlusCircle, Ball } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 // Ajout du type pour ArenaPlay Football
@@ -48,7 +48,7 @@ const GameCard = ({
         onClick={handlePublicRoomClick}
       >
         {type === "futarena" ? (
-          <Football className="h-4 w-4" />
+          <Ball className="h-4 w-4" />
         ) : (
           <Globe className="h-4 w-4" />
         )}

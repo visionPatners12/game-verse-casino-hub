@@ -15,13 +15,13 @@ export const isValidGameType = (type: string | undefined): type is GameCode => {
   // Convert to lowercase for case-insensitive matching
   const normalizedType = type.toLowerCase();
   // Check if it's a valid game code
-  return Object.keys(gameCodeToType).includes(normalizedType);
+  return Object.keys(gameCodeToType).map(k => k.toLowerCase()).includes(normalizedType);
 };
 
 export const getGameCodeFromType = (gameTypeValue: string): GameCode | null => {
   const normalizedType = gameTypeValue.toLowerCase();
   for (const [code, name] of Object.entries(gameCodeToType)) {
-    if (name.toLowerCase() === normalizedType || code === normalizedType) {
+    if (name.toLowerCase() === normalizedType || code.toLowerCase() === normalizedType) {
       return code as GameCode;
     }
   }

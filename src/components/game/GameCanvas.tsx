@@ -5,7 +5,6 @@ import { useRoomWebSocket } from "@/hooks/room/useRoomWebSocket";
 import { useParams } from "react-router-dom";
 import { Loader2, Timer } from "lucide-react";
 
-// Ajout TypeScript global pour Window
 declare global {
   interface Window {
     $: {
@@ -41,7 +40,6 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     broadcastMove 
   } = useRoomWebSocket(roomId);
 
-  // Extract game data
   const players = roomData?.game_players?.map(player => ({
     id: player.id,
     display_name: player.display_name,
@@ -66,7 +64,6 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     gameParams: gameParams
   };
 
-  // Initialiser canvas du jeu + transmettre le gameData
   useEffect(() => {
     if (!canvasRef.current || !currentUserId || gameInitialized.current) return;
     
@@ -103,7 +100,6 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     };
   }, [canvasRef, currentUserId, JSON.stringify(gameData), broadcastMove]);
   
-  // Timer pour l'Arena Football
   useEffect(() => {
     if (roomData?.game_type !== "futarena" || !roomData.match_duration) {
       setRemainingTime(null);
@@ -111,7 +107,7 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
       return;
     }
 
-    if (gameStatus === 'playing') {
+    if (gameStatus === 'playing' || gameStatus === 'starting') {
       setRemainingTime(roomData.match_duration * 60);
       timerInterval.current = setInterval(() => {
         setRemainingTime(prev => {
@@ -121,7 +117,7 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
           return 0;
         });
       }, 1000);
-    } else if (gameStatus !== 'playing') {
+    } else {
       setRemainingTime(null);
       if (timerInterval.current) clearInterval(timerInterval.current);
     }
@@ -130,24 +126,19 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     };
   }, [roomData?.match_duration, roomData?.game_type, gameStatus]);
 
-  
-  // Listen for game events
   useEffect(() => {
     if (!roomId || !currentUserId || !gameInitialized.current) return;
     
     console.log('Setting up game event listeners');
     
-    // When a move is received, update the canvas
     const handleGameMove = (event: any) => {
       console.log('Game move received:', event);
-      // Update canvas based on the move
       if (window.$ && window.$.game && typeof window.$.game.handleMove === 'function') {
         window.$.game.handleMove(event);
       }
     };
     
     return () => {
-      // Remove event listeners
       if (window.$ && window.$.game) {
         window.$.game = undefined;
       }

@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import { WinnersField } from "./components/WinnersField";
 import { GridSizeField } from "./components/GridSizeField";
 import { useCreateRoom } from "./hooks/useCreateRoom";
 import { Input } from "@/components/ui/input";
-import { Timer, Input as InputIcon } from "lucide-react";
+import { Timer, Text } from "lucide-react";
 
 type CreateRoomFormProps = {
   username: string;
@@ -44,7 +43,6 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
           <GridSizeField form={form} />
         )}
 
-        {/* Si jeu futarena, afficher la durée du match */}
         {gameType === "futarena" && (
           <>
             <FormField
@@ -76,7 +74,7 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
-                    <InputIcon className="h-4 w-4" />
+                    <Text className="h-4 w-4" />
                     Ton EA - ID
                   </FormLabel>
                   <FormControl>
