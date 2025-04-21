@@ -21,7 +21,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         toast.error("Invalid game type");
         return;
       }
-      
+
       const safeGameType = gameType as GameCode;
       const gameTypeEnum: GameVariant = gameCodeToType[safeGameType];
 
@@ -37,6 +37,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       // Ajout des champs spécifiques pour ArenaPlay Football
       if (gameType === "futarena") {
         insertData["match_duration"] = values.matchDuration || 12;
+        insertData["ea_id"] = values.eaId;
       }
 
       const { data, error } = await supabase
@@ -61,12 +62,12 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         .select('username')
         .eq('id', authData.user.id)
         .single();
-        
+
       if (userError) {
         toast.error("Error joining room: " + userError.message);
         throw userError;
       }
-      
+
       if (!userData || !userData.username) {
         toast.error("Username not found. Please set up your profile first.");
         return;
@@ -91,7 +92,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         toast.error("Error joining room: " + playerError.message);
         throw playerError;
       }
-      
+
       toast.success("Room created successfully!");
       navigate(`/games/${gameType}/room/${data.id}`);
     } catch (error) {

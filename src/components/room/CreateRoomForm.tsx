@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -25,16 +26,23 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
       maxPlayers: gameConfig?.min_players || 2,
       winnerCount: 1,
       gridSize: gameType === 'tictactoe' ? 3 : undefined,
-      matchDuration: 12, // 12 min par défaut pour FUT
+      matchDuration: gameType === "futarena" ? 12 : undefined, // 12 min par défaut pour FUT
       eaId: "",
+      _gameType: gameType, // Ajout pour la validation conditionnelle
     },
+    mode: "onChange"
   });
 
   const { createRoom } = useCreateRoom(username, gameType);
 
+  // Ajout pour forcer le contexte du jeu lors du submit
+  const handleSubmit = (values: CreateRoomFormData) => {
+    createRoom({ ...values, _gameType: gameType });
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(createRoom)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <BetAmountField form={form} disableControls={true} />
         <PlayersField form={form} gameConfig={gameConfig} />
         <WinnersField form={form} />
@@ -47,20 +55,19 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
           <>
             <FormField
               control={form.control}
-              name="matchDuration"
+              name="eaId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
-                    <Timer className="h-4 w-4" />
-                    Durée du match (minutes)
+                    <Text className="h-4 w-4" />
+                    Ton EA - ID <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
-                      min={1}
-                      max={60}
+                      type="text"
+                      placeholder="Ton identifiant EA"
+                      required
                       {...field}
-                      onChange={e => field.onChange(Number(e.target.value))}
                     />
                   </FormControl>
                   <FormMessage />
@@ -70,18 +77,21 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
 
             <FormField
               control={form.control}
-              name="eaId"
+              name="matchDuration"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
-                    <Text className="h-4 w-4" />
-                    Ton EA - ID
+                    <Timer className="h-4 w-4" />
+                    Durée du match (minutes) <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input
-                      type="text"
-                      placeholder="Ton identifiant EA"
+                      type="number"
+                      min={1}
+                      max={60}
                       {...field}
+                      onChange={e => field.onChange(Number(e.target.value))}
+                      required
                     />
                   </FormControl>
                   <FormMessage />

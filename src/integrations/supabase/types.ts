@@ -348,10 +348,12 @@ export type Database = {
           connected_players: string[] | null
           created_at: string | null
           current_players: number
+          ea_id: string | null
           end_time: string | null
           entry_fee: number
           game_type: Database["public"]["Enums"]["game_type"]
           id: string
+          match_duration: number | null
           max_players: number
           pot: number
           room_id: string | null
@@ -365,10 +367,12 @@ export type Database = {
           connected_players?: string[] | null
           created_at?: string | null
           current_players?: number
+          ea_id?: string | null
           end_time?: string | null
           entry_fee: number
           game_type: Database["public"]["Enums"]["game_type"]
           id?: string
+          match_duration?: number | null
           max_players: number
           pot?: number
           room_id?: string | null
@@ -382,10 +386,12 @@ export type Database = {
           connected_players?: string[] | null
           created_at?: string | null
           current_players?: number
+          ea_id?: string | null
           end_time?: string | null
           entry_fee?: number
           game_type?: Database["public"]["Enums"]["game_type"]
           id?: string
+          match_duration?: number | null
           max_players?: number
           pot?: number
           room_id?: string | null
