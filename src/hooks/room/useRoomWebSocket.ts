@@ -33,6 +33,7 @@ export function useRoomWebSocket(roomId: string | undefined) {
             current_score,
             is_connected,
             is_ready,
+            ea_id,
             users:user_id(username, avatar_url)
           )
         `)
@@ -81,6 +82,20 @@ export function useRoomWebSocket(roomId: string | undefined) {
     
     getCurrentUser();
   }, []);
+
+  // Check for stored room connection on page load
+  useEffect(() => {
+    // If we're not on a room page currently but there is a stored room, handle reconnection
+    if (!roomId) {
+      const { roomId: storedRoomId, userId: storedUserId } = roomService.getStoredRoomConnection();
+      
+      if (storedRoomId && storedUserId) {
+        // Redirect to the stored room page
+        console.log(`Reconnecting to stored room: ${storedRoomId}`);
+        window.location.href = `/games/${storedRoomId.split('-')[0]}/room/${storedRoomId}`;
+      }
+    }
+  }, [roomId]);
 
   // Connect to WebSocket when roomId and userId are available
   useEffect(() => {
@@ -137,7 +152,10 @@ export function useRoomWebSocket(roomId: string | undefined) {
     // Cleanup function
     return () => {
       if (roomId && currentUserId) {
-        roomService.disconnectFromRoom(roomId, currentUserId);
+        // Only disconnect if navigating away, not on refresh
+        if (window.performance && performance.navigation && performance.navigation.type !== 1) {
+          roomService.disconnectFromRoom(roomId, currentUserId);
+        }
       }
       
       roomService.offEvent('presenceSync', () => {});
@@ -147,6 +165,23 @@ export function useRoomWebSocket(roomId: string | undefined) {
       roomService.offEvent('gameOver', () => {});
     };
   }, [roomId, currentUserId, fetchRoomData]);
+
+  // Add a window beforeunload event to handle browser/tab closing
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Do not disconnect on page reload, only when closing tab/browser
+      if (e.type === 'beforeunload' && !e.persisted) {
+        // Still save the connection info to sessionStorage for reconnection
+        console.log("Tab/browser closing detected");
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [roomId, currentUserId]);
 
   // Create a function to toggle ready status
   const toggleReady = useCallback(async () => {

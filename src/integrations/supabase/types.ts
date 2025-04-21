@@ -296,6 +296,7 @@ export type Database = {
           created_at: string | null
           current_score: number | null
           display_name: string
+          ea_id: string | null
           id: string
           is_connected: boolean | null
           is_ready: boolean | null
@@ -307,6 +308,7 @@ export type Database = {
           created_at?: string | null
           current_score?: number | null
           display_name: string
+          ea_id?: string | null
           id?: string
           is_connected?: boolean | null
           is_ready?: boolean | null
@@ -318,6 +320,7 @@ export type Database = {
           created_at?: string | null
           current_score?: number | null
           display_name?: string
+          ea_id?: string | null
           id?: string
           is_connected?: boolean | null
           is_ready?: boolean | null
@@ -932,7 +935,7 @@ export type Database = {
     Enums: {
       balance_source: "real" | "bonus"
       document_type: "ID" | "ProofOfAddress" | "Passport"
-      game_type: "Ludo" | "Checkers" | "TicTacToe" | "CheckGame"
+      game_type: "Ludo" | "Checkers" | "TicTacToe" | "CheckGame" | "FUTArena"
       game_variant: "ludo" | "checkers" | "tictactoe" | "checkgame" | "futarena"
       kyc_status: "Pending" | "Approved" | "Rejected"
       room_type: "public" | "private"
@@ -1066,7 +1069,7 @@ export const Constants = {
     Enums: {
       balance_source: ["real", "bonus"],
       document_type: ["ID", "ProofOfAddress", "Passport"],
-      game_type: ["Ludo", "Checkers", "TicTacToe", "CheckGame"],
+      game_type: ["Ludo", "Checkers", "TicTacToe", "CheckGame", "FUTArena"],
       game_variant: ["ludo", "checkers", "tictactoe", "checkgame", "futarena"],
       kyc_status: ["Pending", "Approved", "Rejected"],
       room_type: ["public", "private"],
