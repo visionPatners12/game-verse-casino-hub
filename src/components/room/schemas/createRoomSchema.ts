@@ -7,7 +7,8 @@ export const createRoomSchema = z.object({
   winnerCount: z.number().min(1, "Must have at least 1 winner"),
   gridSize: z.number().optional(),
   matchDuration: z.number().min(1, "La durée doit être au moins de 1 minute").optional(),
-  eaId: z.string().min(3, "EA-ID obligatoire pour FUT").optional()
+  eaId: z.string().min(3, "EA-ID obligatoire pour FUT").optional(),
+  schemaCache: z.string().optional() // Ajout propre au jeu
 });
 
 export type CreateRoomFormData = z.infer<typeof createRoomSchema>;

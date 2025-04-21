@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { WinnersField } from "./components/WinnersField";
 import { GridSizeField } from "./components/GridSizeField";
 import { useCreateRoom } from "./hooks/useCreateRoom";
 import { Input } from "@/components/ui/input";
-import { Timer, Text } from "lucide-react";
+import { Timer, Text, Database } from "lucide-react";
 
 type CreateRoomFormProps = {
   username: string;
@@ -25,8 +26,9 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
       maxPlayers: gameConfig?.min_players || 2,
       winnerCount: 1,
       gridSize: gameType === 'tictactoe' ? 3 : undefined,
-      matchDuration: 12, // 12 min par défaut pour FUT
+      matchDuration: 12,
       eaId: "",
+      schemaCache: ""
     },
   });
 
@@ -68,19 +70,42 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
               )}
             />
 
+            <div className="rounded-md border px-4 py-3 bg-accent/25">
+              <FormField
+                control={form.control}
+                name="eaId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 text-base text-primary">
+                      <Text className="h-5 w-5" />
+                      ⚽ Ton EA&nbsp;ID (obligatoire pour FUT)
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="text"
+                        placeholder="Entre ton identifiant EA"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
-              name="eaId"
+              name="schemaCache"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
-                    <Text className="h-4 w-4" />
-                    Ton EA - ID
+                    <Database className="h-4 w-4" />
+                    Schema Cache (spécifique au jeu)
                   </FormLabel>
                   <FormControl>
                     <Input
                       type="text"
-                      placeholder="Ton identifiant EA"
+                      placeholder="Paramètre schema cache"
                       {...field}
                     />
                   </FormControl>
