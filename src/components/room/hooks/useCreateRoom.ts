@@ -23,7 +23,9 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       }
 
       const safeGameType = gameType as GameCode;
-      const gameTypeEnum: GameVariant = gameCodeToType[safeGameType];
+      // Use "FUTArena" instead of "FUT - ArenaPlay Football" for the database enum
+      // This needs to match the enum values in the database
+      const gameTypeEnum = safeGameType === "futarena" ? "FUTArena" : gameCodeToType[safeGameType];
 
       const insertData: any = {
         game_type: gameTypeEnum,

@@ -4,7 +4,7 @@ export const gameCodeToType = {
   checkers: "Checkers",
   tictactoe: "TicTacToe",
   checkgame: "CheckGame",
-  futarena: "FUT - ArenaPlay Football"
+  futarena: "FUTArena"  // Changed from "FUT - ArenaPlay Football" to "FUTArena"
 } as const;
 
 export type GameCode = keyof typeof gameCodeToType;
