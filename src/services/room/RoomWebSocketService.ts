@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { WebSocketBase } from "./webSocket/WebSocketBase";
 import { RoomPresenceService } from "./presence/RoomPresenceService";
@@ -8,7 +9,7 @@ export class RoomWebSocketService extends WebSocketBase {
   private presenceService: RoomPresenceService;
   private gameStateService: GameStateService;
   private reconnectAttempts: Record<string, number> = {};
-  private maxReconnectAttempts = 10; // Increased from 5 to 10
+  private maxReconnectAttempts = 15; // Increased from 10 to 15 for better page refresh handling
   private heartbeatIntervals: Record<string, number> = {};
   private lastPresenceStates: Record<string, PresenceData> = {}; // Store last presence state for reconnection
 
@@ -112,21 +113,23 @@ export class RoomWebSocketService extends WebSocketBase {
     return roomChannel;
   }
 
-  // Make the saveActiveRoomToStorage method public
+  // Public method to save active room to storage
   saveActiveRoomToStorage(roomId: string, userId: string) {
     try {
       sessionStorage.setItem('activeRoomId', roomId);
       sessionStorage.setItem('activeUserId', userId);
+      console.log(`Saved room ${roomId} and user ${userId} to session storage for reconnection`);
     } catch (error) {
       console.error('Failed to save room data to session storage:', error);
     }
   }
   
-  // Keep these as private methods
+  // Method to clear active room from storage
   private clearActiveRoomFromStorage() {
     try {
       sessionStorage.removeItem('activeRoomId');
       sessionStorage.removeItem('activeUserId');
+      console.log('Cleared room data from session storage');
     } catch (error) {
       console.error('Failed to clear room data from session storage:', error);
     }
@@ -137,6 +140,9 @@ export class RoomWebSocketService extends WebSocketBase {
     try {
       const roomId = sessionStorage.getItem('activeRoomId');
       const userId = sessionStorage.getItem('activeUserId');
+      if (roomId && userId) {
+        console.log(`Found stored room connection: ${roomId} for user ${userId}`);
+      }
       return { roomId, userId };
     } catch (error) {
       console.error('Failed to get room data from session storage:', error);
@@ -197,8 +203,11 @@ export class RoomWebSocketService extends WebSocketBase {
       delete this.channels[roomId];
     }
     
-    // Clear from session storage
-    this.clearActiveRoomFromStorage();
+    // Clear from session storage - only do this in explicit disconnection, 
+    // not during page refresh which triggers component unmount
+    if (document.visibilityState === 'visible') {
+      this.clearActiveRoomFromStorage();
+    }
     
     // Only mark player as disconnected when explicitly calling disconnect
     this.presenceService.markPlayerDisconnected(roomId, userId);

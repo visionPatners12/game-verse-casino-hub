@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRoomDataState } from "./useRoomDataState";
 import { useRoomSocketEvents } from "./useRoomSocketEvents";
 import { useRoomActions } from "./useRoomActions";
@@ -39,25 +39,27 @@ export function useRoomWebSocket(roomId: string | undefined) {
     setGameStatus,
   });
 
-  // Automatic reconnection
   const { toast } = useToast();
-  // Session restore
-  useCallback(() => {
-    if (!roomId) {
+
+  // Session restore - improved implementation
+  useEffect(() => {
+    if (!roomId && !currentUserId) {
       const { roomId: storedRoomId, userId: storedUserId } = roomService.getStoredRoomConnection();
       if (storedRoomId && storedUserId) {
+        // Navigate to the stored room
         window.location.href = `/games/${storedRoomId.split('-')[0]}/room/${storedRoomId}`;
       }
     }
-  }, [roomId]);
+  }, [roomId, currentUserId]);
 
   // Handle beforeunload to save state
-  useCallback(() => {
+  useEffect(() => {
     const handleBeforeUnload = () => {
       if (roomId && currentUserId) {
         roomService.saveActiveRoomToStorage(roomId, currentUserId);
       }
     };
+    
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [roomId, currentUserId]);

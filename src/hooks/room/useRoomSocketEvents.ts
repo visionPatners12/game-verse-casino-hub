@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { roomService } from "@/services/room";
 import { PresenceData } from "@/components/game/types";
 import { useToast } from "@/components/ui/use-toast";
@@ -22,45 +22,76 @@ export function useRoomSocketEvents({
   const { toast } = useToast();
 
   useEffect(() => {
+    // Don't continue if we don't have both roomId and currentUserId
     if (!roomId || !currentUserId) return;
 
+    console.log(`Initializing room socket connection for room ${roomId} and user ${currentUserId}`);
+    
+    // First connect to room
     roomService.connectToRoom(roomId, currentUserId);
-
+    
+    // Set up event handlers for room events
     const handlePresenceSync = (_: string, state: Record<string, PresenceData[]>) => {
+      console.log("Presence sync received:", state);
       setPresenceState(state);
+      
+      // Update ready status from presence data
       const flat = Object.values(state).flat();
       const current = flat.find(p => p.user_id === currentUserId);
-      setIsReady(Boolean(current && current.is_ready));
+      if (current) {
+        setIsReady(Boolean(current.is_ready));
+      }
     };
-    const handlePlayerJoined = () => fetchRoomData();
-    const handlePlayerLeft = () => fetchRoomData();
+    
+    const handlePlayerJoined = () => {
+      console.log("Player joined event received");
+      fetchRoomData();
+    };
+    
+    const handlePlayerLeft = () => {
+      console.log("Player left event received");
+      fetchRoomData();
+    };
+    
     const handleGameStart = (_: string, data: any) => {
+      console.log("Game start event received:", data);
       setGameStatus('playing');
       fetchRoomData();
     };
+    
     const handleGameOver = (_: string, data: any) => {
+      console.log("Game over event received:", data);
       setGameStatus('ended');
       fetchRoomData();
     };
 
+    // Register all event handlers
     roomService.onEvent('presenceSync', handlePresenceSync);
     roomService.onEvent('playerJoined', handlePlayerJoined);
     roomService.onEvent('playerLeft', handlePlayerLeft);
     roomService.onEvent('gameStart', handleGameStart);
     roomService.onEvent('gameOver', handleGameOver);
 
+    // Fetch initial room data
     fetchRoomData();
 
+    // Clean up function to run when component unmounts or dependencies change
     return () => {
-      if (roomId && currentUserId) {
-        roomService.disconnectFromRoom(roomId, currentUserId);
-      }
+      console.log(`Cleaning up room socket connection for room ${roomId}`);
+      
+      // Remove all event handlers
       roomService.offEvent('presenceSync', handlePresenceSync);
       roomService.offEvent('playerJoined', handlePlayerJoined);
       roomService.offEvent('playerLeft', handlePlayerLeft);
       roomService.offEvent('gameStart', handleGameStart);
       roomService.offEvent('gameOver', handleGameOver);
+      
+      // Only disconnect if we have both room and user ID
+      if (roomId && currentUserId) {
+        // When unmounting component, disconnect from room
+        // The session will be saved by the beforeunload handler in useRoomWebSocket
+        roomService.disconnectFromRoom(roomId, currentUserId);
+      }
     };
-    // eslint-disable-next-line
-  }, [roomId, currentUserId, fetchRoomData]);
+  }, [roomId, currentUserId, fetchRoomData, setGameStatus, setIsReady, setPresenceState]);
 }
