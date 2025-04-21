@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { roomService } from "@/services/room";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +14,6 @@ export function useRoomWebSocket(roomId: string | undefined) {
   const [gameStatus, setGameStatus] = useState<'waiting' | 'starting' | 'playing' | 'ended'>('waiting');
   const { toast } = useToast();
 
-  // Fetch initial room data
   const fetchRoomData = useCallback(async () => {
     if (!roomId) return;
     
@@ -44,15 +42,12 @@ export function useRoomWebSocket(roomId: string | undefined) {
       
       console.log('Fetched room data:', roomData);
       
-      // Cast the roomData to RoomData type after validation
       const typedRoomData = roomData as unknown as RoomData;
       setRoomData(typedRoomData);
       setPlayers(typedRoomData.game_players || []);
       
-      // Set game status based on room status
       const dbStatus = roomData.status as DatabaseSessionStatus;
       
-      // Map database status to client status
       if (dbStatus === 'Active') {
         setGameStatus('playing');
       } else if (dbStatus === 'Finished') {
@@ -73,7 +68,6 @@ export function useRoomWebSocket(roomId: string | undefined) {
     }
   }, [roomId, toast]);
 
-  // Get current user
   useEffect(() => {
     const getCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -83,35 +77,28 @@ export function useRoomWebSocket(roomId: string | undefined) {
     getCurrentUser();
   }, []);
 
-  // Check for stored room connection on page load
   useEffect(() => {
-    // If we're not on a room page currently but there is a stored room, handle reconnection
     if (!roomId) {
       const { roomId: storedRoomId, userId: storedUserId } = roomService.getStoredRoomConnection();
       
       if (storedRoomId && storedUserId) {
-        // Redirect to the stored room page
         console.log(`Reconnecting to stored room: ${storedRoomId}`);
         window.location.href = `/games/${storedRoomId.split('-')[0]}/room/${storedRoomId}`;
       }
     }
   }, [roomId]);
 
-  // Connect to WebSocket when roomId and userId are available
   useEffect(() => {
     if (!roomId || !currentUserId) return;
     
     console.log(`Setting up WebSocket connection for room ${roomId}`);
     
-    // Connect to room WebSocket
     roomService.connectToRoom(roomId, currentUserId);
     
-    // Set up event listeners
     roomService.onEvent('presenceSync', (id: string, state: Record<string, PresenceData[]>) => {
       console.log('Presence state updated:', state);
       setPresenceState(state);
       
-      // Check if current user is ready
       const currentUserPresence = Object.values(state)
         .flat()
         .find((presence) => {
@@ -126,33 +113,30 @@ export function useRoomWebSocket(roomId: string | undefined) {
     
     roomService.onEvent('playerJoined', (id: string, data: any) => {
       console.log('Player joined event:', data);
-      fetchRoomData(); // Refresh room data when a player joins
+      fetchRoomData();
     });
     
     roomService.onEvent('playerLeft', (id: string, data: any) => {
       console.log('Player left event:', data);
-      fetchRoomData(); // Refresh room data when a player leaves
+      fetchRoomData();
     });
     
     roomService.onEvent('gameStart', (id: string, data: any) => {
       console.log('Game started:', data);
       setGameStatus('playing');
-      fetchRoomData(); // Refresh room data when game starts
+      fetchRoomData();
     });
     
     roomService.onEvent('gameOver', (id: string, data: any) => {
       console.log('Game over:', data);
       setGameStatus('ended');
-      fetchRoomData(); // Refresh room data when game ends
+      fetchRoomData();
     });
     
-    // Initial data fetch
     fetchRoomData();
     
-    // Cleanup function
     return () => {
       if (roomId && currentUserId) {
-        // Only disconnect if navigating away, not on refresh
         if (window.performance && performance.navigation && performance.navigation.type !== 1) {
           roomService.disconnectFromRoom(roomId, currentUserId);
         }
@@ -166,13 +150,12 @@ export function useRoomWebSocket(roomId: string | undefined) {
     };
   }, [roomId, currentUserId, fetchRoomData]);
 
-  // Add a window beforeunload event to handle browser/tab closing
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // Do not disconnect on page reload, only when closing tab/browser
-      if (e.type === 'beforeunload' && !e.persisted) {
-        // Still save the connection info to sessionStorage for reconnection
-        console.log("Tab/browser closing detected");
+      console.log("Tab/browser closing detected");
+      
+      if (roomId && currentUserId) {
+        roomService.saveActiveRoomToStorage(roomId, currentUserId);
       }
     };
     
@@ -183,7 +166,6 @@ export function useRoomWebSocket(roomId: string | undefined) {
     };
   }, [roomId, currentUserId]);
 
-  // Create a function to toggle ready status
   const toggleReady = useCallback(async () => {
     if (!roomId || !currentUserId) return;
     
@@ -201,7 +183,6 @@ export function useRoomWebSocket(roomId: string | undefined) {
     }
   }, [roomId, currentUserId, isReady, toast]);
 
-  // Create a function to start the game
   const startGame = useCallback(async () => {
     if (!roomId) return;
     
@@ -224,14 +205,12 @@ export function useRoomWebSocket(roomId: string | undefined) {
     }
   }, [roomId, toast]);
 
-  // Function to broadcast a move
   const broadcastMove = useCallback((moveData: any) => {
     if (!roomId) return;
     
     roomService.broadcastMove(roomId, moveData);
   }, [roomId]);
 
-  // Function to end the game
   const endGame = useCallback(async (results: any) => {
     if (!roomId) return;
     

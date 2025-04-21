@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { WebSocketBase } from "./webSocket/WebSocketBase";
 import { RoomPresenceService } from "./presence/RoomPresenceService";
@@ -113,8 +112,8 @@ export class RoomWebSocketService extends WebSocketBase {
     return roomChannel;
   }
 
-  // Save active room info to session storage for reconnection after page reload
-  private saveActiveRoomToStorage(roomId: string, userId: string) {
+  // Make the saveActiveRoomToStorage method public
+  saveActiveRoomToStorage(roomId: string, userId: string) {
     try {
       sessionStorage.setItem('activeRoomId', roomId);
       sessionStorage.setItem('activeUserId', userId);
@@ -123,7 +122,7 @@ export class RoomWebSocketService extends WebSocketBase {
     }
   }
   
-  // Clear active room info from session storage
+  // Keep these as private methods
   private clearActiveRoomFromStorage() {
     try {
       sessionStorage.removeItem('activeRoomId');
