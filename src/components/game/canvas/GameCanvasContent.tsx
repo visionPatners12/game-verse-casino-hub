@@ -3,39 +3,17 @@ import { Loader2 } from "lucide-react";
 import { GameData } from "@/game-implementation/Ludo/types";
 import { RoomData } from "../types";
 
-declare global {
-  interface Window {
-    $: any;
-    initGameCanvas?: (width: number, height: number) => void;
-    buildGameCanvas?: () => void;
-    removeGameCanvas?: () => void;
-  }
-}
-
 interface GameCanvasContentProps {
   roomData: RoomData;
   currentUserId: string | null;
+  isFullscreen: boolean;
 }
 
-export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasContentProps) => {
+export const GameCanvasContent = memo(({ roomData, currentUserId, isFullscreen }: GameCanvasContentProps) => {
   const [gameState, setGameState] = useState<'loading' | 'ready' | 'error'>('loading');
   const canvasRef = useRef<HTMLDivElement>(null);
   const gameInitialized = useRef<boolean>(false);
   const lastGameData = useRef<GameData | null>(null);
-
-  useEffect(() => {
-    const applyFullscreenStyles = () => {
-      const gameCanvas = document.getElementById("gameCanvas");
-      if (gameCanvas && document.fullscreenElement === gameCanvas) {
-        gameCanvas.style.width = "100vw";
-        gameCanvas.style.height = "100vh";
-        gameCanvas.style.backgroundColor = "black";
-      }
-    };
-
-    document.addEventListener('fullscreenchange', applyFullscreenStyles);
-    return () => document.removeEventListener('fullscreenchange', applyFullscreenStyles);
-  }, []);
 
   const gameData: GameData = {
     currentPlayerId: currentUserId,
@@ -143,7 +121,7 @@ export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasCo
   return (
     <div 
       ref={canvasRef} 
-      className="absolute inset-0 flex items-center justify-center [&:fullscreen]:bg-black"
+      className={`absolute inset-0 flex items-center justify-center ${isFullscreen ? 'bg-black' : ''}`}
     />
   );
 });
