@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { roomService } from "@/services/room";
 import { useToast } from "@/components/ui/use-toast";
@@ -74,21 +75,29 @@ export function useRoomActions({
   const forfeitGame = useCallback(async () => {
     if (!roomId || !currentUserId) return;
     try {
+      // Mark player as forfeited in the database
       await supabase
         .from('game_players')
         .update({ has_forfeited: true })
         .eq('session_id', roomId)
         .eq('user_id', currentUserId);
 
+      // Disconnect from room and WebSocket
       await roomService.disconnectFromRoom(roomId, currentUserId);
+      
+      // Clear ALL room data from storage to prevent auto-reconnection
       roomService.saveActiveRoomToStorage("", "", "");
+      sessionStorage.removeItem('activeRoomId');
+      sessionStorage.removeItem('activeUserId');
+      sessionStorage.removeItem('activeGameType');
       
       toast({
         title: "Partie abandonnée",
         description: "Vous avez quitté la partie.",
       });
       
-      navigate('/');
+      // Redirect to games listing page instead of home
+      navigate('/games');
       
     } catch (error) {
       toast({
