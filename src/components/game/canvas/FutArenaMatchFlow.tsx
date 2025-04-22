@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle } from "lucide-react";
@@ -40,18 +39,15 @@ export const FutArenaMatchFlow = ({
 
   const [timerStarted, setTimerStarted] = useState(false);
 
-  // (Simplicité : on considère le host comme étant le premier player du tableau si pas de roomData.created_by)
-  // S'il existe un champ "created_by" ou autre, utilisez-le ici :
+  // Host detection
   const hostUserId =
     (roomData as any)?.created_by ||
     (roomData?.game_players && roomData?.game_players[0]?.user_id) ||
     null;
   const isHost = currentUserId && hostUserId === currentUserId;
 
-  // Pour l'UI actuelle :
-  const allPlayersReady =
-    connectedPlayers.length > 0 &&
-    connectedPlayers.every((player) => player.is_ready);
+  // Remove the "all players ready" logic for FUTArena → only host matters
+  // ---
 
   useEffect(() => {
     if (!roomData?.id) return;
@@ -85,7 +81,7 @@ export const FutArenaMatchFlow = ({
     }
 
     if (isHost) {
-      // Host : ready pour tout le monde + status starting
+      // Host: directly start the game for all (not waiting for others)
       const { error: updatePlayersErr } = await supabase
         .from("game_players")
         .update({ is_ready: true })
@@ -99,10 +95,11 @@ export const FutArenaMatchFlow = ({
       if (updatePlayersErr || updateStatusErr) {
         toast.error("Couldn't start the game for all players.");
       } else {
-        toast.success("Partie démarrée par le créateur !");
+        toast.success("La partie a démarré !");
+        setTimerStarted(true);
       }
     } else {
-      // Joueur classique : comme avant, ready lui-même
+      // Non-host: just ready up self (should not affect when game starts)
       const { error } = await supabase
         .from("game_players")
         .update({ is_ready: true })
@@ -117,14 +114,14 @@ export const FutArenaMatchFlow = ({
   };
 
   useEffect(() => {
-    // Start timer si partie a commencé OU si tous les joueurs sont ready
+    // Start timer as soon as gameStatus is "playing" or host launched
     if (
-      (gameStatus === "playing" || gameStatus === "starting" || allPlayersReady) &&
+      (gameStatus === "playing" || gameStatus === "starting" || timerStarted) &&
       !timerStarted
     ) {
       setTimerStarted(true);
     }
-  }, [connectedPlayers, allPlayersReady, timerStarted, gameStatus]);
+  }, [timerStarted, gameStatus]);
 
   if (futIdLoading) {
     return (
@@ -157,7 +154,7 @@ export const FutArenaMatchFlow = ({
           ))}
         </div>
 
-        {/* Host ou non, bouton "Get Ready" */}
+        {/* If you're host and NOT ready, big "Get Ready" button, start for ALL */}
         {me && !me.is_ready && (
           <Button
             onClick={handleGetReady}
@@ -172,7 +169,7 @@ export const FutArenaMatchFlow = ({
         <div className="mt-8 text-lg font-semibold text-muted-foreground">
           {!timerStarted
             ? isHost
-              ? "En cliquant sur 'Get Ready', vous lancez la partie pour tous les joueurs."
+              ? "En cliquant sur 'Get Ready', la partie démarre immédiatement pour tout le monde, même si les autres joueurs ne sont pas 'ready'."
               : "En attente que le créateur démarre la partie…"
             : "Tous les joueurs sont prêts ! La partie est en cours de démarrage..."}
         </div>
@@ -180,6 +177,7 @@ export const FutArenaMatchFlow = ({
     );
   }
 
+  // Once timer started, show timer/match
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-30">
       <div className="flex flex-col items-center animate-fade-in">
