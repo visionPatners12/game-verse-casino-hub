@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { RoomData, DatabaseSessionStatus } from "@/components/game/types";
@@ -26,7 +25,7 @@ export function useRoomDataState(roomId: string | undefined) {
       
       console.log("Fetching room data for:", roomId);
       
-      // Utilisez la fonction de calcul du pot prix dans la requête
+      // Fetch room data with the new prize pool calculation
       const { data: roomData, error: roomError } = await supabase
         .from('game_sessions')
         .select(`
@@ -52,23 +51,14 @@ export function useRoomDataState(roomId: string | undefined) {
       
       console.log("Fetched room data:", roomData);
       
-      // Recalcul manuel du pot pour s'assurer qu'il est à jour
-      const connectedPlayers = roomData.game_players ? roomData.game_players.filter(player => player.is_connected).length : 0;
-      console.log(`Connected players count: ${connectedPlayers}, Current players in DB: ${roomData.current_players}`);
+      // Always recalculate pot using the new function with max_players
+      const { data: potData } = await supabase.rpc('calculate_prize_pool', {
+        session_id: roomId
+      });
       
-      // Si on constate une différence, on force le recalcul du pot
-      if (connectedPlayers !== roomData.current_players) {
-        console.log("Player count mismatch. Triggering pot recalculation...");
-        
-        // Appeler la fonction de calcul du pot pour obtenir le pot à jour
-        const { data: potData } = await supabase.rpc('calculate_prize_pool', {
-          session_id: roomId
-        });
-        
-        if (potData) {
-          console.log(`Recalculated pot value: ${potData}`);
-          roomData.pot = potData;
-        }
+      if (potData) {
+        console.log(`Recalculated pot value: ${potData}`);
+        roomData.pot = potData;
       }
       
       const typedRoomData = roomData as unknown as RoomData;
