@@ -13,15 +13,19 @@ interface GameCanvasContainerProps {
 }
 
 const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContainerProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const toggleFullscreen = async () => {
-    if (!containerRef.current) return;
+    const gameCanvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
+    if (!gameCanvas) {
+      toast.error("Canvas non trouvé");
+      return;
+    }
 
     try {
       if (!document.fullscreenElement) {
-        await containerRef.current.requestFullscreen();
+        await gameCanvas.requestFullscreen();
         setIsFullscreen(true);
         toast.success("Mode plein écran activé");
       } else {
@@ -31,7 +35,7 @@ const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContain
       }
     } catch (err) {
       console.error('Erreur lors du passage en plein écran:', err);
-      toast.error("Impossible de passer en mode plein écran. Votre navigateur pourrait ne pas supporter cette fonctionnalité.");
+      toast.error("Impossible de passer en mode plein écran");
     }
   };
 
@@ -47,7 +51,6 @@ const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContain
   return (
     <div 
       ref={containerRef}
-      id="game-canvas-container"
       className="relative bg-accent/10 rounded-lg overflow-hidden w-full aspect-video"
     >
       <Button

@@ -23,6 +23,20 @@ export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasCo
   const gameInitialized = useRef<boolean>(false);
   const lastGameData = useRef<GameData | null>(null);
 
+  useEffect(() => {
+    const applyFullscreenStyles = () => {
+      const gameCanvas = document.getElementById("gameCanvas");
+      if (gameCanvas && document.fullscreenElement === gameCanvas) {
+        gameCanvas.style.width = "100vw";
+        gameCanvas.style.height = "100vh";
+        gameCanvas.style.backgroundColor = "black";
+      }
+    };
+
+    document.addEventListener('fullscreenchange', applyFullscreenStyles);
+    return () => document.removeEventListener('fullscreenchange', applyFullscreenStyles);
+  }, []);
+
   const gameData: GameData = {
     currentPlayerId: currentUserId,
     allPlayers: roomData.game_players?.map(player => ({
@@ -129,9 +143,7 @@ export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasCo
   return (
     <div 
       ref={canvasRef} 
-      id="game-canvas-container" 
-      className="absolute inset-0 flex items-center justify-center [&:fullscreen]:bg-black [&:fullscreen_canvas]:w-[100vw] [&:fullscreen_canvas]:h-[100vh]"
-      style={{ width: '100%', height: '100%' }}
+      className="absolute inset-0 flex items-center justify-center [&:fullscreen]:bg-black"
     />
   );
 });

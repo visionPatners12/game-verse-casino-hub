@@ -102,20 +102,16 @@ function resizeGameFunc(){
 		if(offset.top < 0){
 			offset.y = Math.abs((offset.top/scalePercent)/2);
 		}
-
-		// Handle fullscreen mode
-		if (document.fullscreenElement) {
-			newCanvasW = windowW;
-			newCanvasH = windowH;
-			offset.left = 0;
-			offset.top = 0;
-			$('canvas').css({
-				width: '100vw',
-				height: '100vh',
-				left: 0,
-				top: 0
-			});
+		
+		var gameCanvas = document.getElementById('gameCanvas');
+		if (gameCanvas && document.fullscreenElement === gameCanvas) {
+			// En mode plein écran, le canvas prend tout l'espace disponible
+			gameCanvas.style.width = '100vw';
+			gameCanvas.style.height = '100vh';
+			gameCanvas.style.left = '0';
+			gameCanvas.style.top = '0';
 		} else {
+			// En mode normal, appliquer les dimensions calculées
 			$('canvas').css({
 				width: newCanvasW,
 				height: newCanvasH,
