@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { roomService } from "@/services/room";
 import { PresenceData } from "@/components/game/types";
@@ -77,6 +78,28 @@ export function useRoomSocketEvents({
       fetchRoomData();
     };
 
+    // Surveiller les changements de statut de la room dans la DB
+    const roomStatusChannel = supabase
+      .channel(`room-status-${roomId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "game_sessions",
+          filter: `id=eq.${roomId}`,
+        },
+        (payload) => {
+          console.log("Room status changed in DB:", payload.new);
+          if (payload.new && payload.new.status === "Active") {
+            console.log("Setting game status to playing based on DB update");
+            setGameStatus('playing');
+            fetchRoomData();
+          }
+        }
+      )
+      .subscribe();
+
     // Register all event handlers
     roomService.onEvent('presenceSync', handlePresenceSync);
     roomService.onEvent('playerJoined', handlePlayerJoined);
@@ -97,6 +120,9 @@ export function useRoomSocketEvents({
       roomService.offEvent('playerLeft', handlePlayerLeft);
       roomService.offEvent('gameStart', handleGameStart);
       roomService.offEvent('gameOver', handleGameOver);
+      
+      // Clean up the room status channel
+      supabase.removeChannel(roomStatusChannel);
       
       // Only disconnect if we have both room and user ID
       if (roomId && currentUserId) {

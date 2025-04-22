@@ -47,9 +47,6 @@ export const FutArenaMatchFlow = ({
     null;
   const isHost = currentUserId && hostUserId === currentUserId;
 
-  // Remove the "all players ready" logic for FUTArena → only host matters
-  // ---
-
   useEffect(() => {
     if (!roomData?.id) return;
 
@@ -64,10 +61,23 @@ export const FutArenaMatchFlow = ({
           filter: `session_id=eq.${roomData.id}`,
         },
         () => {
-          // Instead of reloading the page, we'll force re-fetch the data
-          // This will be handled by the parent component's fetchRoomData function
-          // which is automatically called on a timer
           console.log("Game players changed, data will refresh on next poll");
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "game_sessions",
+          filter: `id=eq.${roomData.id}`,
+        },
+        (payload) => {
+          // Si le statut de la session change à "Active", on démarre le timer
+          if (payload.new && payload.new.status === "Active") {
+            console.log("Game session status changed to Active, starting timer");
+            setTimerStarted(true);
+          }
         }
       )
       .subscribe();
@@ -77,6 +87,17 @@ export const FutArenaMatchFlow = ({
     };
   }, [roomData?.id]);
 
+  // Si gameStatus devient playing/starting OU si le status est déjà "Active", démarrer le timer
+  useEffect(() => {
+    if (
+      (gameStatus === "playing" || gameStatus === "starting") || 
+      (roomData && roomData.status === "Active")
+    ) {
+      console.log("Setting timer started based on game status:", gameStatus, "or room status:", roomData?.status);
+      setTimerStarted(true);
+    }
+  }, [gameStatus, roomData?.status]);
+
   const handleGetReady = async () => {
     if (!currentUserId || !roomData?.id) return;
     if (!futId) {
@@ -84,48 +105,59 @@ export const FutArenaMatchFlow = ({
       return;
     }
 
-    if (isHost) {
-      // Host: directly start the game for all (not waiting for others)
-      const { error: updatePlayersErr } = await supabase
-        .from("game_players")
-        .update({ is_ready: true })
-        .eq("session_id", roomData.id);
+    try {
+      console.log("Starting Get Ready process as", isHost ? "host" : "player");
 
-      const { error: updateStatusErr } = await supabase
-        .from("game_sessions")
-        .update({ status: "Active", start_time: new Date().toISOString() })
-        .eq("id", roomData.id);
-
-      if (updatePlayersErr || updateStatusErr) {
-        toast.error("Couldn't start the game for all players.");
-      } else {
-        toast.success("La partie a démarré !");
-        setTimerStarted(true);
-      }
-    } else {
-      // Non-host: just ready up self (should not affect when game starts)
-      const { error } = await supabase
+      // Mettre à jour status "ready" pour le joueur courant
+      const { error: playerError } = await supabase
         .from("game_players")
         .update({ is_ready: true })
         .eq("session_id", roomData.id)
         .eq("user_id", currentUserId);
-      if (error) {
-        toast.error("Couldn't update ready status.");
+
+      if (playerError) {
+        console.error("Error updating player ready status:", playerError);
+        toast.error("Could not update ready status");
+        return;
+      }
+
+      // Si c'est l'hôte, démarrer la partie immédiatement
+      if (isHost) {
+        console.log("Host is starting the game for all players");
+        
+        // Mettre à jour tous les joueurs comme ready
+        const { error: allPlayersError } = await supabase
+          .from("game_players")
+          .update({ is_ready: true })
+          .eq("session_id", roomData.id);
+
+        // Mettre à jour le statut de la session à Active
+        const { error: sessionError } = await supabase
+          .from("game_sessions")
+          .update({ 
+            status: "Active", 
+            start_time: new Date().toISOString() 
+          })
+          .eq("id", roomData.id);
+
+        if (allPlayersError || sessionError) {
+          console.error("Error updating game status:", allPlayersError || sessionError);
+          toast.error("Could not start the game");
+          return;
+        }
+
+        console.log("Game started successfully by host");
+        toast.success("La partie a démarré !");
+        setTimerStarted(true);
       } else {
+        console.log("Player is ready, waiting for host to start");
         toast.success("You're ready! Waiting for host to start the game...");
       }
+    } catch (error) {
+      console.error("Error in Get Ready process:", error);
+      toast.error("An error occurred while getting ready");
     }
   };
-
-  useEffect(() => {
-    // Start timer as soon as gameStatus is "playing" or host launched
-    if (
-      (gameStatus === "playing" || gameStatus === "starting" || timerStarted) &&
-      !timerStarted
-    ) {
-      setTimerStarted(true);
-    }
-  }, [timerStarted, gameStatus]);
 
   if (futIdLoading) {
     return (
@@ -136,58 +168,58 @@ export const FutArenaMatchFlow = ({
     );
   }
 
-  if (!timerStarted) {
+  // Si le timer a démarré, montrer le timer/match
+  if (timerStarted) {
     return (
-      <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 z-30">
-        <div className="flex flex-col md:flex-row items-center gap-8">
-          {futPlayers.map((p, idx) => (
-            <div key={p.user_id} className="flex flex-col items-center bg-card/70 rounded-lg px-6 py-4 m-2 shadow">
-              <span className="font-bold text-lg text-primary mb-2">{`Joueur ${idx + 1}`}</span>
-              <span className="text-2xl font-semibold text-foreground mb-1">FUT ID :</span>
-              <span className="mb-4 text-xl text-muted-foreground">{p.user_id === currentUserId ? (futId || <span className="italic text-red-500">Non défini</span>) : (p.ea_id || <span className="italic text-red-500">Non défini</span>)}</span>
-              {p.is_ready && (
-                <div className="text-green-600 font-semibold flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5" />
-                  Prêt
-                </div>
-              )}
-              {p.user_id !== currentUserId && !p.ea_id && (
-                <div className="text-sm text-red-500 italic mt-2">En attente que ce joueur renseigne son FUT ID…</div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* If you're host and NOT ready, big "Get Ready" button, start for ALL */}
-        {me && !me.is_ready && (
-          <Button
-            onClick={handleGetReady}
-            className="mt-8"
-            size="lg"
-            disabled={!futId}
-          >
-            Get Ready
-          </Button>
-        )}
-
-        <div className="mt-8 text-lg font-semibold text-muted-foreground">
-          {!timerStarted
-            ? isHost
-              ? "En cliquant sur 'Get Ready', la partie démarre immédiatement pour tout le monde, même si les autres joueurs ne sont pas 'ready'."
-              : "En attente que le créateur démarre la partie…"
-            : "Tous les joueurs sont prêts ! La partie est en cours de démarrage..."}
+      <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-30">
+        <div className="flex flex-col items-center animate-fade-in">
+          <GameTimer matchDuration={roomData.match_duration!} />
+          <p className="mt-6 text-xl text-muted-foreground font-semibold">Match en cours</p>
         </div>
       </div>
     );
   }
 
-  // Once timer started, show timer/match
+  // Sinon, montrer l'interface de préparation
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-30">
-      <div className="flex flex-col items-center animate-fade-in">
-        <GameTimer matchDuration={roomData.match_duration!} />
-        <p className="mt-6 text-xl text-muted-foreground font-semibold">Match en cours</p>
+    <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 z-30">
+      <div className="flex flex-col md:flex-row items-center gap-8">
+        {futPlayers.map((p, idx) => (
+          <div key={p.user_id} className="flex flex-col items-center bg-card/70 rounded-lg px-6 py-4 m-2 shadow">
+            <span className="font-bold text-lg text-primary mb-2">{`Joueur ${idx + 1}`}</span>
+            <span className="text-2xl font-semibold text-foreground mb-1">FUT ID :</span>
+            <span className="mb-4 text-xl text-muted-foreground">{p.user_id === currentUserId ? (futId || <span className="italic text-red-500">Non défini</span>) : (p.ea_id || <span className="italic text-red-500">Non défini</span>)}</span>
+            {p.is_ready && (
+              <div className="text-green-600 font-semibold flex items-center gap-2">
+                <CheckCircle className="h-5 w-5" />
+                Prêt
+              </div>
+            )}
+            {p.user_id !== currentUserId && !p.ea_id && (
+              <div className="text-sm text-red-500 italic mt-2">En attente que ce joueur renseigne son FUT ID…</div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Si joueur n'est pas prêt, montrer bouton Get Ready */}
+      {me && !me.is_ready && (
+        <Button
+          onClick={handleGetReady}
+          className="mt-8"
+          size="lg"
+          disabled={!futId}
+        >
+          Get Ready
+        </Button>
+      )}
+
+      <div className="mt-8 text-lg font-semibold text-muted-foreground">
+        {isHost
+          ? "En cliquant sur 'Get Ready', la partie démarre immédiatement pour tout le monde, même si les autres joueurs ne sont pas 'ready'."
+          : "En attente que le créateur démarre la partie…"}
       </div>
     </div>
   );
 };
+

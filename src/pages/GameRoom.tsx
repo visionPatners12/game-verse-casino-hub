@@ -53,6 +53,15 @@ const GameRoom = () => {
   const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId);
   const [showFutIdDialog, setShowFutIdDialog] = useState(false);
 
+  // Si la room est active, mettre à jour l'état du jeu
+  useEffect(() => {
+    if (roomData?.status === "Active" && gameStatus === "waiting") {
+      console.log("Room is active but gameStatus is waiting, updating to playing");
+      // Mise à jour automatique de l'état du jeu basée sur le statut de la room
+      startGame();
+    }
+  }, [roomData?.status, gameStatus, startGame]);
+
   // If the current user's futId is missing and we're in FutArena, open dialog
   useEffect(() => {
     if (
@@ -68,12 +77,19 @@ const GameRoom = () => {
     }
   }, [isFutArena, currentUserId, futId, futIdLoading, showFutIdDialog, authLoading, session]);
 
-  // Forcer un refresh des données de room au montage
+  // Forcer un refresh des données de room au montage et sur changement important
   useEffect(() => {
     if (roomId && !isLoading) {
       fetchRoomData();
+      
+      // Créer un intervalle de rafraîchissement plus fréquent pour les données importantes
+      const refreshInterval = setInterval(() => {
+        fetchRoomData();
+      }, 3000); // Rafraîchir toutes les 3 secondes
+      
+      return () => clearInterval(refreshInterval);
     }
-  }, [roomId, fetchRoomData]);
+  }, [roomId, fetchRoomData, isLoading]);
 
   useEffect(() => {
     if (!authLoading && !session) {
