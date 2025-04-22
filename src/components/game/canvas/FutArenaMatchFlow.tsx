@@ -1,10 +1,12 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle } from "lucide-react";
 import { GameTimer } from "./GameTimer";
 import { useFutId } from "@/hooks/useFutId";
 import { RoomData } from "../types";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface FutArenaMatchFlowProps {
   roomData: RoomData;
@@ -39,8 +41,56 @@ export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutAr
   // Pour l'autre joueur, on prend son ea_id direct
   const otherPlayer = futPlayers.find(p => p.user_id !== currentUserId);
 
-  // Gestion "Ready" local - maintenant on utilise les données de la base de données (is_ready de game_players)
+  // Gestion du timer
   const [timerStarted, setTimerStarted] = useState(false);
+
+  // Set up real-time subscription to track player ready status changes
+  useEffect(() => {
+    if (!roomData?.id) return;
+    
+    const channel = supabase
+      .channel(`room-${roomData.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'game_players',
+          filter: `session_id=eq.${roomData.id}`
+        },
+        (payload) => {
+          console.log('Player data updated:', payload);
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [roomData?.id]);
+  
+  // Handle Get Ready button click
+  const handleGetReady = async () => {
+    if (!currentUserId || !roomData?.id) return;
+    
+    try {
+      const { error } = await supabase
+        .from('game_players')
+        .update({ is_ready: true })
+        .eq('session_id', roomData.id)
+        .eq('user_id', currentUserId);
+        
+      if (error) {
+        console.error("Error updating ready status:", error);
+        toast.error("Couldn't update ready status. Please try again.");
+      } else {
+        toast.success("You're ready! Waiting for other players...");
+      }
+    } catch (err) {
+      console.error("Error in ready status update:", err);
+      toast.error("An error occurred. Please try again.");
+    }
+  };
 
   // Démarrage du timer quand tout le monde est ready et que le jeu est en mode "playing"
   useEffect(() => {
@@ -76,7 +126,8 @@ export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutAr
               
               {p.is_ready && (
                 <div className="text-green-600 font-semibold flex items-center gap-2">
-                  Prêt <span className="ml-1">✔️</span>
+                  <CheckCircle className="h-5 w-5" />
+                  Prêt
                 </div>
               )}
               
@@ -87,6 +138,19 @@ export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutAr
             </div>
           ))}
         </div>
+        
+        {/* Only display Get Ready button if user isn't ready yet */}
+        {me && !me.is_ready && (
+          <Button 
+            onClick={handleGetReady}
+            className="mt-8"
+            size="lg"
+            disabled={!futId} // Disable if user doesn't have a FUT ID
+          >
+            Get Ready
+          </Button>
+        )}
+        
         <div className="mt-8 text-lg font-semibold text-muted-foreground">
           {gameStatus === "waiting" ? 
             "En attente que tous les joueurs soient prêts et que la partie démarre..." : 
