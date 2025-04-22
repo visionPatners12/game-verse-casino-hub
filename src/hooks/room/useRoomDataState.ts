@@ -8,14 +8,14 @@ import { useAuth } from "@/hooks/useAuth";
 export function useRoomDataState(roomId: string | undefined) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [roomData, setRoomData] = useState<RoomData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Initialize as false
   const [players, setPlayers] = useState<any[]>([]);
   const [gameStatus, setGameStatus] = useState<'waiting' | 'starting' | 'playing' | 'ended'>('waiting');
   const { toast } = useToast();
-  const { session } = useAuth(); // Get session from auth context
+  const { session } = useAuth();
 
   const fetchRoomData = useCallback(async () => {
-    if (!roomId || !session?.user) return; // Only fetch if we have both roomId and session
+    if (!roomId || !session?.user) return;
 
     try {
       setIsLoading(true);
@@ -37,7 +37,10 @@ export function useRoomDataState(roomId: string | undefined) {
         .eq('id', roomId)
         .single();
 
-      if (roomError) throw roomError;
+      if (roomError) {
+        console.error('Error fetching room data:', roomError);
+        return;
+      }
       
       const typedRoomData = roomData as unknown as RoomData;
       setRoomData(typedRoomData);
@@ -49,19 +52,11 @@ export function useRoomDataState(roomId: string | undefined) {
       else setGameStatus('waiting');
       
     } catch (error: any) {
-      console.error('Error fetching room data:', error);
-      if (error.code === 'PGRST116') {
-        console.log('Room not found or no access');
-      }
-      toast({
-        title: "Error Loading Room",
-        description: "Could not load game room data. Please try again.",
-        variant: "destructive"
-      });
+      console.error('Error in room data fetch:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [roomId, toast, session?.user]);
+  }, [roomId, session?.user]);
 
   // Update currentUserId when session changes
   useEffect(() => {
@@ -72,7 +67,7 @@ export function useRoomDataState(roomId: string | undefined) {
     }
   }, [session]);
 
-  // Only fetch room data when we have both roomId and session
+  // Fetch room data when we have both roomId and session
   useEffect(() => {
     if (roomId && session?.user) {
       fetchRoomData();

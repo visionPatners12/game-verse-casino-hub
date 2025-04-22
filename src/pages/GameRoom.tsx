@@ -22,22 +22,15 @@ const GameRoom = () => {
     startGame
   } = useRoomWebSocket(roomId);
   
-  // Redirect if not authenticated
+  // Only redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !session) {
       navigate("/auth");
     }
   }, [authLoading, session, navigate]);
-
-  // Only redirect for missing room after authentication is complete
-  useEffect(() => {
-    if (!authLoading && !isLoading && !roomData && roomId) {
-      navigate("/games");
-    }
-  }, [authLoading, isLoading, roomData, roomId, navigate]);
   
-  // Show nothing while checking auth
-  if (authLoading) {
+  // Show nothing while checking auth or loading room data
+  if (authLoading || isLoading) {
     return null;
   }
   
