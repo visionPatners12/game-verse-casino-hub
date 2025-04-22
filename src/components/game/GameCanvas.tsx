@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import { RoomData } from "./types";
 import { GameData } from "@/game-implementation/Ludo/types";
@@ -69,6 +68,25 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     gameParams: gameParams
   };
 
+  const toggleFullscreen = async () => {
+    try {
+      if (!containerRef.current) return;
+
+      if (!document.fullscreenElement) {
+        await containerRef.current.requestFullscreen();
+        setIsFullscreen(true);
+        toast.success("Fullscreen mode enabled");
+      } else {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+        toast.success("Exited fullscreen mode");
+      }
+    } catch (err) {
+      console.error('Error toggling fullscreen:', err);
+      toast.error("Could not toggle fullscreen mode");
+    }
+  };
+
   useEffect(() => {
     if (!canvasRef.current || !currentUserId || gameInitialized.current) return;
     
@@ -114,7 +132,6 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     };
   }, [canvasRef, currentUserId, broadcastMove]);
   
-  // Recalculate gameData when roomData changes
   useEffect(() => {
     if (window.$ && window.$.game && gameInitialized.current) {
       console.log("Updating game data:", gameData);
@@ -167,76 +184,47 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     };
   }, [roomId, currentUserId, gameStatus]);
 
-  const toggleFullscreen = () => {
-    if (!containerRef.current) return;
-    
-    if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen()
-        .then(() => {
-          setIsFullscreen(true);
-          toast("Fullscreen mode enabled");
-        })
-        .catch(err => {
-          console.error('Error attempting to enable fullscreen:', err);
-          toast.error("Could not enter fullscreen mode");
-        });
-    } else {
-      document.exitFullscreen()
-        .then(() => {
-          setIsFullscreen(false);
-          toast("Exited fullscreen mode");
-        })
-        .catch(err => {
-          console.error('Error attempting to exit fullscreen:', err);
-          toast.error("Could not exit fullscreen mode");
-        });
-    }
-  };
-
-  // Listen for fullscreen change events
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
     
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
   return (
     <div 
       ref={containerRef}
-      className="relative bg-accent/10 rounded-lg border border-border aspect-video w-full overflow-hidden"
+      className="relative bg-accent/10 rounded-lg overflow-hidden w-full aspect-video"
     >
+      <Button
+        variant="outline"
+        size="icon"
+        className="absolute top-4 right-4 z-50 bg-background/80 hover:bg-background/90"
+        onClick={toggleFullscreen}
+        title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+      >
+        <Maximize className="h-4 w-4" />
+      </Button>
+
+      {roomData.game_type === "futarena" && remainingTime !== null && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-background/80 rounded px-4 py-2 shadow font-bold text-lg">
+          <Timer className="h-5 w-5 mr-2" />
+          <span>
+            {Math.floor(remainingTime / 60)
+              .toString()
+              .padStart(2, '0')}:
+            {(remainingTime % 60).toString().padStart(2, '0')}
+          </span>
+        </div>
+      )}
+
       <div 
         ref={canvasRef} 
         id="game-canvas-container" 
         className="absolute inset-0 flex items-center justify-center"
       >
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute top-4 right-4 z-50 bg-background bg-opacity-70 hover:bg-background"
-          onClick={toggleFullscreen}
-          title="Toggle fullscreen"
-        >
-          <Maximize className="h-4 w-4" />
-        </Button>
-
-        {roomData.game_type === "futarena" && remainingTime !== null && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-background bg-opacity-70 rounded px-4 py-2 shadow font-bold text-lg border">
-            <Timer className="h-5 w-5 mr-2" />
-            <span>
-              {Math.floor(remainingTime / 60)
-                .toString()
-                .padStart(2, '0')}:
-              {(remainingTime % 60).toString().padStart(2, '0')}
-            </span>
-          </div>
-        )}
-
         {gameState === 'loading' && (
           <div className="text-center">
             <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" />
