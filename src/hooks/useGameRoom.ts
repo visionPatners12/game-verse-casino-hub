@@ -11,6 +11,7 @@ export const useGameRoom = () => {
     isLoading,
     currentUserId,
     gameStatus,
+    fetchRoomData
   } = useRoomWebSocket(roomId);
   
   // Safely get the game name from the type
@@ -24,6 +25,7 @@ export const useGameRoom = () => {
     currentUserId,
     gameType,
     gameName,
-    gameStatus
+    gameStatus,
+    fetchRoomData
   };
 };

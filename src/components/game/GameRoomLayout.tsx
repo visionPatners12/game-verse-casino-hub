@@ -33,7 +33,8 @@ export const GameRoomLayout = ({
   onStartGame,
   onForfeit
 }: GameRoomLayoutProps) => {
-  const totalPot = roomData?.pot ?? (roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0);
+  // Properly calculate total pot - use the pot value directly if available, otherwise calculate it
+  const totalPot = roomData?.pot || (roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0);
   
   const allPlayersReady = roomData?.game_players?.every(player => player.is_ready || !player.is_connected);
   const enoughPlayers = roomData?.game_players?.filter(player => player.is_connected).length >= 2;

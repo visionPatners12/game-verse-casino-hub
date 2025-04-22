@@ -1,9 +1,10 @@
+
 import { useEffect, useRef, useState } from "react";
 import { RoomData } from "./types";
 import { GameData } from "@/game-implementation/Ludo/types";
 import { useRoomWebSocket } from "@/hooks/room/useRoomWebSocket";
 import { useParams } from "react-router-dom";
-import { Loader2, Maximize } from "lucide-react";
+import { Loader2, Fullscreen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Timer } from "lucide-react";
 import { toast } from "sonner";
@@ -70,20 +71,25 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
 
   const toggleFullscreen = async () => {
     try {
-      if (!containerRef.current) return;
+      if (!containerRef.current) {
+        toast.error("Fullscreen container not found");
+        return;
+      }
 
       if (!document.fullscreenElement) {
+        // Enter fullscreen
         await containerRef.current.requestFullscreen();
         setIsFullscreen(true);
         toast.success("Fullscreen mode enabled");
       } else {
+        // Exit fullscreen
         await document.exitFullscreen();
         setIsFullscreen(false);
         toast.success("Exited fullscreen mode");
       }
     } catch (err) {
       console.error('Error toggling fullscreen:', err);
-      toast.error("Could not toggle fullscreen mode");
+      toast.error("Could not toggle fullscreen mode. Your browser might not support this feature.");
     }
   };
 
@@ -205,7 +211,7 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
         onClick={toggleFullscreen}
         title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
       >
-        <Maximize className="h-4 w-4" />
+        <Fullscreen className="h-4 w-4" />
       </Button>
 
       {roomData.game_type === "futarena" && remainingTime !== null && (
