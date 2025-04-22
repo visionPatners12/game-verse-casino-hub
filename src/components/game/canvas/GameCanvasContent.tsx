@@ -1,10 +1,8 @@
-
 import { useEffect, useRef, useState, memo } from "react";
 import { Loader2 } from "lucide-react";
 import { GameData } from "@/game-implementation/Ludo/types";
 import { RoomData } from "../types";
 
-// Define interface for the window object with jQuery and game functions
 declare global {
   interface Window {
     $: any;
@@ -19,7 +17,6 @@ interface GameCanvasContentProps {
   currentUserId: string | null;
 }
 
-// Utiliser memo pour éviter les re-renders non nécessaires
 export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasContentProps) => {
   const [gameState, setGameState] = useState<'loading' | 'ready' | 'error'>('loading');
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -92,8 +89,6 @@ export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasCo
   }, [canvasRef, currentUserId, gameData]);
   
   useEffect(() => {
-    // Vérifier si les données de jeu ont été modifiées de manière significative
-    // pour éviter les mises à jour inutiles
     if (window.$ && window.$.game && gameInitialized.current) {
       const shouldUpdate = !lastGameData.current || 
                           lastGameData.current.gameParams.totalPot !== gameData.gameParams.totalPot ||
@@ -135,10 +130,9 @@ export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasCo
     <div 
       ref={canvasRef} 
       id="game-canvas-container" 
-      className="absolute inset-0 flex items-center justify-center"
+      className="absolute inset-0 flex items-center justify-center [&:fullscreen]:bg-black"
     />
   );
 });
 
-// Ajouter un displayName pour faciliter le debugging
 GameCanvasContent.displayName = 'GameCanvasContent';

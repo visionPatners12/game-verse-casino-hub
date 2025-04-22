@@ -12,7 +12,6 @@ interface GameCanvasContainerProps {
   currentUserId: string | null;
 }
 
-// Utiliser memo pour éviter les re-renders non nécessaires
 const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContainerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -23,9 +22,13 @@ const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContain
         toast.error("Fullscreen container not found");
         return;
       }
+      
+      // Important: Get the game canvas container from the DOM
+      const gameCanvasElement = containerRef.current.querySelector("#game-canvas-container");
+      const targetElement = gameCanvasElement || containerRef.current;
 
       if (!document.fullscreenElement) {
-        await containerRef.current.requestFullscreen();
+        await targetElement.requestFullscreen();
         setIsFullscreen(true);
         toast.success("Fullscreen mode enabled");
       } else {
@@ -79,3 +82,4 @@ const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContain
 GameCanvasContainer.displayName = 'GameCanvasContainer';
 
 export default GameCanvasContainer;
+
