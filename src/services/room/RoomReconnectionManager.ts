@@ -1,5 +1,4 @@
-
-import { RoomWebSocketService } from "./RoomWebSocketService";
+import { RoomWebSocketService } from "./websocket/RoomWebSocketService";
 
 export class RoomReconnectionManager {
   private reconnectAttempts: Record<string, number> = {};
