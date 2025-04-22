@@ -1,9 +1,14 @@
-
 import { useCallback } from "react";
 import { roomService } from "@/services/room";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+
+interface RoomActionsProps {
+  roomId: string | undefined;
+  currentUserId: string | null;
+  isReady: boolean;
+  setIsReady: (ready: boolean) => void;
+  setGameStatus: (status: 'waiting' | 'starting' | 'playing' | 'ended') => void;
+}
 
 export function useRoomActions({
   roomId,
@@ -11,47 +16,31 @@ export function useRoomActions({
   isReady,
   setIsReady,
   setGameStatus,
-}: {
-  roomId: string | undefined,
-  currentUserId: string | null,
-  isReady: boolean,
-  setIsReady: (v: boolean) => void,
-  setGameStatus: (status: 'waiting' | 'starting' | 'playing' | 'ended') => void,
-}) {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-
+}: RoomActionsProps) {
   const toggleReady = useCallback(async () => {
     if (!roomId || !currentUserId) return;
-    const newReadyState = !isReady;
+
     try {
+      const newReadyState = !isReady;
       await roomService.markPlayerReady(roomId, currentUserId, newReadyState);
       setIsReady(newReadyState);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Could not update ready status. Please try again.",
-        variant: "destructive"
-      });
+      console.error("Failed to toggle ready state:", error);
+      toast.error("Failed to update ready status. Please try again.");
     }
-  }, [roomId, currentUserId, isReady, setIsReady, toast]);
+  }, [roomId, currentUserId, isReady, setIsReady]);
 
   const startGame = useCallback(async () => {
     if (!roomId) return;
+
     try {
+      await roomService.startGame(roomId);
       setGameStatus('starting');
-      const result = await roomService.startGame(roomId);
-      if (result) setGameStatus('playing');
-      else setGameStatus('waiting');
     } catch (error) {
-      setGameStatus('waiting');
-      toast({
-        title: "Error",
-        description: "Could not start the game. Please try again.",
-        variant: "destructive"
-      });
+      console.error("Failed to start game:", error);
+      toast.error("Failed to start the game. Please try again.");
     }
-  }, [roomId, setGameStatus, toast]);
+  }, [roomId, setGameStatus]);
 
   const broadcastMove = useCallback((moveData: any) => {
     if (!roomId) return;
@@ -60,53 +49,59 @@ export function useRoomActions({
 
   const endGame = useCallback(async (results: any) => {
     if (!roomId) return;
+
     try {
       await roomService.endGame(roomId, results);
       setGameStatus('ended');
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Could not end the game properly. Please try again.",
-        variant: "destructive"
-      });
+      console.error("Failed to end game:", error);
+      toast.error("Failed to end the game. Please try again.");
     }
-  }, [roomId, setGameStatus, toast]);
+  }, [roomId, setGameStatus]);
 
   const forfeitGame = useCallback(async () => {
     if (!roomId || !currentUserId) return;
+
     try {
+      // Optimistically update the UI
+      setGameStatus('ended');
+      
       // Mark player as forfeited in the database
-      await supabase
+      const { error } = await supabase
         .from('game_players')
         .update({ has_forfeited: true })
         .eq('session_id', roomId)
         .eq('user_id', currentUserId);
-
-      // Disconnect from room and WebSocket
-      await roomService.disconnectFromRoom(roomId, currentUserId);
+        
+      if (error) {
+        console.error("Failed to forfeit game:", error);
+        toast.error("Failed to forfeit the game. Please try again.");
+        // Revert UI state if the database update fails
+        setGameStatus('playing');
+        return;
+      }
       
-      // Clear ALL room data from storage to prevent auto-reconnection
-      roomService.saveActiveRoomToStorage("", "", "");
-      sessionStorage.removeItem('activeRoomId');
-      sessionStorage.removeItem('activeUserId');
-      sessionStorage.removeItem('activeGameType');
+      // Disconnect from the room
+      roomService.disconnectFromRoom(roomId, currentUserId);
       
-      toast({
-        title: "Partie abandonnée",
-        description: "Vous avez quitté la partie.",
-      });
-      
-      // Redirect to games listing page instead of home
-      navigate('/games');
-      
+      // Redirect to the games page
+      window.location.href = '/games';
     } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de quitter la partie. Veuillez réessayer.",
-        variant: "destructive"
-      });
+      console.error("Failed to forfeit game:", error);
+      toast.error("Failed to forfeit the game. Please try again.");
     }
-  }, [roomId, currentUserId, toast, navigate]);
+  }, [roomId, currentUserId, setGameStatus]);
 
-  return { toggleReady, startGame, broadcastMove, endGame, forfeitGame };
+  const updateRoomPot = async () => {
+    if (!roomId) return;
+    
+    try {
+      // Use shouldLog=true only during room creation
+      await roomService.presenceService.updateRoomPot(roomId, true);
+    } catch (error) {
+      console.error('Error updating room pot:', error);
+    }
+  };
+
+  return { toggleReady, startGame, broadcastMove, endGame, forfeitGame, updateRoomPot };
 }

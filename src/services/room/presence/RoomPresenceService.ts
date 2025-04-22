@@ -65,8 +65,8 @@ export class RoomPresenceService {
         
       if (error) throw error;
       
-      // Après avoir marqué le joueur comme connecté, recalculons le pot
-      await this.updateRoomPot(roomId);
+      // After marking the player as connected, recalculate the pot without logging
+      await this.updateRoomPot(roomId, false);
     } catch (error) {
       console.error('Error marking player connected:', error);
     }
@@ -82,17 +82,16 @@ export class RoomPresenceService {
         
       if (error) throw error;
       
-      // Après avoir marqué le joueur comme déconnecté, recalculons le pot
-      await this.updateRoomPot(roomId);
+      // After marking the player as disconnected, recalculate the pot without logging
+      await this.updateRoomPot(roomId, false);
     } catch (error) {
       console.error('Error marking player disconnected:', error);
     }
   }
   
-  // Nouvelle méthode pour mettre à jour le pot de la partie
-  private async updateRoomPot(roomId: string) {
+  // Updated to accept a shouldLog parameter
+  private async updateRoomPot(roomId: string, shouldLog: boolean = false) {
     try {
-      // Récupérer le nombre actuel de joueurs connectés
       const { data: players, error: playersError } = await supabase
         .from('game_players')
         .select('id')
@@ -103,39 +102,42 @@ export class RoomPresenceService {
       
       const connectedPlayers = players?.length || 0;
       
-      // Mettre à jour le nombre de joueurs et recalculer le pot
+      const potAmount = await this.calculatePot(roomId, connectedPlayers);
+      
       const { error: updateError } = await supabase
         .from('game_sessions')
         .update({ 
           current_players: connectedPlayers,
-          pot: await this.calculatePot(roomId, connectedPlayers) 
+          pot: potAmount
         })
         .eq('id', roomId);
         
       if (updateError) throw updateError;
       
-      console.log(`Room ${roomId} updated: ${connectedPlayers} players, pot recalculated`);
+      if (shouldLog) {
+        console.log(`Room ${roomId} updated: ${connectedPlayers} players, pot recalculated`);
+      }
     } catch (error) {
       console.error('Error updating room pot:', error);
     }
   }
   
-  // Calculer le pot de la partie
   private async calculatePot(roomId: string, playerCount: number): Promise<number> {
     try {
-      // Utiliser la fonction RPC pour calculer le pot
       const { data, error } = await supabase.rpc('calculate_prize_pool', {
         session_id: roomId
       });
       
       if (error) throw error;
       
-      console.log(`Pot calculated for room ${roomId}: ${data}`);
+      if (data && playerCount === 1) { // Only log during initial room creation
+        console.log(`Pot calculated for room ${roomId}: ${data}`);
+      }
+      
       return data || 0;
     } catch (error) {
       console.error('Error calculating pot:', error);
       
-      // En cas d'erreur, faire un calcul de secours
       const { data: roomData } = await supabase
         .from('game_sessions')
         .select('entry_fee, commission_rate')
