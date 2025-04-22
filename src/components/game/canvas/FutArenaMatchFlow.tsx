@@ -14,11 +14,15 @@ interface FutArenaMatchFlowProps {
   gameStatus: 'waiting' | 'starting' | 'playing' | 'ended';
 }
 
-export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutArenaMatchFlowProps) => {
+export const FutArenaMatchFlow = ({
+  roomData,
+  currentUserId,
+  gameStatus,
+}: FutArenaMatchFlowProps) => {
   const connectedPlayers = useMemo(
     () =>
       (roomData?.game_players ?? []).filter(
-        p => p.is_connected && !!p.user_id
+        (p) => p.is_connected && !!p.user_id
       ),
     [roomData]
   );
@@ -30,32 +34,42 @@ export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutAr
     is_ready: p.is_ready || false,
   }));
 
-  const me = futPlayers.find(p => p.user_id === currentUserId);
+  const me = futPlayers.find((p) => p.user_id === currentUserId);
 
   const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId);
 
-  const otherPlayer = futPlayers.find(p => p.user_id !== currentUserId);
-
   const [timerStarted, setTimerStarted] = useState(false);
-  
-  // Check if all players are ready
-  const allPlayersReady = connectedPlayers.length > 0 && 
-    connectedPlayers.every(player => player.is_ready);
+
+  // (Simplicité : on considère le host comme étant le premier player du tableau si pas de roomData.created_by)
+  // S'il existe un champ "created_by" ou autre, utilisez-le ici :
+  const hostUserId =
+    (roomData as any)?.created_by ||
+    (roomData?.game_players && roomData?.game_players[0]?.user_id) ||
+    null;
+  const isHost = currentUserId && hostUserId === currentUserId;
+
+  // Pour l'UI actuelle :
+  const allPlayersReady =
+    connectedPlayers.length > 0 &&
+    connectedPlayers.every((player) => player.is_ready);
 
   useEffect(() => {
     if (!roomData?.id) return;
 
     const channel = supabase
       .channel(`room-${roomData.id}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'game_players',
-        filter: `session_id=eq.${roomData.id}`
-      }, () => {
-        // Reload data when any player's status changes
-        window.location.reload();
-      })
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "game_players",
+          filter: `session_id=eq.${roomData.id}`,
+        },
+        () => {
+          window.location.reload();
+        }
+      )
       .subscribe();
 
     return () => {
@@ -69,26 +83,43 @@ export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutAr
       toast.error("Please set your FUT ID before getting ready.");
       return;
     }
-    const { error } = await supabase
-      .from('game_players')
-      .update({ is_ready: true })
-      .eq('session_id', roomData.id)
-      .eq('user_id', currentUserId);
-    if (error) {
-      toast.error("Couldn't update ready status.");
+
+    if (isHost) {
+      // Host : ready pour tout le monde + status starting
+      const { error: updatePlayersErr } = await supabase
+        .from("game_players")
+        .update({ is_ready: true })
+        .eq("session_id", roomData.id);
+
+      const { error: updateStatusErr } = await supabase
+        .from("game_sessions")
+        .update({ status: "Active", start_time: new Date().toISOString() })
+        .eq("id", roomData.id);
+
+      if (updatePlayersErr || updateStatusErr) {
+        toast.error("Couldn't start the game for all players.");
+      } else {
+        toast.success("Partie démarrée par le créateur !");
+      }
     } else {
-      toast.success("You're ready! Waiting for other players...");
+      // Joueur classique : comme avant, ready lui-même
+      const { error } = await supabase
+        .from("game_players")
+        .update({ is_ready: true })
+        .eq("session_id", roomData.id)
+        .eq("user_id", currentUserId);
+      if (error) {
+        toast.error("Couldn't update ready status.");
+      } else {
+        toast.success("You're ready! Waiting for host to start the game...");
+      }
     }
   };
 
   useEffect(() => {
-    // Start timer only when:
-    // 1. Game status is playing or starting
-    // 2. All connected players are ready
-    // 3. Timer hasn't already started
+    // Start timer si partie a commencé OU si tous les joueurs sont ready
     if (
-      (gameStatus === "playing" || gameStatus === "starting") &&
-      allPlayersReady &&
+      (gameStatus === "playing" || gameStatus === "starting" || allPlayersReady) &&
       !timerStarted
     ) {
       setTimerStarted(true);
@@ -125,9 +156,10 @@ export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutAr
             </div>
           ))}
         </div>
-        
+
+        {/* Host ou non, bouton "Get Ready" */}
         {me && !me.is_ready && (
-          <Button 
+          <Button
             onClick={handleGetReady}
             className="mt-8"
             size="lg"
@@ -136,11 +168,13 @@ export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutAr
             Get Ready
           </Button>
         )}
-        
+
         <div className="mt-8 text-lg font-semibold text-muted-foreground">
-          {!allPlayersReady ? 
-            "En attente que tous les joueurs soient prêts et que la partie démarre..." : 
-            "Tous les joueurs sont prêts! La partie est en cours de démarrage..."}
+          {!timerStarted
+            ? isHost
+              ? "En cliquant sur 'Get Ready', vous lancez la partie pour tous les joueurs."
+              : "En attente que le créateur démarre la partie…"
+            : "Tous les joueurs sont prêts ! La partie est en cours de démarrage..."}
         </div>
       </div>
     );
