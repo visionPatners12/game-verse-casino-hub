@@ -1,6 +1,8 @@
+
 import { useCallback } from "react";
 import { roomService } from "@/services/room";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RoomActionsProps {
   roomId: string | undefined;
@@ -92,12 +94,49 @@ export function useRoomActions({
     }
   }, [roomId, currentUserId, setGameStatus]);
 
-  const updateRoomPot = async () => {
+  // Update this function to use the public API instead of accessing private properties
+  const updateRoomPot = async (shouldLog: boolean = false) => {
     if (!roomId) return;
     
     try {
-      // Use shouldLog=true only during room creation
-      await roomService.presenceService.updateRoomPot(roomId, true);
+      // Make a direct database call instead of using private methods
+      const { data: roomData, error } = await supabase
+        .from('game_sessions')
+        .select('id, entry_fee, max_players, commission_rate')
+        .eq('id', roomId)
+        .single();
+  
+      if (error) throw error;
+
+      // Get players count
+      const { data: players, error: playersError } = await supabase
+        .from('game_players')
+        .select('id')
+        .eq('session_id', roomId)
+        .eq('is_connected', true);
+      
+      if (playersError) throw playersError;
+      
+      // Calculate pot amount (similar logic to RoomPresenceService.calculatePot)
+      const connectedPlayers = players?.length || 0;
+      const potAmount = roomData.entry_fee * roomData.max_players * (1 - roomData.commission_rate/100);
+
+      // Update pot in database
+      const { error: updateError } = await supabase
+        .from('game_sessions')
+        .update({ 
+          current_players: connectedPlayers,
+          pot: potAmount
+        })
+        .eq('id', roomId);
+      
+      if (updateError) throw updateError;
+      
+      // Only log during initial room creation if shouldLog is true
+      if (shouldLog) {
+        console.log(`Pot calculated for room ${roomId}: ${potAmount}`);
+        console.log(`Room ${roomId} updated: ${connectedPlayers} players, pot recalculated`);
+      }
     } catch (error) {
       console.error('Error updating room pot:', error);
     }
