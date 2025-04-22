@@ -17,6 +17,7 @@ interface GameCanvasContainerProps {
 const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContainerProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const handle = useFullScreenHandle();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleChange = (state: boolean) => {
@@ -28,21 +29,31 @@ const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContain
       }
     };
 
-    handle.node?.current?.addEventListener('fullscreenchange', () => {
+    // Surveiller le changement d'état de plein écran
+    const fullscreenChangeHandler = () => {
       handleChange(!!document.fullscreenElement);
-    });
+    };
+
+    document.addEventListener('fullscreenchange', fullscreenChangeHandler);
 
     return () => {
-      handle.node?.current?.removeEventListener('fullscreenchange', () => {
-        handleChange(!!document.fullscreenElement);
-      });
+      document.removeEventListener('fullscreenchange', fullscreenChangeHandler);
     };
-  }, [handle]);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (isFullscreen) {
+      handle.exit();
+    } else {
+      handle.enter();
+    }
+  };
 
   return (
     <FullScreen handle={handle}>
       <div 
         id="game-canvas-container" 
+        ref={containerRef}
         className="relative bg-accent/10 rounded-lg overflow-hidden w-full aspect-video"
       >
         <LudoGameScripts />
@@ -51,7 +62,7 @@ const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContain
           variant="outline"
           size="icon"
           className="absolute top-4 right-4 z-50 bg-background/80 hover:bg-background/90"
-          onClick={isFullscreen ? handle.exit : handle.enter}
+          onClick={toggleFullscreen}
           title={isFullscreen ? "Quitter le plein écran" : "Passer en plein écran"}
         >
           {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}

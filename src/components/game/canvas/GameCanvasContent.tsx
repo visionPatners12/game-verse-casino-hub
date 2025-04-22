@@ -81,6 +81,7 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, isFullscreen }
     };
   }, [canvasRef, currentUserId, gameData]);
 
+  // Mettre à jour les données de jeu lorsqu'elles changent
   useEffect(() => {
     if (window.$ && window.$.game && gameInitialized.current) {
       const shouldUpdate = !lastGameData.current || 
@@ -95,6 +96,14 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, isFullscreen }
       }
     }
   }, [gameData]);
+
+  // Mettre à jour le canvas lorsque le mode plein écran change
+  useEffect(() => {
+    if (gameInitialized.current && window.resizeGameFunc) {
+      console.log("Redimensionnement du canvas après changement de plein écran");
+      window.resizeGameFunc();
+    }
+  }, [isFullscreen]);
 
   if (gameState === 'loading') {
     return (
