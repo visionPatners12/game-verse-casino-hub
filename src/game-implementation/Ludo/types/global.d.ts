@@ -11,7 +11,7 @@ interface JQuery {
 
 declare global {
   interface Window {
-    $: JQuery & (selector: string) => JQuery;
+    $: JQuery & ((selector: string) => JQuery);
     initGameCanvas: (width: number, height: number) => void;
     buildGameCanvas: () => void;
     removeGameCanvas: () => void;
