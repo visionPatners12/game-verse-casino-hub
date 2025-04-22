@@ -7,14 +7,7 @@ export const LudoGameScripts = () => {
   useEffect(() => {
     if (scriptsLoaded) return;
 
-    // Check if jQuery is already loaded
-    if (window.jQuery || window.$) {
-      console.log("jQuery already loaded, skipping jQuery loading");
-      loadGameScripts();
-      return;
-    }
-
-    // Function to load scripts in sequence
+    // Define loadGameScripts function before using it
     const loadGameScripts = () => {
       const scripts = [
         '/src/game-implementation/Ludo/js/vendor/createjs.min.js',
@@ -59,6 +52,13 @@ export const LudoGameScripts = () => {
 
       loadScriptSequentially();
     };
+
+    // Check if jQuery is already loaded
+    if (window.jQuery || window.$) {
+      console.log("jQuery already loaded, skipping jQuery loading");
+      loadGameScripts();
+      return;
+    }
 
     // Load jQuery first, then other scripts
     console.log("Loading jQuery...");

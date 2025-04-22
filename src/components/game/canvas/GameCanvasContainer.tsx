@@ -16,6 +16,7 @@ interface GameCanvasContainerProps {
 declare global {
   interface Window {
     $: any;
+    jQuery: any;
     gameInitialized?: boolean;
     initGameCanvas?: (width: number, height: number) => void;
     buildGameCanvas?: () => void;
