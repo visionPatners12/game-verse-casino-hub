@@ -1,4 +1,3 @@
-
 ////////////////////////////////////////////////////////////
 // MAIN
 ////////////////////////////////////////////////////////////
@@ -103,12 +102,27 @@ function resizeGameFunc(){
 		if(offset.top < 0){
 			offset.y = Math.abs((offset.top/scalePercent)/2);
 		}
-		
-		$('canvas').css('width', newCanvasW);
-		$('canvas').css('height', newCanvasH);
-		
-		$('canvas').css('left', (offset.left/2));
-		$('canvas').css('top', (offset.top/2));
+
+		// Handle fullscreen mode
+		if (document.fullscreenElement) {
+			newCanvasW = windowW;
+			newCanvasH = windowH;
+			offset.left = 0;
+			offset.top = 0;
+			$('canvas').css({
+				width: '100vw',
+				height: '100vh',
+				left: 0,
+				top: 0
+			});
+		} else {
+			$('canvas').css({
+				width: newCanvasW,
+				height: newCanvasH,
+				left: offset.left/2,
+				top: offset.top/2
+			});
+		}
 
 		//room
 		if ( typeof initSocket == 'function' && multiplayerSettings.enable) {

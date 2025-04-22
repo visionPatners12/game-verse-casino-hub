@@ -1,7 +1,7 @@
 
 import { useEffect, useRef, useState, memo } from "react";
 import { toast } from "sonner";
-import { Fullscreen } from "lucide-react";
+import { Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GameTimer } from "./GameTimer";
 import { GameCanvasContent } from "./GameCanvasContent";
@@ -17,34 +17,21 @@ const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContain
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const toggleFullscreen = async () => {
-    try {
-      if (!containerRef.current) {
-        toast.error("Fullscreen container not found");
-        return;
-      }
-      
-      // Important: Cibler directement le conteneur du jeu
-      const gameCanvasElement = document.getElementById("game-canvas-container");
-      
-      if (!gameCanvasElement) {
-        toast.error("Game canvas element not found");
-        return;
-      }
-      
-      console.log("Toggling fullscreen for element:", gameCanvasElement);
+    if (!containerRef.current) return;
 
+    try {
       if (!document.fullscreenElement) {
-        await gameCanvasElement.requestFullscreen();
+        await containerRef.current.requestFullscreen();
         setIsFullscreen(true);
-        toast.success("Fullscreen mode enabled");
+        toast.success("Mode plein écran activé");
       } else {
         await document.exitFullscreen();
         setIsFullscreen(false);
-        toast.success("Exited fullscreen mode");
+        toast.success("Mode plein écran désactivé");
       }
     } catch (err) {
-      console.error('Error toggling fullscreen:', err);
-      toast.error("Could not toggle fullscreen mode. Your browser might not support this feature.");
+      console.error('Erreur lors du passage en plein écran:', err);
+      toast.error("Impossible de passer en mode plein écran. Votre navigateur pourrait ne pas supporter cette fonctionnalité.");
     }
   };
 
@@ -60,6 +47,7 @@ const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContain
   return (
     <div 
       ref={containerRef}
+      id="game-canvas-container"
       className="relative bg-accent/10 rounded-lg overflow-hidden w-full aspect-video"
     >
       <Button
@@ -67,9 +55,9 @@ const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContain
         size="icon"
         className="absolute top-4 right-4 z-50 bg-background/80 hover:bg-background/90"
         onClick={toggleFullscreen}
-        title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+        title={isFullscreen ? "Quitter le plein écran" : "Passer en plein écran"}
       >
-        <Fullscreen className="h-4 w-4" />
+        {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
       </Button>
 
       {roomData.game_type === "futarena" && roomData.match_duration && (

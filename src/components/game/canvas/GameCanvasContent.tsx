@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState, memo } from "react";
 import { Loader2 } from "lucide-react";
 import { GameData } from "@/game-implementation/Ludo/types";
@@ -50,7 +49,7 @@ export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasCo
     const initializeGame = async () => {
       try {
         setGameState('loading');
-        console.log("Initializing game canvas...");
+        console.log("Initialisation du canvas de jeu...");
         
         if (window.$ && typeof window.$.game !== 'undefined') {
           window.$.game = {
@@ -58,22 +57,22 @@ export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasCo
             gameData: gameData,
           };
           lastGameData.current = gameData;
-          console.log("Game data set:", gameData);
+          console.log("Données de jeu définies:", gameData);
         }
         
         if (window.initGameCanvas && window.buildGameCanvas) {
-          console.log("Building game canvas with dimensions 1280x768");
+          console.log("Construction du canvas avec les dimensions 1280x768");
           window.initGameCanvas(1280, 768);
           window.buildGameCanvas();
           gameInitialized.current = true;
           setGameState('ready');
-          console.log("Game canvas initialized successfully");
+          console.log("Canvas initialisé avec succès");
         } else {
-          console.error("Game canvas initialization functions not found");
+          console.error("Les fonctions d'initialisation du canvas sont introuvables");
           setGameState('error');
         }
       } catch (error) {
-        console.error("Error initializing game canvas:", error);
+        console.error("Erreur lors de l'initialisation du canvas:", error);
         setGameState('error');
       }
     };
@@ -83,12 +82,12 @@ export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasCo
     return () => {
       gameInitialized.current = false;
       if (window.removeGameCanvas) {
-        console.log("Removing game canvas");
+        console.log("Suppression du canvas");
         window.removeGameCanvas();
       }
     };
   }, [canvasRef, currentUserId, gameData]);
-  
+
   useEffect(() => {
     if (window.$ && window.$.game && gameInitialized.current) {
       const shouldUpdate = !lastGameData.current || 
@@ -97,7 +96,7 @@ export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasCo
                           lastGameData.current.allPlayers.length !== gameData.allPlayers.length;
       
       if (shouldUpdate) {
-        console.log("Updating game data:", gameData);
+        console.log("Mise à jour des données de jeu:", gameData);
         window.$.game.gameData = gameData;
         lastGameData.current = gameData;
       }
@@ -109,8 +108,8 @@ export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasCo
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" />
-          <h3 className="text-2xl font-bold mb-2">Loading Game</h3>
-          <p className="text-muted-foreground">Preparing canvas...</p>
+          <h3 className="text-2xl font-bold mb-2">Chargement du jeu</h3>
+          <p className="text-muted-foreground">Préparation du canvas...</p>
         </div>
       </div>
     );
@@ -120,8 +119,8 @@ export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasCo
     return (
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center text-destructive">
-          <h3 className="text-2xl font-bold mb-2">Error</h3>
-          <p>Failed to initialize game. Please refresh the page.</p>
+          <h3 className="text-2xl font-bold mb-2">Erreur</h3>
+          <p>Impossible d'initialiser le jeu. Veuillez rafraîchir la page.</p>
         </div>
       </div>
     );
@@ -131,7 +130,7 @@ export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasCo
     <div 
       ref={canvasRef} 
       id="game-canvas-container" 
-      className="absolute inset-0 flex items-center justify-center [&:fullscreen]:bg-black"
+      className="absolute inset-0 flex items-center justify-center [&:fullscreen]:bg-black [&:fullscreen_canvas]:w-[100vw] [&:fullscreen_canvas]:h-[100vh]"
       style={{ width: '100%', height: '100%' }}
     />
   );
