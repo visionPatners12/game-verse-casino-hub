@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { GameData } from "@/game-implementation/Ludo/types";
@@ -39,7 +38,7 @@ export const GameCanvasContent = ({ roomData, currentUserId }: GameCanvasContent
       maxPlayers: roomData.max_players,
       currentPlayers: roomData.current_players,
       roomId: roomData.room_id,
-      totalPot: roomData.pot || (roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100)),
+      totalPot: roomData.pot || 0,
       matchDuration: roomData.match_duration,
     }
   };

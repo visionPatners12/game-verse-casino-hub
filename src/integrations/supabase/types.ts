@@ -919,6 +919,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_prize_pool: {
+        Args: { session_id: string }
+        Returns: number
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
