@@ -106,23 +106,28 @@ function resizeGameFunc(){
 		
 		// Check if we're in fullscreen mode
 		const isFullscreen = document.fullscreenElement;
+		console.log("Resizing canvas, fullscreen status:", !!isFullscreen);
 		
 		if (isFullscreen && isFullscreen.id === "game-canvas-container") {
 			// Apply fullscreen styles
 			$('canvas').css({
-				width: '100%',
-				height: '100%',
+				width: '100vw',
+				height: '100vh',
 				left: 0,
-				top: 0
+				top: 0,
+				position: 'absolute'
 			});
+			console.log("Applied fullscreen canvas styles");
 		} else {
 			// Regular size styles
 			$('canvas').css({
 				width: newCanvasW,
 				height: newCanvasH,
 				left: offset.left/2,
-				top: offset.top/2
+				top: offset.top/2,
+				position: 'relative'
 			});
+			console.log("Applied regular canvas styles");
 		}
 
 		//room

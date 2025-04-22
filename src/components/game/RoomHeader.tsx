@@ -2,7 +2,6 @@
 import { Button } from "@/components/ui/button";
 import { Copy, Share2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import { useFullScreenHandle } from "react-full-screen";
 
 interface RoomHeaderProps {
   gameName: string;

@@ -42,7 +42,7 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, isFullscreen }
     const initializeGame = async () => {
       try {
         setGameState('loading');
-        console.log("Initialisation du canvas de jeu...");
+        console.log("Initializing game canvas...");
         
         if (window.$ && typeof window.$.game !== 'undefined') {
           window.$.game = {
@@ -50,22 +50,28 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, isFullscreen }
             gameData: gameData,
           };
           lastGameData.current = gameData;
-          console.log("Données de jeu définies:", gameData);
+          console.log("Game data set:", gameData);
         }
         
         if (window.initGameCanvas && window.buildGameCanvas) {
-          console.log("Construction du canvas avec les dimensions 1280x768");
+          console.log("Building canvas with dimensions 1280x768");
           window.initGameCanvas(1280, 768);
           window.buildGameCanvas();
           gameInitialized.current = true;
           setGameState('ready');
-          console.log("Canvas initialisé avec succès");
+          console.log("Canvas initialized successfully");
+          
+          // Force resize after init to ensure proper dimensions
+          if (window.resizeGameFunc) {
+            console.log("Initial resize after canvas initialization");
+            setTimeout(window.resizeGameFunc, 200);
+          }
         } else {
-          console.error("Les fonctions d'initialisation du canvas sont introuvables");
+          console.error("Canvas initialization functions not found");
           setGameState('error');
         }
       } catch (error) {
-        console.error("Erreur lors de l'initialisation du canvas:", error);
+        console.error("Error initializing canvas:", error);
         setGameState('error');
       }
     };
@@ -75,13 +81,13 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, isFullscreen }
     return () => {
       gameInitialized.current = false;
       if (window.removeGameCanvas) {
-        console.log("Suppression du canvas");
+        console.log("Removing canvas");
         window.removeGameCanvas();
       }
     };
   }, [canvasRef, currentUserId, gameData]);
 
-  // Mettre à jour les données de jeu lorsqu'elles changent
+  // Update game data when it changes
   useEffect(() => {
     if (window.$ && window.$.game && gameInitialized.current) {
       const shouldUpdate = !lastGameData.current || 
@@ -90,18 +96,19 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, isFullscreen }
                           lastGameData.current.allPlayers.length !== gameData.allPlayers.length;
       
       if (shouldUpdate) {
-        console.log("Mise à jour des données de jeu:", gameData);
+        console.log("Updating game data:", gameData);
         window.$.game.gameData = gameData;
         lastGameData.current = gameData;
       }
     }
   }, [gameData]);
 
-  // Mettre à jour le canvas lorsque le mode plein écran change
+  // Update canvas when fullscreen mode changes
   useEffect(() => {
     if (gameInitialized.current && window.resizeGameFunc) {
-      console.log("Redimensionnement du canvas après changement de plein écran");
-      window.resizeGameFunc();
+      console.log("Resizing canvas after fullscreen change from prop:", isFullscreen);
+      // Add a small delay to ensure the DOM has updated
+      setTimeout(window.resizeGameFunc, 200);
     }
   }, [isFullscreen]);
 
@@ -110,8 +117,8 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, isFullscreen }
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" />
-          <h3 className="text-2xl font-bold mb-2">Chargement du jeu</h3>
-          <p className="text-muted-foreground">Préparation du canvas...</p>
+          <h3 className="text-2xl font-bold mb-2">Loading Game</h3>
+          <p className="text-muted-foreground">Preparing canvas...</p>
         </div>
       </div>
     );
@@ -121,8 +128,8 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, isFullscreen }
     return (
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center text-destructive">
-          <h3 className="text-2xl font-bold mb-2">Erreur</h3>
-          <p>Impossible d'initialiser le jeu. Veuillez rafraîchir la page.</p>
+          <h3 className="text-2xl font-bold mb-2">Error</h3>
+          <p>Unable to initialize game. Please refresh the page.</p>
         </div>
       </div>
     );

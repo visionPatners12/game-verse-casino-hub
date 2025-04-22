@@ -7,7 +7,6 @@ import { GameTimer } from "./GameTimer";
 import { GameCanvasContent } from "./GameCanvasContent";
 import { LudoGameScripts } from "./LudoGameScripts";
 import { RoomData } from "../types";
-import { FullScreen, useFullScreenHandle } from "react-full-screen";
 
 interface GameCanvasContainerProps {
   roomData: RoomData;
@@ -16,27 +15,24 @@ interface GameCanvasContainerProps {
 
 const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContainerProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const handle = useFullScreenHandle();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleChange = () => {
+    const handleFullscreenChange = () => {
       const fullscreenElement = document.fullscreenElement;
-      const isFullscreen = !!fullscreenElement;
-      setIsFullscreen(isFullscreen);
+      setIsFullscreen(!!fullscreenElement);
       
-      if (isFullscreen) {
-        toast.success("Mode plein écran activé");
-      } else {
-        toast.success("Mode plein écran désactivé");
+      // Make sure we resize the game canvas when fullscreen changes
+      if (window.resizeGameFunc) {
+        console.log("Resizing game after fullscreen change via fullscreenchange event");
+        setTimeout(window.resizeGameFunc, 100);
       }
     };
 
-    // Surveiller le changement d'état de plein écran
-    document.addEventListener('fullscreenchange', handleChange);
-
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    
     return () => {
-      document.removeEventListener('fullscreenchange', handleChange);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
   }, []);
 
@@ -44,13 +40,23 @@ const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContain
     if (!containerRef.current) return;
     
     if (isFullscreen) {
-      document.exitFullscreen().catch(err => {
-        console.error(`Erreur lors de la sortie du mode plein écran: ${err.message}`);
-      });
+      console.log("Exiting fullscreen mode");
+      document.exitFullscreen()
+        .then(() => {
+          toast.success("Mode plein écran désactivé");
+        })
+        .catch(err => {
+          console.error(`Erreur lors de la sortie du mode plein écran: ${err.message}`);
+        });
     } else {
-      containerRef.current.requestFullscreen().catch(err => {
-        console.error(`Erreur lors du passage en mode plein écran: ${err.message}`);
-      });
+      console.log("Entering fullscreen mode");
+      containerRef.current.requestFullscreen()
+        .then(() => {
+          toast.success("Mode plein écran activé");
+        })
+        .catch(err => {
+          console.error(`Erreur lors du passage en mode plein écran: ${err.message}`);
+        });
     }
   };
 
@@ -58,7 +64,7 @@ const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContain
     <div 
       id="game-canvas-container" 
       ref={containerRef}
-      className={`relative bg-accent/10 rounded-lg overflow-hidden w-full aspect-video ${isFullscreen ? 'fixed inset-0 z-50 aspect-auto' : ''}`}
+      className={`relative bg-accent/10 rounded-lg overflow-hidden w-full aspect-video ${isFullscreen ? 'fixed inset-0 z-50 aspect-auto bg-black' : ''}`}
     >
       <LudoGameScripts />
       
