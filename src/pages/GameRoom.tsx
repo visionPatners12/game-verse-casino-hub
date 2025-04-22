@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout";
 import { GameRoomLayout } from "@/components/game/GameRoomLayout";
 import { useParams, useNavigate } from "react-router-dom";
@@ -6,6 +5,8 @@ import { gameCodeToType, isValidGameType } from "@/lib/gameTypes";
 import { useRoomWebSocket } from "@/hooks/room/useRoomWebSocket";
 import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFutId } from "@/hooks/useFutId";
+import { FutIdDialog } from "@/components/game/FutIdDialog";
 
 const GameRoom = () => {
   const { roomId, gameType } = useParams<{ roomId: string; gameType: string }>();
@@ -23,7 +24,27 @@ const GameRoom = () => {
     forfeitGame,
     fetchRoomData
   } = useRoomWebSocket(roomId);
-  
+
+  // --- FUT ID hook (active only if in FUTArena) ---
+  const isFutArena = roomData?.game_type?.toLowerCase() === "futarena";
+  const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId);
+  const [showFutIdDialog, setShowFutIdDialog] = useState(false);
+
+  // Ask for FUT ID if required
+  useEffect(() => {
+    if (
+      isFutArena &&
+      !!currentUserId &&
+      !futId &&
+      !futIdLoading &&
+      !showFutIdDialog &&
+      !authLoading &&
+      session
+    ) {
+      setShowFutIdDialog(true);
+    }
+  }, [isFutArena, currentUserId, futId, futIdLoading, showFutIdDialog, authLoading, session]);
+
   // Force a refresh of room data when component mounts
   useEffect(() => {
     if (roomId && !isLoading) {
@@ -62,6 +83,14 @@ const GameRoom = () => {
         onStartGame={startGame}
         onForfeit={forfeitGame}
       />
+      {isFutArena && (
+        <FutIdDialog
+          open={showFutIdDialog}
+          onOpenChange={setShowFutIdDialog}
+          onSave={saveFutId}
+          isLoading={futIdLoading}
+        />
+      )}
     </Layout>
   );
 };
