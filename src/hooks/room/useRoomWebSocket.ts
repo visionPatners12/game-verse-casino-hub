@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function useRoomWebSocket(roomId: string | undefined) {
   const { gameType } = useParams<{ gameType?: string }>();
@@ -17,6 +18,7 @@ export function useRoomWebSocket(roomId: string | undefined) {
   const [hasAttemptedReconnect, setHasAttemptedReconnect] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const {
     roomData,
@@ -60,15 +62,24 @@ export function useRoomWebSocket(roomId: string | undefined) {
     }
 
     const checkStoredConnection = async () => {
+      // Only proceed if there's a logged-in user
+      if (!user || !user.id) {
+        console.log("No authenticated user, clearing any stored room connection");
+        roomService.saveActiveRoomToStorage("", "", "");
+        sessionStorage.removeItem('activeRoomId');
+        sessionStorage.removeItem('activeUserId');
+        sessionStorage.removeItem('activeGameType');
+        setHasAttemptedReconnect(true);
+        return;
+      }
+      
       const { roomId: storedRoomId, userId: storedUserId, gameType: storedGameType } = roomService.getStoredRoomConnection();
       
-      if (storedRoomId && storedUserId && storedGameType) {
+      // Validate that the stored user ID matches the current user ID
+      if (storedRoomId && storedUserId && storedGameType && storedUserId === user.id) {
         console.log(`Found stored room connection on page load: ${storedRoomId} (${storedGameType}) for user ${storedUserId}, reconnecting without redirect`);
         
         try {
-          // Connect to room without navigating
-          roomService.connectToRoom(storedRoomId, storedUserId, storedGameType);
-          
           // Verify connection was successful through direct DB check
           const { data: sessionData } = await supabase
             .from('game_sessions')
@@ -78,19 +89,52 @@ export function useRoomWebSocket(roomId: string | undefined) {
             
           if (!sessionData || !sessionData.id) {
             console.log("Room no longer exists, clearing storage");
-            roomService.disconnectFromRoom(storedRoomId, storedUserId);
             roomService.saveActiveRoomToStorage("", "", ""); // Clear by passing empty strings
+            sessionStorage.removeItem('activeRoomId');
+            sessionStorage.removeItem('activeUserId');
+            sessionStorage.removeItem('activeGameType');
+          } else {
+            // Check if player is actually in this room
+            const { data: playerData } = await supabase
+              .from('game_players')
+              .select('id')
+              .eq('session_id', storedRoomId)
+              .eq('user_id', user.id)
+              .maybeSingle();
+              
+            if (playerData && playerData.id) {
+              // Only connect to room if this user is actually a player in that room
+              console.log("User is a valid player in this room, reconnecting");
+              roomService.connectToRoom(storedRoomId, storedUserId, storedGameType);
+            } else {
+              console.log("User is not a player in this room, clearing storage");
+              roomService.saveActiveRoomToStorage("", "", "");
+              sessionStorage.removeItem('activeRoomId');
+              sessionStorage.removeItem('activeUserId');
+              sessionStorage.removeItem('activeGameType');
+            }
           }
         } catch (error) {
           console.error("Error reconnecting to room:", error);
+          roomService.saveActiveRoomToStorage("", "", "");
+          sessionStorage.removeItem('activeRoomId');
+          sessionStorage.removeItem('activeUserId');
+          sessionStorage.removeItem('activeGameType');
         }
+      } else if (storedRoomId || storedUserId || storedGameType) {
+        // If there's partial data or user mismatch, clear it all
+        console.log("Invalid stored room data or user mismatch, clearing storage");
+        roomService.saveActiveRoomToStorage("", "", "");
+        sessionStorage.removeItem('activeRoomId');
+        sessionStorage.removeItem('activeUserId');
+        sessionStorage.removeItem('activeGameType');
       }
       
       setHasAttemptedReconnect(true);
     };
     
     checkStoredConnection();
-  }, [navigate, roomId, toast, hasAttemptedReconnect]);
+  }, [navigate, roomId, toast, hasAttemptedReconnect, user]);
 
   // Setup beforeunload handler to save room data
   useEffect(() => {

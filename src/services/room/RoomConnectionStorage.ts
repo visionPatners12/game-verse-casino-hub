@@ -2,6 +2,12 @@
 export class RoomConnectionStorage {
   save(roomId: string, userId: string, gameType?: string) {
     try {
+      // If any of the required values are empty, clear everything
+      if (!roomId || !userId) {
+        this.clear();
+        return;
+      }
+      
       console.log(`Saving room connection data: roomId=${roomId}, userId=${userId}, gameType=${gameType}`);
       sessionStorage.setItem('activeRoomId', roomId);
       sessionStorage.setItem('activeUserId', userId);
@@ -33,10 +39,18 @@ export class RoomConnectionStorage {
       const userId = sessionStorage.getItem('activeUserId');
       const gameType = sessionStorage.getItem('activeGameType');
       
+      // Only return valid values if all required fields exist
       if (roomId && userId) {
         console.log(`Found stored room connection: ${roomId} for user ${userId}, game type: ${gameType}`);
+        return { roomId, userId, gameType };
+      } else {
+        // If any required field is missing, clear all data and return null values
+        if (roomId || userId || gameType) {
+          console.log('Incomplete room data found, clearing storage');
+          this.clear();
+        }
+        return { roomId: null, userId: null, gameType: null };
       }
-      return { roomId, userId, gameType };
     } catch (error) {
       console.error('Failed to get room data from session storage:', error);
       return { roomId: null, userId: null, gameType: null };

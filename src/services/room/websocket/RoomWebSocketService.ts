@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { RoomWebSocketConnection } from "./RoomWebSocketConnection";
 import { RoomPresenceService } from "../presence/RoomPresenceService";
@@ -86,7 +85,14 @@ export class RoomWebSocketService {
   }
 
   saveActiveRoomToStorage(roomId: string, userId: string, gameType?: string) {
-    this.connectionStorage.save(roomId, userId, gameType);
+    if (roomId && userId) {
+      this.connectionStorage.save(roomId, userId, gameType);
+    } else {
+      this.connectionStorage.clear();
+      sessionStorage.removeItem('activeRoomId');
+      sessionStorage.removeItem('activeUserId');
+      sessionStorage.removeItem('activeGameType');
+    }
   }
 
   connectToRoom(roomId: string, userId: string | null, gameType?: string) {
@@ -175,6 +181,9 @@ export class RoomWebSocketService {
     if (isIntentionalDisconnect) {
       console.log('Intentional disconnect, clearing storage');
       this.connectionStorage.clear();
+      sessionStorage.removeItem('activeRoomId');
+      sessionStorage.removeItem('activeUserId');
+      sessionStorage.removeItem('activeGameType');
       this.presenceService.markPlayerDisconnected(roomId, userId);
     } else {
       console.log('Non-intentional disconnect (refresh/navigation), keeping storage data');
