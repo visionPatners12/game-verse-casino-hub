@@ -12,7 +12,9 @@ export default function Auth() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Only redirect if there's an active session
     if (session) {
+      console.log("Active session detected on Auth page, redirecting to /games");
       navigate('/games');
     }
   }, [session, navigate]);

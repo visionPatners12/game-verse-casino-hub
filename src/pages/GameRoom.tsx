@@ -5,7 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { gameCodeToType, isValidGameType } from "@/lib/gameTypes";
 import { useRoomWebSocket } from "@/hooks/room/useRoomWebSocket";
 import { useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 
 const GameRoom = () => {
   const { roomId, gameType } = useParams<{ roomId: string; gameType: string }>();
@@ -22,10 +22,13 @@ const GameRoom = () => {
     startGame
   } = useRoomWebSocket(roomId);
   
-  // Only redirect if not authenticated
+  // Only redirect if not authenticated and auth loading is complete
   useEffect(() => {
     if (!authLoading && !session) {
+      console.log("No auth session in GameRoom, redirecting to /auth");
       navigate("/auth");
+    } else if (session) {
+      console.log("Authenticated user in GameRoom, staying on page");
     }
   }, [authLoading, session, navigate]);
   
