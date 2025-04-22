@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { RoomData, DatabaseSessionStatus } from "@/components/game/types";
@@ -17,10 +16,8 @@ export function useRoomDataState(roomId: string | undefined) {
   const lastPollTime = useRef(Date.now());
   const lastRoomDataHash = useRef<string | null>(null);
 
-  // Simple hash function to check if there are significant changes in room data
   const hashRoomData = (data: any): string => {
     if (!data) return '';
-    // Create a simplified version of the data with only fields we care about for change detection
     const simplified = {
       pot: data.pot,
       current_players: data.current_players,
@@ -39,19 +36,12 @@ export function useRoomDataState(roomId: string | undefined) {
     if (!roomId || !session?.user) return;
 
     try {
-      // Only show loading state on first load
       if (isFirstLoad.current) {
         setIsLoading(true);
       }
       
-      // Only log on first load or every 30 seconds to reduce console spam
       const shouldLog = isFirstLoad.current || (Date.now() - lastPollTime.current > 30000);
-      if (shouldLog) {
-        console.log("Fetching room data for:", roomId);
-        lastPollTime.current = Date.now();
-      }
       
-      // Fetch room data with the new prize pool calculation
       const { data: roomData, error: roomError } = await supabase
         .from('game_sessions')
         .select(`
@@ -75,36 +65,28 @@ export function useRoomDataState(roomId: string | undefined) {
         return;
       }
       
-      if (shouldLog) {
+      if (isFirstLoad.current) {
         console.log("Fetched room data:", roomData);
       }
       
-      // Always recalculate pot using the new function with max_players
       const { data: potData } = await supabase.rpc('calculate_prize_pool', {
         session_id: roomId
       });
       
-      if (potData) {
-        if (shouldLog) {
-          console.log(`Recalculated pot value: ${potData}`);
-        }
+      if (potData && isFirstLoad.current) {
+        console.log(`Recalculated pot value: ${potData}`);
         roomData.pot = potData;
       }
       
       const typedRoomData = roomData as unknown as RoomData;
       const newDataHash = hashRoomData(typedRoomData);
       
-      // Mise à jour sans provoquer de flickering
       setRoomData(prevData => {
-        // Si c'est le premier chargement ou s'il y a des changements significatifs
         if (!prevData || isFirstLoad.current || newDataHash !== lastRoomDataHash.current) {
-          // Update the hash reference
           lastRoomDataHash.current = newDataHash;
           return typedRoomData;
         }
         
-        // Pour les mises à jour régulières, ne mettre à jour que les joueurs
-        // tout en conservant la structure générale de roomData
         return {
           ...prevData,
           game_players: typedRoomData.game_players,
@@ -130,7 +112,6 @@ export function useRoomDataState(roomId: string | undefined) {
     }
   }, [roomId, session?.user]);
 
-  // Update currentUserId when session changes
   useEffect(() => {
     if (session?.user) {
       setCurrentUserId(session.user.id);
@@ -139,12 +120,10 @@ export function useRoomDataState(roomId: string | undefined) {
     }
   }, [session]);
 
-  // Fetch room data when we have both roomId and session
   useEffect(() => {
     if (roomId && session?.user) {
       fetchRoomData();
       
-      // Mise en place d'un actualisation périodique des données de la partie
       const intervalId = setInterval(fetchRoomData, 5000);
       
       return () => clearInterval(intervalId);
