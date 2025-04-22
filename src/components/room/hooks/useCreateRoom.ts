@@ -4,9 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { GameCode, isValidGameType, gameCodeToType, GameVariant } from "@/lib/gameTypes";
 import { CreateRoomFormData } from "../schemas/createRoomSchema";
 import { toast } from "sonner";
+import { useWallet } from "@/hooks/useWallet";
+import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
 
 export function useCreateRoom(username: string, gameType: string | undefined) {
   const navigate = useNavigate();
+  const { wallet } = useWallet();
+  const { checkAndDeductBalance } = useWalletBalanceCheck();
 
   const createRoom = async (values: CreateRoomFormData) => {
     try {
@@ -22,9 +26,14 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         return;
       }
 
+      // On vérifie et DÉDUIT le montant via la fonction
+      const canProceed = await checkAndDeductBalance(values.bet);
+      if (!canProceed) {
+        // toast handled in hook
+        return;
+      }
+
       const safeGameType = gameType as GameCode;
-      // Use "FUTArena" instead of "FUT - ArenaPlay Football" for the database enum
-      // This needs to match the enum values in the database
       const gameTypeEnum = safeGameType === "futarena" ? "FUTArena" : gameCodeToType[safeGameType];
 
       const insertData: any = {
@@ -97,8 +106,9 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
 
       toast.success("Room created successfully!");
       navigate(`/games/${gameType}/room/${data.id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating room:', error);
+      toast.error(error.message || "Erreur inattendue.");
     }
   };
 

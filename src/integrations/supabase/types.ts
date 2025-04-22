@@ -923,6 +923,12 @@ export type Database = {
         Args: { session_id: string }
         Returns: number
       }
+      deduct_entry_fee: {
+        Args: { p_user_id: string; p_amount: number }
+        Returns: {
+          new_balance: number
+        }[]
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean

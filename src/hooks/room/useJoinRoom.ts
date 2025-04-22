@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,7 +45,7 @@ export function useJoinRoom() {
         return;
       }
 
-      // Check wallet balance before proceeding
+      // Check wallet balance and try to deduct in the DB before proceeding
       const canProceed = await checkAndDeductBalance(room.entry_fee);
       if (!canProceed) {
         return;
