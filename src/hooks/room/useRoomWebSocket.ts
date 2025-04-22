@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from "react";
 import { useRoomDataState } from "./useRoomDataState";
 import { useRoomSocketEvents } from "./useRoomSocketEvents";
@@ -38,7 +39,7 @@ export function useRoomWebSocket(roomId: string | undefined) {
     setPresenceState
   });
 
-  const { toggleReady, startGame, broadcastMove, endGame } = useRoomActions({
+  const { toggleReady, startGame, broadcastMove, endGame, forfeitGame } = useRoomActions({
     roomId,
     currentUserId,
     isReady,
@@ -116,6 +117,7 @@ export function useRoomWebSocket(roomId: string | undefined) {
     startGame,
     broadcastMove,
     endGame,
+    forfeitGame,
     fetchRoomData
   };
 }
