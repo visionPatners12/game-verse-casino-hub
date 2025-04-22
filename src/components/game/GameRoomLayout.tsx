@@ -33,7 +33,8 @@ export const GameRoomLayout = ({
   onStartGame,
   onForfeit
 }: GameRoomLayoutProps) => {
-  const totalPot = roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0;
+  // Calculate total pot directly from roomData.pot value if available, otherwise calculate it
+  const totalPot = roomData?.pot || (roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0);
   
   const allPlayersReady = roomData?.game_players?.every(player => player.is_ready || !player.is_connected);
   const enoughPlayers = roomData?.game_players?.filter(player => player.is_connected).length >= 2;
@@ -43,15 +44,24 @@ export const GameRoomLayout = ({
   return (
     <main className="flex-1 container mx-auto px-4 py-8">
       <div className="flex flex-col gap-8">
-        {/* Game Canvas Section */}
-        {isPlaying && (
-          <div className="w-full">
+        {/* Game Canvas Section - Always show container, even if not playing yet */}
+        <div className="w-full">
+          {isPlaying ? (
             <GameCanvas 
               roomData={roomData}
               currentUserId={currentUserId}
             />
-          </div>
-        )}
+          ) : (
+            <div className="aspect-video w-full flex items-center justify-center bg-accent/10 rounded-lg border border-border">
+              <div className="text-center">
+                <h3 className="text-2xl font-bold mb-2">Waiting for game to start</h3>
+                <p className="text-muted-foreground">
+                  Get ready and wait for the host to start the game
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Room Info and Controls */}
         <div className="flex flex-col lg:flex-row justify-between items-start gap-8">

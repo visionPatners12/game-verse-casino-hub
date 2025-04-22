@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import { RoomData } from "./types";
 import { GameData } from "@/game-implementation/Ludo/types";
@@ -6,6 +7,7 @@ import { useParams } from "react-router-dom";
 import { Loader2, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Timer } from "lucide-react";
+import { toast } from "sonner";
 
 declare global {
   interface Window {
@@ -57,7 +59,7 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     maxPlayers: roomData?.max_players,
     currentPlayers: roomData?.current_players,
     roomId: roomData?.room_id,
-    totalPot: roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0,
+    totalPot: roomData?.pot || (roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0),
     matchDuration: roomData?.match_duration,
   };
 
@@ -73,22 +75,30 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     const initializeGame = async () => {
       try {
         setGameState('loading');
+        console.log("Initializing game canvas...");
+        
         if (window.$ && typeof window.$.game !== 'undefined') {
           window.$.game = {
             ...window.$.game,
             gameData: gameData,
             sendMove: broadcastMove
           };
+          console.log("Game data set:", gameData);
         }
+        
         if (window.initGameCanvas && window.buildGameCanvas) {
+          console.log("Building game canvas with dimensions 1280x768");
           window.initGameCanvas(1280, 768);
           window.buildGameCanvas();
           gameInitialized.current = true;
           setGameState('ready');
+          console.log("Game canvas initialized successfully");
         } else {
+          console.error("Game canvas initialization functions not found");
           setGameState('error');
         }
       } catch (error) {
+        console.error("Error initializing game canvas:", error);
         setGameState('error');
       }
     };
@@ -98,10 +108,19 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     return () => {
       gameInitialized.current = false;
       if (window.removeGameCanvas) {
+        console.log("Removing game canvas");
         window.removeGameCanvas();
       }
     };
-  }, [canvasRef, currentUserId, JSON.stringify(gameData), broadcastMove]);
+  }, [canvasRef, currentUserId, broadcastMove]);
+  
+  // Recalculate gameData when roomData changes
+  useEffect(() => {
+    if (window.$ && window.$.game && gameInitialized.current) {
+      console.log("Updating game data:", gameData);
+      window.$.game.gameData = gameData;
+    }
+  }, [JSON.stringify(gameData)]);
   
   useEffect(() => {
     if (roomData?.game_type !== "futarena" || !roomData.match_duration) {
@@ -153,14 +172,38 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     
     if (!document.fullscreenElement) {
       containerRef.current.requestFullscreen()
-        .then(() => setIsFullscreen(true))
-        .catch(err => console.error('Error attempting to enable fullscreen:', err));
+        .then(() => {
+          setIsFullscreen(true);
+          toast("Fullscreen mode enabled");
+        })
+        .catch(err => {
+          console.error('Error attempting to enable fullscreen:', err);
+          toast.error("Could not enter fullscreen mode");
+        });
     } else {
       document.exitFullscreen()
-        .then(() => setIsFullscreen(false))
-        .catch(err => console.error('Error attempting to exit fullscreen:', err));
+        .then(() => {
+          setIsFullscreen(false);
+          toast("Exited fullscreen mode");
+        })
+        .catch(err => {
+          console.error('Error attempting to exit fullscreen:', err);
+          toast.error("Could not exit fullscreen mode");
+        });
     }
   };
+
+  // Listen for fullscreen change events
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   return (
     <div 
@@ -175,8 +218,9 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
         <Button
           variant="outline"
           size="icon"
-          className="absolute top-4 right-4 z-50"
+          className="absolute top-4 right-4 z-50 bg-background bg-opacity-70 hover:bg-background"
           onClick={toggleFullscreen}
+          title="Toggle fullscreen"
         >
           <Maximize className="h-4 w-4" />
         </Button>

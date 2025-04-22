@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout";
 import { GameRoomLayout } from "@/components/game/GameRoomLayout";
 import { useParams, useNavigate } from "react-router-dom";
@@ -19,8 +20,17 @@ const GameRoom = () => {
     gameStatus,
     toggleReady,
     startGame,
-    forfeitGame
+    forfeitGame,
+    fetchRoomData
   } = useRoomWebSocket(roomId);
+  
+  // Force a refresh of room data when component mounts
+  useEffect(() => {
+    if (roomId && !isLoading) {
+      console.log("Fetching room data on mount for room:", roomId);
+      fetchRoomData();
+    }
+  }, [roomId, fetchRoomData]);
   
   useEffect(() => {
     if (!authLoading && !session) {
