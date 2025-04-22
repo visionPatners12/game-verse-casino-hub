@@ -8,6 +8,7 @@ import { roomService } from "@/services/room";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client"; // Add this import for supabase
 
 export function useRoomWebSocket(roomId: string | undefined) {
   const { gameType } = useParams<{ gameType?: string }>();
@@ -87,7 +88,8 @@ export function useRoomWebSocket(roomId: string | undefined) {
           } else {
             console.log("Room no longer exists, clearing storage");
             roomService.disconnectFromRoom(storedRoomId, storedUserId);
-            roomService.connectionStorage.clear();
+            // Fix: Use the roomService method instead of accessing private property
+            roomService.saveActiveRoomToStorage("", "", ""); // Clear by passing empty strings
           }
         } catch (error) {
           console.error("Error reconnecting to room:", error);
