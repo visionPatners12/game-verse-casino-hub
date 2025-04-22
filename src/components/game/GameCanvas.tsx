@@ -3,7 +3,9 @@ import { RoomData } from "./types";
 import { GameData } from "@/game-implementation/Ludo/types";
 import { useRoomWebSocket } from "@/hooks/room/useRoomWebSocket";
 import { useParams } from "react-router-dom";
-import { Loader2, Timer } from "lucide-react";
+import { Loader2, Maximize } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Timer } from "lucide-react";
 
 declare global {
   interface Window {
@@ -28,8 +30,9 @@ interface GameCanvasProps {
 const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
   const [gameState, setGameState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [remainingTime, setRemainingTime] = useState<number | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const timerInterval = useRef<NodeJS.Timeout | null>(null);
-
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const gameInitialized = useRef<boolean>(false);
   const { roomId } = useParams<{ roomId: string }>();
@@ -145,41 +148,68 @@ const GameCanvas = ({ roomData, currentUserId }: GameCanvasProps) => {
     };
   }, [roomId, currentUserId, gameStatus]);
 
+  const toggleFullscreen = () => {
+    if (!containerRef.current) return;
+    
+    if (!document.fullscreenElement) {
+      containerRef.current.requestFullscreen()
+        .then(() => setIsFullscreen(true))
+        .catch(err => console.error('Error attempting to enable fullscreen:', err));
+    } else {
+      document.exitFullscreen()
+        .then(() => setIsFullscreen(false))
+        .catch(err => console.error('Error attempting to exit fullscreen:', err));
+    }
+  };
+
   return (
-    <div className="game-container">
-      <div className="bg-accent/10 rounded-lg border border-border aspect-video relative overflow-hidden">
-        <div 
-          ref={canvasRef} 
-          id="game-canvas-container" 
-          className="absolute inset-0 flex items-center justify-center"
+    <div 
+      ref={containerRef}
+      className="relative bg-accent/10 rounded-lg border border-border aspect-video w-full overflow-hidden"
+    >
+      <div 
+        ref={canvasRef} 
+        id="game-canvas-container" 
+        className="absolute inset-0 flex items-center justify-center"
+      >
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute top-4 right-4 z-50"
+          onClick={toggleFullscreen}
         >
-          {roomData.game_type === "futarena" && remainingTime !== null && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-background bg-opacity-70 rounded px-4 py-2 shadow font-bold text-lg border">
-              <Timer className="h-5 w-5 mr-2" />
-              <span>
-                {Math.floor(remainingTime / 60)
-                  .toString()
-                  .padStart(2, '0')}:
-                {(remainingTime % 60).toString().padStart(2, '0')}
-              </span>
-            </div>
-          )}
-          {gameState === 'loading' && (
-            <div className="text-center">
-              <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" />
-              <h3 className="text-2xl font-bold mb-2">Loading Game</h3>
-              <p className="text-muted-foreground">Preparing canvas...</p>
-            </div>
-          )}
-          {gameState === 'error' && (
-            <div className="text-center text-destructive">
-              <h3 className="text-2xl font-bold mb-2">Error</h3>
-              <p>Failed to initialize game. Please refresh the page.</p>
-            </div>
-          )}
-        </div>
+          <Maximize className="h-4 w-4" />
+        </Button>
+
+        {roomData.game_type === "futarena" && remainingTime !== null && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-background bg-opacity-70 rounded px-4 py-2 shadow font-bold text-lg border">
+            <Timer className="h-5 w-5 mr-2" />
+            <span>
+              {Math.floor(remainingTime / 60)
+                .toString()
+                .padStart(2, '0')}:
+              {(remainingTime % 60).toString().padStart(2, '0')}
+            </span>
+          </div>
+        )}
+
+        {gameState === 'loading' && (
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" />
+            <h3 className="text-2xl font-bold mb-2">Loading Game</h3>
+            <p className="text-muted-foreground">Preparing canvas...</p>
+          </div>
+        )}
+
+        {gameState === 'error' && (
+          <div className="text-center text-destructive">
+            <h3 className="text-2xl font-bold mb-2">Error</h3>
+            <p>Failed to initialize game. Please refresh the page.</p>
+          </div>
+        )}
       </div>
     </div>
   );
 };
+
 export default GameCanvas;

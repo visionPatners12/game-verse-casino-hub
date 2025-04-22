@@ -42,91 +42,97 @@ export const GameRoomLayout = ({
 
   return (
     <main className="flex-1 container mx-auto px-4 py-8">
-      <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
-        <div className="w-full lg:w-2/3">
-          <Card className="mb-6">
-            <CardHeader className="pb-3">
-              {!loading && roomData && (
-                <div className="flex justify-between items-center">
-                  <CardTitle>
-                    <RoomHeader 
-                      gameName={gameName} 
-                      roomId={roomData.room_id}
-                    />
-                  </CardTitle>
-                  
-                  <div className="flex items-center gap-2">
-                    {gameStatus === 'waiting' && (
+      <div className="flex flex-col gap-8">
+        {/* Game Canvas Section */}
+        {isPlaying && (
+          <div className="w-full">
+            <GameCanvas 
+              roomData={roomData}
+              currentUserId={currentUserId}
+            />
+          </div>
+        )}
+
+        {/* Room Info and Controls */}
+        <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
+          <div className="w-full lg:w-2/3">
+            <Card>
+              <CardHeader className="pb-3">
+                {!loading && roomData && (
+                  <div className="flex justify-between items-center">
+                    <CardTitle>
+                      <RoomHeader 
+                        gameName={gameName} 
+                        roomId={roomData.room_id}
+                      />
+                    </CardTitle>
+                    
+                    <div className="flex items-center gap-2">
+                      {gameStatus === 'waiting' && (
+                        <Button 
+                          onClick={onToggleReady}
+                          variant={isReady ? "default" : "outline"}
+                          className="flex items-center gap-2"
+                        >
+                          {isReady ? (
+                            <>
+                              <PauseCircle className="h-4 w-4" />
+                              Ready
+                            </>
+                          ) : (
+                            <>
+                              <PlayCircle className="h-4 w-4" />
+                              Get Ready
+                            </>
+                          )}
+                        </Button>
+                      )}
+                      
+                      {isReady && canStartGame && (
+                        <Button onClick={onStartGame}>
+                          Start Game
+                        </Button>
+                      )}
+
                       <Button 
-                        onClick={onToggleReady}
-                        variant={isReady ? "default" : "outline"}
+                        onClick={onForfeit} 
+                        variant="destructive"
                         className="flex items-center gap-2"
                       >
-                        {isReady ? (
-                          <>
-                            <PauseCircle className="h-4 w-4" />
-                            Ready
-                          </>
-                        ) : (
-                          <>
-                            <PlayCircle className="h-4 w-4" />
-                            Get Ready
-                          </>
-                        )}
+                        <DoorOpen className="h-4 w-4" />
+                        Leave Room
                       </Button>
-                    )}
-                    
-                    {isReady && canStartGame && (
-                      <Button onClick={onStartGame}>
-                        Start Game
-                      </Button>
-                    )}
-
-                    <Button 
-                      onClick={onForfeit} 
-                      variant="destructive"
-                      className="flex items-center gap-2"
-                    >
-                      <DoorOpen className="h-4 w-4" />
-                      Abandonner
-                    </Button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <LoadingState />
-              ) : (
-                roomData && (
-                  <>
-                    <RoomInfo 
-                      entryFee={roomData.entry_fee} 
-                      totalPot={totalPot}
-                      roomId={roomData.room_id}
-                    />
-                    
-                    <PlayersList 
-                      players={roomData.game_players}
-                      maxPlayers={roomData.max_players}
-                      currentUserId={currentUserId}
-                    />
-                    
-                    {isPlaying && (
-                      <GameCanvas 
-                        roomData={roomData}
+                )}
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <LoadingState />
+                ) : (
+                  roomData && (
+                    <>
+                      <RoomInfo 
+                        entryFee={roomData.entry_fee} 
+                        totalPot={totalPot}
+                        roomId={roomData.room_id}
+                      />
+                      
+                      <PlayersList 
+                        players={roomData.game_players}
+                        maxPlayers={roomData.max_players}
                         currentUserId={currentUserId}
                       />
-                    )}
-                  </>
-                )
-              )}
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="w-full lg:w-1/3">
-          <GameChat />
+                    </>
+                  )
+                )}
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="w-full lg:w-1/3">
+            <GameChat />
+          </div>
         </div>
       </div>
     </main>
