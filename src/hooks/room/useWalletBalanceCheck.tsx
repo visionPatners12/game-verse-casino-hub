@@ -33,7 +33,6 @@ export function useWalletBalanceCheck() {
 
     // Si déjà insuffisant côté front, affichage immédiat
     if (wallet.real_balance < amount) {
-      console.log("Insufficient funds detected in frontend check:", wallet.real_balance, "<", amount);
       setShowInsufficientFundsDialog(true);
       return false;
     }
@@ -45,18 +44,19 @@ export function useWalletBalanceCheck() {
     });
 
     if (error) {
-      console.error("Error in deduct_entry_fee RPC:", error);
-      // S'il manque le solde, la fonction SQL échoue : info user
+      // S'il manque le solde, la fonction SQL échoue : info user
       setShowInsufficientFundsDialog(true);
       toast.error("Solde insuffisant.");
       return false;
     }
 
-    console.log("Successfully deducted balance:", amount);
-    // Success : solde réellement déduit en DB
+    // Success : solde réellement déduit en DB
     return true;
   };
 
+  /**
+   * Modale affichée si solde insuffisant
+   */
   const InsufficientFundsDialog = () => (
     <AlertDialog 
       open={showInsufficientFundsDialog} 
@@ -85,8 +85,6 @@ export function useWalletBalanceCheck() {
 
   return {
     checkAndDeductBalance,
-    InsufficientFundsDialog,
-    showInsufficientFundsDialog, // Export this state so components can check it
-    setShowInsufficientFundsDialog // Export this function so components can reset it
+    InsufficientFundsDialog
   };
 }

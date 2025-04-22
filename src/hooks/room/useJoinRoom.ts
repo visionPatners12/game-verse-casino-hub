@@ -50,7 +50,6 @@ export function useJoinRoom() {
       // Check wallet balance and try to deduct in the DB before proceeding
       const canProceed = await checkAndDeductBalance(room.entry_fee);
       if (!canProceed) {
-        console.log("Insufficient funds to join room with entry fee:", room.entry_fee);
         return;
       }
       
