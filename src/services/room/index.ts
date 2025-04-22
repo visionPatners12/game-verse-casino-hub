@@ -10,13 +10,18 @@ export { RoomReconnectionManager } from './RoomReconnectionManager';
 // Helper functions to be used app-wide - these delegate to the RoomConnectionStorage class
 export const getStoredRoomConnection = () => {
   if (typeof window !== 'undefined') {
-    const roomId = sessionStorage.getItem('activeRoomId');
-    const userId = sessionStorage.getItem('activeUserId');
-    const gameType = sessionStorage.getItem('activeGameType');
-    
-    console.log(`getStoredRoomConnection called, found: roomId=${roomId}, userId=${userId}, gameType=${gameType}`);
-    
-    return { roomId, userId, gameType };
+    try {
+      const roomId = sessionStorage.getItem('activeRoomId');
+      const userId = sessionStorage.getItem('activeUserId');
+      const gameType = sessionStorage.getItem('activeGameType');
+      
+      console.log(`getStoredRoomConnection called, found: roomId=${roomId}, userId=${userId}, gameType=${gameType}`);
+      
+      return { roomId, userId, gameType };
+    } catch (e) {
+      console.error("Failed to access session storage:", e);
+      return { roomId: null, userId: null, gameType: null };
+    }
   }
   return { roomId: null, userId: null, gameType: null };
 };

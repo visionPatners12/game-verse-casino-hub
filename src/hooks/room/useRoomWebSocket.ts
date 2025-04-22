@@ -48,29 +48,56 @@ export function useRoomWebSocket(roomId: string | undefined) {
 
   // Check for stored room connection when no roomId is provided (on other pages)
   useEffect(() => {
-    if (roomId || hasAttemptedReconnect) {
-      return; // Don't attempt reconnect if we already have a roomId or have tried before
+    // Early return if we already have a roomId
+    if (roomId) {
+      return;
+    }
+    
+    // Early return if we've already attempted reconnection
+    if (hasAttemptedReconnect) {
+      return;
     }
 
-    const { roomId: storedRoomId, userId: storedUserId, gameType: storedGameType } = roomService.getStoredRoomConnection();
-    
-    if (storedRoomId && storedUserId && storedGameType) {
-      console.log(`Found stored room connection on page load: ${storedRoomId} (${storedGameType}) for user ${storedUserId}, redirecting...`);
+    const checkStoredConnection = async () => {
+      const { roomId: storedRoomId, userId: storedUserId, gameType: storedGameType } = roomService.getStoredRoomConnection();
       
-      toast({
-        title: "Reconnecting to room",
-        description: "You were in an active game room. Reconnecting you...",
-      });
+      if (storedRoomId && storedUserId && storedGameType) {
+        console.log(`Found stored room connection on page load: ${storedRoomId} (${storedGameType}) for user ${storedUserId}, redirecting...`);
+        
+        toast({
+          title: "Reconnecting to room",
+          description: "You were in an active game room. Reconnecting you...",
+        });
+        
+        try {
+          // Connect to room before navigating
+          roomService.connectToRoom(storedRoomId, storedUserId, storedGameType);
+          
+          // Verify connection was successful through direct DB check
+          const { data: sessionData } = await supabase
+            .from('game_sessions')
+            .select('id, status')
+            .eq('id', storedRoomId)
+            .single();
+            
+          if (sessionData && sessionData.id) {
+            console.log("Room still exists, navigating...");
+            // Then navigate to the stored room
+            navigate(`/games/${storedGameType}/room/${storedRoomId}`);
+          } else {
+            console.log("Room no longer exists, clearing storage");
+            roomService.disconnectFromRoom(storedRoomId, storedUserId);
+            roomService.connectionStorage.clear();
+          }
+        } catch (error) {
+          console.error("Error reconnecting to room:", error);
+        }
+      }
       
-      // Try to connect to the stored room first before navigating
-      roomService.connectToRoom(storedRoomId, storedUserId, storedGameType);
-      
-      // Then navigate to the stored room
-      navigate(`/games/${storedGameType}/room/${storedRoomId}`);
       setHasAttemptedReconnect(true);
-    } else {
-      setHasAttemptedReconnect(true); // Mark as attempted even if no stored connection
-    }
+    };
+    
+    checkStoredConnection();
   }, [navigate, roomId, toast, hasAttemptedReconnect]);
 
   // Setup beforeunload handler to save room data

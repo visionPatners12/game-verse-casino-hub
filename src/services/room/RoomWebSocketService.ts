@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { WebSocketBase } from "./webSocket/WebSocketBase";
 import { RoomPresenceService } from "./presence/RoomPresenceService";
@@ -58,8 +57,19 @@ export class RoomWebSocketService extends WebSocketBase {
         console.log(`No active channel for room ${roomId}, reconnecting...`);
         this.isReconnecting = true;
         this.connectToRoom(roomId, userId, gameType);
+      } else if (!this.heartbeatManager.isHeartbeatHealthy(roomId)) {
+        console.log(`Heartbeat unhealthy for room ${roomId}, reconnecting...`);
+        this.isReconnecting = true;
+        
+        // Clean up existing channel first
+        this.channels[roomId].untrack();
+        supabase.removeChannel(this.channels[roomId]);
+        delete this.channels[roomId];
+        
+        // Then reconnect
+        this.connectToRoom(roomId, userId, gameType);
       } else {
-        console.log(`Channel for room ${roomId} exists, checking session state...`);
+        console.log(`Channel for room ${roomId} exists and is healthy, checking session state...`);
         this.verifySupabaseSession();
       }
     }
@@ -94,6 +104,9 @@ export class RoomWebSocketService extends WebSocketBase {
       console.warn("Cannot connect to room - missing roomId or userId");
       return null;
     }
+    
+    // Set reconnecting flag before doing any cleanup to prevent premature clearing
+    this.isReconnecting = true;
     
     // Cleanup existing channel if present to avoid stale references
     if (this.channels[roomId]) {
@@ -151,6 +164,11 @@ export class RoomWebSocketService extends WebSocketBase {
       .on('broadcast', { event: 'game_over' }, (payload) => {
         console.log('Game over:', payload);
         this.triggerCallback('gameOver', roomId, payload);
+      })
+      .on('broadcast', { event: 'heartbeat' }, (payload) => {
+        if (Math.random() < 0.05) { // only log ~5% of heartbeats
+          console.log(`Received heartbeat from another client in room ${roomId}:`, payload);
+        }
       });
 
     roomChannel.subscribe(async (status) => {
@@ -219,10 +237,13 @@ export class RoomWebSocketService extends WebSocketBase {
     
     console.log(`Disconnecting from room ${roomId}`);
     
-    // Set reconnecting flag first to prevent premature clearing
+    // Only clear reconnect timers if this is an intentional disconnect
     const isIntentionalDisconnect = document.visibilityState === 'visible' && !this.isReconnecting;
     
-    this.reconnectionManager.clearReconnectTimer(roomId);
+    if (isIntentionalDisconnect) {
+      this.reconnectionManager.clearReconnectTimer(roomId);
+    }
+    
     this.heartbeatManager.clearHeartbeat(roomId);
 
     if (this.channels[roomId]) {
