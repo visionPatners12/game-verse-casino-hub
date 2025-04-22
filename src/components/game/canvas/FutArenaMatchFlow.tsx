@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle } from "lucide-react";
@@ -63,7 +64,10 @@ export const FutArenaMatchFlow = ({
           filter: `session_id=eq.${roomData.id}`,
         },
         () => {
-          window.location.reload();
+          // Instead of reloading the page, we'll force re-fetch the data
+          // This will be handled by the parent component's fetchRoomData function
+          // which is automatically called on a timer
+          console.log("Game players changed, data will refresh on next poll");
         }
       )
       .subscribe();

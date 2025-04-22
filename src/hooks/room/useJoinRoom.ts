@@ -33,7 +33,7 @@ export function useJoinRoom() {
       const { data: room, error: roomError } = await supabase
         .from('game_sessions')
         .select('*')
-        .eq('room_id', roomCode)
+        .eq('room_id', roomCode.toUpperCase())
         .maybeSingle();
         
       if (roomError && roomError.code !== 'PGRST116') {
@@ -44,6 +44,8 @@ export function useJoinRoom() {
         toast.error("Room not found. Please check the code and try again.");
         return;
       }
+
+      console.log("Found room:", room);
 
       // Check wallet balance and try to deduct in the DB before proceeding
       const canProceed = await checkAndDeductBalance(room.entry_fee);
@@ -88,14 +90,21 @@ export function useJoinRoom() {
       }
       
       if (existingPlayer) {
+        console.log("Player already exists in room, updating connection status");
         // Player already exists, just update connection status
-        await supabase
+        const { error: updateError } = await supabase
           .from('game_players')
           .update({ is_connected: true })
           .eq('id', existingPlayer.id);
+          
+        if (updateError) {
+          console.error("Error updating player connection:", updateError);
+          throw updateError;
+        }
       } else {
+        console.log("Adding new player to room:", room.id);
         // Add player to the room
-        const { error: joinError } = await supabase
+        const { data: newPlayer, error: joinError } = await supabase
           .from('game_players')
           .insert({
             session_id: room.id,
@@ -103,13 +112,16 @@ export function useJoinRoom() {
             user_id: user.id,
             is_connected: true,
             is_ready: false
-          });
+          })
+          .select();
           
         if (joinError) {
           console.error("Error joining room:", joinError);
           toast.error("Error joining room: " + joinError.message);
           throw joinError;
         }
+        
+        console.log("Successfully added player to room:", newPlayer);
       }
       
       // Find game type for navigation
@@ -123,6 +135,7 @@ export function useJoinRoom() {
       }
       
       // Navigate to game room
+      console.log(`Navigating to /games/${gameType}/room/${room.id}`);
       navigate(`/games/${gameType}/room/${room.id}`);
       toast.success("Joined room successfully!");
       

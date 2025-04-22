@@ -19,6 +19,7 @@ export class RoomWebSocketConnection extends WebSocketBase {
     
     // Return existing channel if already set up
     if (this.channels[roomId]) {
+      console.log(`Channel for room ${roomId} already exists, reusing it`);
       return this.channels[roomId];
     }
     
@@ -53,15 +54,26 @@ export class RoomWebSocketConnection extends WebSocketBase {
         if (Math.random() < 0.05) {
           console.log(`Received heartbeat from another client in room ${roomId}:`, payload);
         }
+      })
+      .on('broadcast', { event: 'player_joined' }, (payload) => {
+        console.log('New player joined the room:', payload);
+        this.triggerCallback('playerJoinedRoom', roomId, payload);
       });
 
     this.channels[roomId] = roomChannel;
     
-    // Important: Subscribe to the channel and store the promise
+    // Important: Subscribe to the channel and track the promise
     roomChannel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         console.log(`Successfully subscribed to room ${roomId}`);
         this.subscribedChannels.add(roomId);
+        
+        // Broadcast that this player has joined to all other clients
+        roomChannel.send({
+          type: 'broadcast',
+          event: 'player_joined',
+          payload: { userId }
+        });
       } else if (status === 'CHANNEL_ERROR') {
         console.error(`Failed to subscribe to room ${roomId}`);
       } else {
