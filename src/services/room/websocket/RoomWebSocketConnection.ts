@@ -8,6 +8,8 @@ export class RoomWebSocketConnection extends WebSocketBase {
   protected channels: Record<string, RealtimeChannel> = {};
   private lastPresenceStates: Record<string, PresenceData> = {};
   private subscribedChannels: Set<string> = new Set();
+  // Add a new map to track channel subscription promises
+  private channelSubscriptions: Map<string, Promise<RealtimeChannel>> = new Map();
 
   setupChannel(roomId: string, userId: string | null, gameType?: string) {
     if (!roomId || !userId) {
@@ -62,24 +64,32 @@ export class RoomWebSocketConnection extends WebSocketBase {
 
     this.channels[roomId] = roomChannel;
     
-    // Important: Subscribe to the channel and track the promise
-    roomChannel.subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        console.log(`Successfully subscribed to room ${roomId}`);
-        this.subscribedChannels.add(roomId);
-        
-        // Broadcast that this player has joined to all other clients
-        roomChannel.send({
-          type: 'broadcast',
-          event: 'player_joined',
-          payload: { userId }
-        });
-      } else if (status === 'CHANNEL_ERROR') {
-        console.error(`Failed to subscribe to room ${roomId}`);
-      } else {
-        console.log(`Room ${roomId} subscription status: ${status}`);
-      }
+    // Create and store a promise for the channel subscription
+    const subscriptionPromise = new Promise<RealtimeChannel>((resolve) => {
+      roomChannel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`Successfully subscribed to room ${roomId}`);
+          this.subscribedChannels.add(roomId);
+          
+          // Broadcast that this player has joined to all other clients
+          roomChannel.send({
+            type: 'broadcast',
+            event: 'player_joined',
+            payload: { userId }
+          });
+          
+          resolve(roomChannel);
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error(`Failed to subscribe to room ${roomId}`);
+          // Still resolve to prevent hanging promises
+          resolve(roomChannel);
+        } else {
+          console.log(`Room ${roomId} subscription status: ${status}`);
+        }
+      });
     });
+    
+    this.channelSubscriptions.set(roomId, subscriptionPromise);
     
     return roomChannel;
   }
@@ -90,6 +100,11 @@ export class RoomWebSocketConnection extends WebSocketBase {
 
   isSubscribed(roomId: string): boolean {
     return this.subscribedChannels.has(roomId);
+  }
+
+  // Get the subscription promise for a room channel
+  getSubscriptionPromise(roomId: string): Promise<RealtimeChannel> | null {
+    return this.channelSubscriptions.get(roomId) || null;
   }
 
   cleanupChannel(roomId: string) {
@@ -114,12 +129,13 @@ export class RoomWebSocketConnection extends WebSocketBase {
       delete this.channels[roomId];
       delete this.lastPresenceStates[roomId];
       this.subscribedChannels.delete(roomId);
+      this.channelSubscriptions.delete(roomId);
       
       console.log(`Channel for room ${roomId} cleaned up successfully`);
     }
   }
 
-  updatePresenceState(roomId: string, presenceData: PresenceData) {
+  async updatePresenceState(roomId: string, presenceData: PresenceData) {
     this.lastPresenceStates[roomId] = presenceData;
     const channel = this.channels[roomId];
     
@@ -128,31 +144,41 @@ export class RoomWebSocketConnection extends WebSocketBase {
       return Promise.reject(new Error("No channel exists"));
     }
     
+    // Wait for the channel to be fully subscribed before tracking presence
+    // This fixes the "tried to push 'presence' before joining" error
     if (!this.subscribedChannels.has(roomId)) {
-      console.warn(`Waiting for subscription before tracking presence for room ${roomId}`);
-      // Return a promise that resolves when the channel is subscribed
-      return new Promise((resolve, reject) => {
-        const checkInterval = setInterval(() => {
-          if (this.subscribedChannels.has(roomId)) {
-            clearInterval(checkInterval);
-            try {
-              resolve(channel.track(presenceData));
-            } catch (error) {
-              console.error(`Error tracking presence after subscription: ${error}`);
-              reject(error);
-            }
-          }
-        }, 100);
+      console.log(`Waiting for subscription before tracking presence for room ${roomId}`);
+      
+      try {
+        // Get the subscription promise or create a new one with a timeout
+        const subscriptionPromise = this.channelSubscriptions.get(roomId) || 
+          Promise.race([
+            new Promise<never>((_, reject) => 
+              setTimeout(() => reject(new Error("Subscription timeout")), 5000)
+            ),
+            new Promise<RealtimeChannel>(resolve => {
+              const checkInterval = setInterval(() => {
+                if (this.subscribedChannels.has(roomId)) {
+                  clearInterval(checkInterval);
+                  resolve(channel);
+                }
+              }, 100);
+            })
+          ]);
+          
+        // Wait for the subscription to complete
+        await subscriptionPromise;
         
-        // Set a timeout to avoid infinite waiting
-        setTimeout(() => {
-          clearInterval(checkInterval);
-          reject(new Error("Subscription timeout"));
-        }, 5000);
-      });
+        console.log(`Channel now subscribed, tracking presence for room ${roomId}`);
+        return channel.track(presenceData);
+      } catch (error) {
+        console.error(`Error waiting for subscription: ${error}`);
+        return Promise.reject(error);
+      }
     }
     
     try {
+      console.log(`Tracking presence for room ${roomId}:`, presenceData);
       return channel.track(presenceData);
     } catch (error) {
       console.error(`Error tracking presence: ${error}`);

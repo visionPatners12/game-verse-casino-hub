@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle } from "lucide-react";
@@ -54,6 +55,7 @@ export const FutArenaMatchFlow = ({
     try {
       console.log("Starting Get Ready process as", isHost ? "host" : "player");
 
+      // Update player ready status first
       const { error: playerError } = await supabase
         .from("game_players")
         .update({ is_ready: true })
@@ -67,11 +69,13 @@ export const FutArenaMatchFlow = ({
       }
 
       if (isHost) {
+        // If host, also update all players' ready status
         const { error: allPlayersError } = await supabase
           .from("game_players")
           .update({ is_ready: true })
           .eq("session_id", roomData.id);
         
+        // Start the game by updating session status
         const { error: sessionError } = await supabase
           .from("game_sessions")
           .update({ 

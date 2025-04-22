@@ -4,6 +4,7 @@ import { roomService } from "@/services/room";
 import { PresenceData } from "@/components/game/types";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export function useRoomSocketEvents({
   roomId,
@@ -20,7 +21,7 @@ export function useRoomSocketEvents({
   setIsReady: (r: boolean) => void,
   setPresenceState: (p: Record<string, PresenceData[]>) => void
 }) {
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
 
   useEffect(() => {
     // Don't continue if we don't have both roomId and currentUserId
@@ -29,7 +30,11 @@ export function useRoomSocketEvents({
     console.log(`Initializing room socket connection for room ${roomId} and user ${currentUserId}`);
     
     // First connect to room
-    roomService.connectToRoom(roomId, currentUserId);
+    const channel = roomService.connectToRoom(roomId, currentUserId);
+    if (!channel) {
+      console.error("Failed to create room channel");
+      return;
+    }
     
     // Set up event handlers for room events
     const handlePresenceSync = (_: string, state: Record<string, PresenceData[]>) => {
@@ -58,7 +63,7 @@ export function useRoomSocketEvents({
         .eq('session_id', roomId);
       
       if (players?.some(p => p.has_forfeited)) {
-        toast({
+        uiToast({
           title: "Un joueur a abandonné",
           description: "Un joueur a quitté la partie.",
         });
@@ -70,6 +75,7 @@ export function useRoomSocketEvents({
       console.log("Game start event received:", data);
       setGameStatus('playing');
       fetchRoomData();
+      toast.success("La partie a démarré !");
     };
     
     const handleGameOver = (_: string, data: any) => {
@@ -94,6 +100,7 @@ export function useRoomSocketEvents({
           if (payload.new && payload.new.status === "Active") {
             console.log("Setting game status to playing based on DB update");
             setGameStatus('playing');
+            toast.success("La partie a démarré !");
             fetchRoomData();
           }
         }
@@ -127,9 +134,8 @@ export function useRoomSocketEvents({
       // Only disconnect if we have both room and user ID
       if (roomId && currentUserId) {
         // When unmounting component, disconnect from room
-        // The session will be saved by the beforeunload handler in useRoomWebSocket
         roomService.disconnectFromRoom(roomId, currentUserId);
       }
     };
-  }, [roomId, currentUserId, fetchRoomData, setGameStatus, setIsReady, setPresenceState, toast]);
+  }, [roomId, currentUserId, fetchRoomData, setGameStatus, setIsReady, setPresenceState, uiToast]);
 }
