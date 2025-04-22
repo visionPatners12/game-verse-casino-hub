@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle } from "lucide-react";
@@ -38,9 +37,10 @@ export const FutArenaMatchFlow = ({
 
   const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId);
 
-  const [timerStarted, setTimerStarted] = useState(false);
+  const timerShouldBeStarted = (
+    gameStatus === "playing" || gameStatus === "starting" || roomData?.status === "Active"
+  );
 
-  // Host detection
   const hostUserId =
     (roomData as any)?.created_by ||
     (roomData?.game_players && roomData?.game_players[0]?.user_id) ||
@@ -49,21 +49,8 @@ export const FutArenaMatchFlow = ({
 
   useEffect(() => {
     if (!roomData?.id) return;
-
     const channel = supabase
       .channel(`room-${roomData.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "game_players",
-          filter: `session_id=eq.${roomData.id}`,
-        },
-        () => {
-          console.log("Game players changed, data will refresh on next poll");
-        }
-      )
       .on(
         "postgres_changes",
         {
@@ -73,30 +60,16 @@ export const FutArenaMatchFlow = ({
           filter: `id=eq.${roomData.id}`,
         },
         (payload) => {
-          // Si le statut de la session change à "Active", on démarre le timer
           if (payload.new && payload.new.status === "Active") {
-            console.log("Game session status changed to Active, starting timer");
-            setTimerStarted(true);
+            console.log("Game session status changed to Active, timer should start (by status now)");
           }
         }
       )
       .subscribe();
-
     return () => {
       supabase.removeChannel(channel);
     };
   }, [roomData?.id]);
-
-  // Si gameStatus devient playing/starting OU si le status est déjà "Active", démarrer le timer
-  useEffect(() => {
-    if (
-      (gameStatus === "playing" || gameStatus === "starting") || 
-      (roomData && roomData.status === "Active")
-    ) {
-      console.log("Setting timer started based on game status:", gameStatus, "or room status:", roomData?.status);
-      setTimerStarted(true);
-    }
-  }, [gameStatus, roomData?.status]);
 
   const handleGetReady = async () => {
     if (!currentUserId || !roomData?.id) return;
@@ -108,7 +81,6 @@ export const FutArenaMatchFlow = ({
     try {
       console.log("Starting Get Ready process as", isHost ? "host" : "player");
 
-      // Mettre à jour status "ready" pour le joueur courant
       const { error: playerError } = await supabase
         .from("game_players")
         .update({ is_ready: true })
@@ -121,17 +93,11 @@ export const FutArenaMatchFlow = ({
         return;
       }
 
-      // Si c'est l'hôte, démarrer la partie immédiatement
       if (isHost) {
-        console.log("Host is starting the game for all players");
-        
-        // Mettre à jour tous les joueurs comme ready
         const { error: allPlayersError } = await supabase
           .from("game_players")
           .update({ is_ready: true })
           .eq("session_id", roomData.id);
-
-        // Mettre à jour le statut de la session à Active
         const { error: sessionError } = await supabase
           .from("game_sessions")
           .update({ 
@@ -148,7 +114,6 @@ export const FutArenaMatchFlow = ({
 
         console.log("Game started successfully by host");
         toast.success("La partie a démarré !");
-        setTimerStarted(true);
       } else {
         console.log("Player is ready, waiting for host to start");
         toast.success("You're ready! Waiting for host to start the game...");
@@ -168,8 +133,7 @@ export const FutArenaMatchFlow = ({
     );
   }
 
-  // Si le timer a démarré, montrer le timer/match
-  if (timerStarted) {
+  if (timerShouldBeStarted) {
     return (
       <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-30">
         <div className="flex flex-col items-center animate-fade-in">
@@ -180,7 +144,6 @@ export const FutArenaMatchFlow = ({
     );
   }
 
-  // Sinon, montrer l'interface de préparation
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 z-30">
       <div className="flex flex-col md:flex-row items-center gap-8">
@@ -202,7 +165,6 @@ export const FutArenaMatchFlow = ({
         ))}
       </div>
 
-      {/* Si joueur n'est pas prêt, montrer bouton Get Ready */}
       {me && !me.is_ready && (
         <Button
           onClick={handleGetReady}
@@ -222,4 +184,3 @@ export const FutArenaMatchFlow = ({
     </div>
   );
 };
-
