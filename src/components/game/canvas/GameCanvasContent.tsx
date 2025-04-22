@@ -1,9 +1,8 @@
-
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { Loader2 } from "lucide-react";
 import { RoomData } from "../types";
-import { FutArenaMatchFlow } from "./FutArenaMatchFlow";
-import { useEffect, useRef, useState } from "react";
+import { FutArenaHTMLFlow } from "./FutArenaHTMLFlow";
+import { useState, useRef, useEffect } from "react";
 
 // Props inchangés
 interface GameCanvasContentProps {
@@ -12,12 +11,37 @@ interface GameCanvasContentProps {
   gameStatus: 'waiting' | 'starting' | 'playing' | 'ended';
 }
 
-// Refactoré pour déléguer le cas futarena au nouveau composant !
+// Nouveau rendu HTML flow pour FutArena (plus d'overlay)
 export const GameCanvasContent = memo(({ roomData, currentUserId, gameStatus }: GameCanvasContentProps) => {
-  // --- Mode FUTArena : affichage IDs, play, timer ---
   const isFutArena = roomData.game_type?.toLowerCase() === "futarena";
-  if (isFutArena && typeof roomData.match_duration === "number" && (gameStatus === "playing" || gameStatus === "starting" || gameStatus === "waiting")) {
-    return <FutArenaMatchFlow roomData={roomData} currentUserId={currentUserId} gameStatus={gameStatus} />;
+  const [showFlow, setShowFlow] = useState(
+    isFutArena && typeof roomData.match_duration === "number" && (gameStatus === "playing" || gameStatus === "starting" || gameStatus === "waiting")
+  );
+  const [internalRoomData, setInternalRoomData] = useState(roomData);
+
+  // Callback to refresh la roomData (simple wrapper)
+  const handleRefreshRoom = useCallback(() => {
+    setInternalRoomData({ ...roomData });
+  }, [roomData]);
+
+  useEffect(() => {
+    setShowFlow(
+      isFutArena && typeof roomData.match_duration === "number" && (gameStatus === "playing" || gameStatus === "starting" || gameStatus === "waiting")
+    );
+    setInternalRoomData(roomData);
+  }, [isFutArena, roomData, gameStatus]);
+
+  if (isFutArena && showFlow) {
+    return (
+      <div className="w-full h-full relative">
+        <FutArenaHTMLFlow
+          roomData={internalRoomData}
+          currentUserId={currentUserId}
+          gameStatus={gameStatus}
+          onRefreshRoom={handleRefreshRoom}
+        />
+      </div>
+    );
   }
 
   // --- CANVAS LOGIC FOR OTHER MODES (inchangé) ---
