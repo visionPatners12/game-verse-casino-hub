@@ -1,15 +1,37 @@
-
 import { useEffect, useRef, useState, memo } from "react";
 import { Loader2 } from "lucide-react";
+import { GameTimer } from "./GameTimer";
 import { GameData } from "@/game-implementation/Ludo/types";
 import { RoomData } from "../types";
 
 interface GameCanvasContentProps {
   roomData: RoomData;
   currentUserId: string | null;
+  gameStatus: 'waiting' | 'starting' | 'playing' | 'ended';
 }
 
-export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasContentProps) => {
+/**
+ * Pour la room FUTArena (=type futarena et status="playing"), 
+ * on affiche juste un compte à rebours plein écran.
+ * Sinon on garde l'ancien comportement (canvas du jeu classique).
+ */
+export const GameCanvasContent = memo(({ roomData, currentUserId, gameStatus }: GameCanvasContentProps) => {
+  // Si Futarena et gameStatus===playing => juste timer !
+  if (
+    roomData.game_type === "futarena" && 
+    typeof roomData.match_duration === "number" && 
+    gameStatus === "playing"
+  ) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-20">
+        <div className="flex flex-col items-center animate-fade-in">
+          <GameTimer matchDuration={roomData.match_duration} />
+          <p className="mt-6 text-xl text-muted-foreground font-semibold">Match en cours</p>
+        </div>
+      </div>
+    );
+  }
+
   const [gameState, setGameState] = useState<'loading' | 'ready' | 'error'>('loading');
   const canvasRef = useRef<HTMLDivElement>(null);
   const gameInitialized = useRef<boolean>(false);

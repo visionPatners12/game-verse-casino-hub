@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import GameChat from "@/components/GameChat";
@@ -132,6 +131,7 @@ export const GameRoomLayout = ({
                             <GameCanvas 
                               roomData={roomData}
                               currentUserId={currentUserId}
+                              gameStatus={gameStatus}
                             />
                           ) : (
                             <div className="aspect-video w-full flex items-center justify-center bg-accent/10 p-4 sm:p-8">

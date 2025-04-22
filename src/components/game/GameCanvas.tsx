@@ -6,13 +6,13 @@ import GameCanvasContainer from "./canvas/GameCanvasContainer";
 interface GameCanvasProps {
   roomData: RoomData;
   currentUserId: string | null;
+  gameStatus: 'waiting' | 'starting' | 'playing' | 'ended';
 }
 
-const GameCanvas = memo(({ roomData, currentUserId }: GameCanvasProps) => {
-  return <GameCanvasContainer roomData={roomData} currentUserId={currentUserId} />;
+const GameCanvas = memo(({ roomData, currentUserId, gameStatus }: GameCanvasProps) => {
+  return <GameCanvasContainer roomData={roomData} currentUserId={currentUserId} gameStatus={gameStatus} />;
 });
 
-// Ajouter un displayName pour faciliter le debugging
 GameCanvas.displayName = 'GameCanvas';
 
 export default GameCanvas;

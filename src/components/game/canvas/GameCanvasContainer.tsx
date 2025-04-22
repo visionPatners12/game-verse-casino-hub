@@ -10,9 +10,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface GameCanvasContainerProps {
   roomData: RoomData;
   currentUserId: string | null;
+  gameStatus: 'waiting' | 'starting' | 'playing' | 'ended';
 }
 
-const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContainerProps) => {
+const GameCanvasContainer = memo(({ roomData, currentUserId, gameStatus }: GameCanvasContainerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const handle = useFullScreenHandle();
   const isMobile = useIsMobile();
@@ -28,13 +29,10 @@ const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContain
       >
         <LudoGameScripts />
 
-        {roomData.game_type === "futarena" && roomData.match_duration && (
-          <GameTimer matchDuration={roomData.match_duration} />
-        )}
-
         <GameCanvasContent 
           roomData={roomData}
           currentUserId={currentUserId}
+          gameStatus={gameStatus}
         />
       </div>
     </FullScreen>
