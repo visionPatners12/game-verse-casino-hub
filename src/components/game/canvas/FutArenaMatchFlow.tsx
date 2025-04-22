@@ -73,6 +73,11 @@ export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutAr
   const handleGetReady = async () => {
     if (!currentUserId || !roomData?.id) return;
     
+    if (!futId) {
+      toast.error("Please set your FUT ID before getting ready.");
+      return;
+    }
+    
     try {
       const { error } = await supabase
         .from('game_players')
