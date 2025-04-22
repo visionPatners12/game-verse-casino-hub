@@ -1,8 +1,8 @@
-
 import { useCallback } from "react";
 import { roomService } from "@/services/room";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 export function useRoomActions({
   roomId,
@@ -18,6 +18,7 @@ export function useRoomActions({
   setGameStatus: (status: 'waiting' | 'starting' | 'playing' | 'ended') => void,
 }) {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const toggleReady = useCallback(async () => {
     if (!roomId || !currentUserId) return;
@@ -81,10 +82,14 @@ export function useRoomActions({
 
       await roomService.disconnectFromRoom(roomId, currentUserId);
       roomService.saveActiveRoomToStorage("", "", "");
+      
       toast({
         title: "Partie abandonnée",
         description: "Vous avez quitté la partie.",
       });
+      
+      navigate('/');
+      
     } catch (error) {
       toast({
         title: "Erreur",
@@ -92,7 +97,7 @@ export function useRoomActions({
         variant: "destructive"
       });
     }
-  }, [roomId, currentUserId, toast]);
+  }, [roomId, currentUserId, toast, navigate]);
 
   return { toggleReady, startGame, broadcastMove, endGame, forfeitGame };
 }
