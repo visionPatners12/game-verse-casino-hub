@@ -23,12 +23,18 @@ const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContain
         return;
       }
       
-      // Important: Get the game canvas container from the DOM
-      const gameCanvasElement = containerRef.current.querySelector("#game-canvas-container");
-      const targetElement = gameCanvasElement || containerRef.current;
+      // Important: Cibler directement le conteneur du jeu
+      const gameCanvasElement = document.getElementById("game-canvas-container");
+      
+      if (!gameCanvasElement) {
+        toast.error("Game canvas element not found");
+        return;
+      }
+      
+      console.log("Toggling fullscreen for element:", gameCanvasElement);
 
       if (!document.fullscreenElement) {
-        await targetElement.requestFullscreen();
+        await gameCanvasElement.requestFullscreen();
         setIsFullscreen(true);
         toast.success("Fullscreen mode enabled");
       } else {
@@ -78,8 +84,6 @@ const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContain
   );
 });
 
-// Ajouter un displayName pour faciliter le debugging
 GameCanvasContainer.displayName = 'GameCanvasContainer';
 
 export default GameCanvasContainer;
-

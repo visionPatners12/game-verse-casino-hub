@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState, memo } from "react";
 import { Loader2 } from "lucide-react";
 import { GameData } from "@/game-implementation/Ludo/types";
@@ -131,6 +132,7 @@ export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasCo
       ref={canvasRef} 
       id="game-canvas-container" 
       className="absolute inset-0 flex items-center justify-center [&:fullscreen]:bg-black"
+      style={{ width: '100%', height: '100%' }}
     />
   );
 });

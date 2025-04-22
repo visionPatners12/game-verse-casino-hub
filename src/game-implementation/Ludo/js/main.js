@@ -1,3 +1,4 @@
+
 ////////////////////////////////////////////////////////////
 // MAIN
 ////////////////////////////////////////////////////////////
@@ -128,6 +129,15 @@ function resizeGameFunc(){
 			$('#notificationHolder').css('top', (offset.top/2));
 		}
 		$(window).scrollTop(0);
+		
+		// Handle fullscreen special case
+		if (document.fullscreenElement && document.fullscreenElement.id === "game-canvas-container") {
+			console.log("Detected fullscreen mode, applying special styles");
+			$('canvas').css('width', '100%');
+			$('canvas').css('height', '100%');
+			$('canvas').css('left', 0);
+			$('canvas').css('top', 0);
+		}
 		
 		resizeCanvas();
 		if ( typeof resizeScore == 'function' ) { 
