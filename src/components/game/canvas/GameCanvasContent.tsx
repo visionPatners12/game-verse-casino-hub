@@ -7,10 +7,9 @@ import { RoomData } from "../types";
 interface GameCanvasContentProps {
   roomData: RoomData;
   currentUserId: string | null;
-  isFullscreen: boolean;
 }
 
-export const GameCanvasContent = memo(({ roomData, currentUserId, isFullscreen }: GameCanvasContentProps) => {
+export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasContentProps) => {
   const [gameState, setGameState] = useState<'loading' | 'ready' | 'error'>('loading');
   const canvasRef = useRef<HTMLDivElement>(null);
   const gameInitialized = useRef<boolean>(false);
@@ -61,7 +60,6 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, isFullscreen }
           setGameState('ready');
           console.log("Canvas initialized successfully");
           
-          // Force resize after init to ensure proper dimensions
           if (window.resizeGameFunc) {
             console.log("Initial resize after canvas initialization");
             setTimeout(window.resizeGameFunc, 200);
@@ -87,7 +85,6 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, isFullscreen }
     };
   }, [canvasRef, currentUserId, gameData]);
 
-  // Update game data when it changes
   useEffect(() => {
     if (window.$ && window.$.game && gameInitialized.current) {
       const shouldUpdate = !lastGameData.current || 
@@ -102,15 +99,6 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, isFullscreen }
       }
     }
   }, [gameData]);
-
-  // Update canvas when fullscreen mode changes
-  useEffect(() => {
-    if (gameInitialized.current && window.resizeGameFunc) {
-      console.log("Resizing canvas after fullscreen change from prop:", isFullscreen);
-      // Add a small delay to ensure the DOM has updated
-      setTimeout(window.resizeGameFunc, 200);
-    }
-  }, [isFullscreen]);
 
   if (gameState === 'loading') {
     return (
@@ -138,7 +126,7 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, isFullscreen }
   return (
     <div 
       ref={canvasRef} 
-      className={`absolute inset-0 flex items-center justify-center ${isFullscreen ? 'bg-black' : ''}`}
+      className="absolute inset-0 flex items-center justify-center"
     />
   );
 });

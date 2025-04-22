@@ -1,15 +1,14 @@
 
 import { Button } from "@/components/ui/button";
-import { Copy, Share2, ExternalLink } from "lucide-react";
+import { Copy, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface RoomHeaderProps {
   gameName: string;
   roomId: string;
-  onToggleFullscreen?: () => void;
 }
 
-const RoomHeader = ({ gameName, roomId, onToggleFullscreen }: RoomHeaderProps) => {
+const RoomHeader = ({ gameName, roomId }: RoomHeaderProps) => {
   const copyRoomLink = () => {
     const roomUrl = `${window.location.origin}${window.location.pathname}`;
     navigator.clipboard.writeText(roomUrl);
@@ -53,16 +52,6 @@ const RoomHeader = ({ gameName, roomId, onToggleFullscreen }: RoomHeaderProps) =
         >
           <Share2 className="h-4 w-4" />
           <span className="hidden sm:inline">Share</span>
-        </Button>
-        
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-1"
-          onClick={onToggleFullscreen}
-        >
-          <ExternalLink className="h-4 w-4" />
-          <span className="hidden sm:inline">Fullscreen</span>
         </Button>
       </div>
     </div>
