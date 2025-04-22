@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -16,12 +16,30 @@ interface JoinGameDialogProps {
 export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
   const [roomCode, setRoomCode] = useState("");
   const { joinRoom, isLoading } = useJoinRoom();
-  const { checkAndDeductBalance, InsufficientFundsDialog } = useWalletBalanceCheck();
+  const { 
+    checkAndDeductBalance, 
+    InsufficientFundsDialog, 
+    showInsufficientFundsDialog 
+  } = useWalletBalanceCheck();
+
+  // Reset room code when dialog is opened
+  useEffect(() => {
+    if (open) {
+      setRoomCode("");
+    }
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await joinRoom(roomCode);
   };
+
+  // Make sure dialog stays open if insufficient funds dialog is shown
+  useEffect(() => {
+    if (showInsufficientFundsDialog && !open) {
+      onOpenChange(true);
+    }
+  }, [showInsufficientFundsDialog, open, onOpenChange]);
 
   return (
     <>
@@ -64,6 +82,8 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
           </form>
         </DialogContent>
       </Dialog>
+      
+      {/* Always render the InsufficientFundsDialog component */}
       <InsufficientFundsDialog />
     </>
   );
