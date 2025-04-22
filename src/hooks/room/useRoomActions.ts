@@ -1,6 +1,8 @@
+
 import { useCallback } from "react";
 import { roomService } from "@/services/room";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useRoomActions({
   roomId,

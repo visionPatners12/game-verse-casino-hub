@@ -1,6 +1,6 @@
 
-export { roomService } from './RoomWebSocketService';
-export type { WebSocketBase } from './webSocket/WebSocketBase';
+export { roomService } from './websocket/RoomWebSocketService';
+export type { WebSocketBase } from './websocket/WebSocketBase';
 export { RoomPresenceService } from './presence/RoomPresenceService';
 export { GameStateService } from './game/GameStateService';
 export { RoomHeartbeatManager } from './RoomHeartbeatManager';

@@ -1,4 +1,5 @@
 
+import { supabase } from "@/integrations/supabase/client";
 import { RoomWebSocketConnection } from "./RoomWebSocketConnection";
 import { RoomPresenceService } from "../presence/RoomPresenceService";
 import { GameStateService } from "../game/GameStateService";
@@ -200,6 +201,14 @@ export class RoomWebSocketService {
   async endGame(roomId: string, results: any) {
     const channel = this.connection.getChannel(roomId);
     return await this.gameStateService.endGame(roomId, results, channel);
+  }
+
+  onEvent(event: string, callback: (roomId: string, data: any) => void) {
+    this.connection.onEvent(event, callback);
+  }
+
+  offEvent(event: string, callback: (roomId: string, data: any) => void) {
+    this.connection.offEvent(event, callback);
   }
 }
 
