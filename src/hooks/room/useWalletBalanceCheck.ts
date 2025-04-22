@@ -33,24 +33,29 @@ export function useWalletBalanceCheck() {
     return true;
   };
 
-  const InsufficientFundsDialog = () => (
-    <AlertDialog open={showInsufficientFundsDialog} onOpenChange={setShowInsufficientFundsDialog}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Solde insuffisant</AlertDialogTitle>
-          <AlertDialogDescription>
-            Vous n'avez pas assez d'argent dans votre portefeuille pour rejoindre cette partie.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction onClick={() => navigate("/wallet")}>
-            Ajouter des fonds
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
+  const InsufficientFundsDialog = () => {
+    return (
+      <AlertDialog 
+        open={showInsufficientFundsDialog} 
+        onOpenChange={setShowInsufficientFundsDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Solde insuffisant</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vous n'avez pas assez d'argent dans votre portefeuille pour rejoindre cette partie.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={() => navigate("/wallet")}>
+              Ajouter des fonds
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  };
 
   return {
     checkAndDeductBalance,
