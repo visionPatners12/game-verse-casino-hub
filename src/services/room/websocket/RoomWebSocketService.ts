@@ -48,11 +48,18 @@ export class RoomWebSocketService extends WebSocketBase {
       return;
     }
     
+    console.log(`Disconnecting from room ${roomId} for user ${userId}`);
+    
+    // Clear active room storage first
+    this.connectionStorage.save("", "", "");
+    
     // Mark player as disconnected in the database
     this.presenceService.markPlayerDisconnected(roomId, userId);
     
     // Clean up channel and presence data
     this.cleanupChannel(roomId);
+    
+    console.log(`Successfully disconnected from room ${roomId}`);
   }
 
   getChannel(roomId: string) {
@@ -60,6 +67,7 @@ export class RoomWebSocketService extends WebSocketBase {
   }
 
   cleanupChannel(roomId: string) {
+    console.log(`Cleaning up channel for room ${roomId}`);
     this.roomConnection.cleanupChannel(roomId);
     this.presenceManager.clearPresenceState(roomId);
   }

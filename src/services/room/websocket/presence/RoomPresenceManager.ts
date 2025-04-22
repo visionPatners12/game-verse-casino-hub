@@ -15,6 +15,13 @@ export class RoomPresenceManager {
     
     return new Promise((resolve, reject) => {
       try {
+        // Check if the room is subscribed before tracking presence
+        if (!this.subscribedRooms.has(roomId)) {
+          console.warn(`Cannot track presence: room ${roomId} not subscribed yet`);
+          resolve(null);
+          return;
+        }
+        
         const result = channel.track(presenceData);
         resolve(result);
       } catch (error) {
@@ -37,6 +44,7 @@ export class RoomPresenceManager {
   }
 
   clearPresenceState(roomId: string) {
+    console.log(`Clearing presence state for room ${roomId}`);
     delete this.lastPresenceStates[roomId];
     this.subscribedRooms.delete(roomId);
   }

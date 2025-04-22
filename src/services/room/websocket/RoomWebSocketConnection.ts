@@ -82,11 +82,28 @@ export class RoomWebSocketConnection extends WebSocketBase {
 
   cleanupChannel(roomId: string) {
     if (this.channels[roomId]) {
-      this.channels[roomId].untrack();
-      supabase.removeChannel(this.channels[roomId]);
+      console.log(`Cleaning up WebSocket channel for room ${roomId}`);
+      
+      try {
+        // First untrack any presence data
+        this.channels[roomId].untrack();
+      } catch (e) {
+        console.warn(`Error untracking presence for room ${roomId}:`, e);
+      }
+      
+      try {
+        // Then remove the channel
+        supabase.removeChannel(this.channels[roomId]);
+      } catch (e) {
+        console.warn(`Error removing channel for room ${roomId}:`, e);
+      }
+      
+      // Clean up local references
       delete this.channels[roomId];
       delete this.lastPresenceStates[roomId];
       this.subscribedChannels.delete(roomId);
+      
+      console.log(`Channel for room ${roomId} cleaned up successfully`);
     }
   }
 
@@ -106,7 +123,12 @@ export class RoomWebSocketConnection extends WebSocketBase {
         const checkInterval = setInterval(() => {
           if (this.subscribedChannels.has(roomId)) {
             clearInterval(checkInterval);
-            resolve(channel.track(presenceData));
+            try {
+              resolve(channel.track(presenceData));
+            } catch (error) {
+              console.error(`Error tracking presence after subscription: ${error}`);
+              reject(error);
+            }
           }
         }, 100);
         
@@ -118,7 +140,12 @@ export class RoomWebSocketConnection extends WebSocketBase {
       });
     }
     
-    return channel.track(presenceData);
+    try {
+      return channel.track(presenceData);
+    } catch (error) {
+      console.error(`Error tracking presence: ${error}`);
+      return Promise.reject(error);
+    }
   }
 
   getLastPresenceState(roomId: string) {

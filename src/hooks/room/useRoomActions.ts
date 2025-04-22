@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import { roomService } from "@/services/room";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface RoomActionsProps {
   roomId: string | undefined;
@@ -19,6 +20,8 @@ export function useRoomActions({
   setIsReady,
   setGameStatus,
 }: RoomActionsProps) {
+  const navigate = useNavigate();
+
   const toggleReady = useCallback(async () => {
     if (!roomId || !currentUserId) return;
 
@@ -65,34 +68,41 @@ export function useRoomActions({
     if (!roomId || !currentUserId) return;
 
     try {
-      // Optimistically update the UI
-      setGameStatus('ended');
+      console.log(`Player ${currentUserId} is forfeiting game in room ${roomId}`);
       
-      // Mark player as forfeited in the database
+      // First, mark player as forfeited in the database
       const { error } = await supabase
         .from('game_players')
-        .update({ has_forfeited: true })
+        .update({ has_forfeited: true, is_connected: false })
         .eq('session_id', roomId)
         .eq('user_id', currentUserId);
         
       if (error) {
         console.error("Failed to forfeit game:", error);
         toast.error("Failed to forfeit the game. Please try again.");
-        // Revert UI state if the database update fails
-        setGameStatus('playing');
         return;
       }
+      
+      // Clear storage to prevent automatic reconnection
+      roomService.saveActiveRoomToStorage("", "", "");
+      sessionStorage.removeItem('activeRoomId');
+      sessionStorage.removeItem('activeUserId');
+      sessionStorage.removeItem('activeGameType');
       
       // Disconnect from the room
       roomService.disconnectFromRoom(roomId, currentUserId);
       
-      // Redirect to the games page
-      window.location.href = '/games';
+      // Set game status to ended in local state
+      setGameStatus('ended');
+      
+      // Redirect to games page
+      toast.success("You left the game");
+      navigate('/games');
     } catch (error) {
       console.error("Failed to forfeit game:", error);
-      toast.error("Failed to forfeit the game. Please try again.");
+      toast.error("Failed to leave the game. Please try again.");
     }
-  }, [roomId, currentUserId, setGameStatus]);
+  }, [roomId, currentUserId, setGameStatus, navigate]);
 
   // Update this function to use the public API instead of accessing private properties
   const updateRoomPot = async (shouldLog: boolean = false) => {
