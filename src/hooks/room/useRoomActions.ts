@@ -70,10 +70,13 @@ export function useRoomActions({
     try {
       console.log(`Player ${currentUserId} is forfeiting game in room ${roomId}`);
       
-      // First, mark player as forfeited in the database
+      // First, mark player as forfeited and disconnected in the database
       const { error } = await supabase
         .from('game_players')
-        .update({ has_forfeited: true, is_connected: false })
+        .update({ 
+          has_forfeited: true, 
+          is_connected: false 
+        })
         .eq('session_id', roomId)
         .eq('user_id', currentUserId);
         
@@ -83,20 +86,34 @@ export function useRoomActions({
         return;
       }
       
+      // Log confirmation that database update was successful
+      console.log(`Database updated: Player ${currentUserId} marked as forfeited and disconnected in room ${roomId}`);
+      
       // Clear storage to prevent automatic reconnection
       roomService.saveActiveRoomToStorage("", "", "");
+      console.log("Room storage cleared from memory");
+      
+      // Clear session storage items
       sessionStorage.removeItem('activeRoomId');
       sessionStorage.removeItem('activeUserId');
       sessionStorage.removeItem('activeGameType');
+      console.log("Session storage cleared");
       
-      // Disconnect from the room
-      roomService.disconnectFromRoom(roomId, currentUserId);
+      // Disconnect from the room - this should clean up channels and presence
+      try {
+        await roomService.disconnectFromRoom(roomId, currentUserId);
+        console.log(`Successfully disconnected from room ${roomId} websocket`);
+      } catch (disconnectError) {
+        console.error("Error during room disconnection:", disconnectError);
+        // Continue with leaving the room even if disconnection has an error
+      }
       
       // Set game status to ended in local state
       setGameStatus('ended');
       
       // Redirect to games page
       toast.success("You left the game");
+      console.log("Redirecting to games page");
       navigate('/games');
     } catch (error) {
       console.error("Failed to forfeit game:", error);

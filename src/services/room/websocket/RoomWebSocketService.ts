@@ -42,7 +42,7 @@ export class RoomWebSocketService extends WebSocketBase {
     return roomChannel;
   }
 
-  disconnectFromRoom(roomId: string, userId: string | null) {
+  async disconnectFromRoom(roomId: string, userId: string | null) {
     if (!roomId || !userId) {
       console.warn("Cannot disconnect from room - missing roomId or userId");
       return;
@@ -53,23 +53,36 @@ export class RoomWebSocketService extends WebSocketBase {
     // Clear active room storage first
     this.connectionStorage.save("", "", "");
     
-    // Mark player as disconnected in the database
-    this.presenceService.markPlayerDisconnected(roomId, userId);
-    
-    // Clean up channel and presence data
-    this.cleanupChannel(roomId);
-    
-    console.log(`Successfully disconnected from room ${roomId}`);
+    try {
+      // Mark player as disconnected in the database
+      await this.presenceService.markPlayerDisconnected(roomId, userId);
+      console.log(`Player ${userId} marked as disconnected in database for room ${roomId}`);
+      
+      // Clean up channel and presence data
+      await this.cleanupChannel(roomId);
+      
+      console.log(`Successfully disconnected from room ${roomId}`);
+    } catch (error) {
+      console.error(`Error during disconnection from room ${roomId}:`, error);
+      // Still consider disconnection successful even if there's an error
+      // since we've already cleared the storage
+    }
   }
 
   getChannel(roomId: string) {
     return this.roomConnection.getChannel(roomId);
   }
 
-  cleanupChannel(roomId: string) {
+  async cleanupChannel(roomId: string) {
     console.log(`Cleaning up channel for room ${roomId}`);
-    this.roomConnection.cleanupChannel(roomId);
-    this.presenceManager.clearPresenceState(roomId);
+    try {
+      await this.roomConnection.cleanupChannel(roomId);
+      this.presenceManager.clearPresenceState(roomId);
+      console.log(`Channel cleanup completed for room ${roomId}`);
+    } catch (error) {
+      console.error(`Error cleaning up channel for room ${roomId}:`, error);
+      // Continue with the disconnect flow even if channel cleanup fails
+    }
   }
 
   updatePresenceState(roomId: string, presenceData: PresenceData) {
