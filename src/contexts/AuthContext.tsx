@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
@@ -35,34 +36,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const setupAuth = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      console.log("Initial session check:", sessionData.session ? "Session exists" : "No session");
-      
-      setSession(sessionData.session);
-      setUser(sessionData.session?.user ?? null);
-      initialSessionChecked.current = true;
-      setIsLoading(false);
-      
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (event, session) => {
-          console.log("Auth state change event:", event);
-          
-          setSession(session);
-          setUser(session?.user ?? null);
-          
-          if (initialSessionChecked.current) {
-            if (event === 'SIGNED_IN') {
-              console.log("SIGNED_IN event - navigating to /games");
-              navigate('/games');
-            } else if (event === 'SIGNED_OUT') {
-              console.log("SIGNED_OUT event - navigating to /auth");
-              navigate('/auth');
+      try {
+        // Explicitly set Supabase auth configuration to ensure persistence
+        supabase.auth.setSession({
+          access_token: localStorage.getItem('supabase.auth.token.access_token') || '',
+          refresh_token: localStorage.getItem('supabase.auth.token.refresh_token') || '',
+        });
+        
+        // Get initial session
+        const { data: sessionData } = await supabase.auth.getSession();
+        console.log("Initial session check:", sessionData.session ? "Session exists" : "No session");
+        
+        setSession(sessionData.session);
+        setUser(sessionData.session?.user ?? null);
+        initialSessionChecked.current = true;
+        setIsLoading(false);
+        
+        // Set up auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event, session) => {
+            console.log("Auth state change event:", event);
+            
+            setSession(session);
+            setUser(session?.user ?? null);
+            
+            // Only navigate on explicit sign in/out events, not on refreshes
+            if (initialSessionChecked.current) {
+              if (event === 'SIGNED_IN') {
+                console.log("SIGNED_IN event - navigating to /games");
+                navigate('/games');
+              } else if (event === 'SIGNED_OUT') {
+                console.log("SIGNED_OUT event - navigating to /auth");
+                navigate('/auth');
+              }
             }
           }
-        }
-      );
-      
-      return () => subscription.unsubscribe();
+        );
+        
+        return () => subscription.unsubscribe();
+      } catch (error) {
+        console.error("Error setting up auth:", error);
+        setIsLoading(false);
+      }
     };
     
     setupAuth();
