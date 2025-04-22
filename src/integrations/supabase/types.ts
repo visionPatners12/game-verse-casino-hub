@@ -297,6 +297,7 @@ export type Database = {
           current_score: number | null
           display_name: string
           ea_id: string | null
+          has_forfeited: boolean | null
           id: string
           is_connected: boolean | null
           is_ready: boolean | null
@@ -309,6 +310,7 @@ export type Database = {
           current_score?: number | null
           display_name: string
           ea_id?: string | null
+          has_forfeited?: boolean | null
           id?: string
           is_connected?: boolean | null
           is_ready?: boolean | null
@@ -321,6 +323,7 @@ export type Database = {
           current_score?: number | null
           display_name?: string
           ea_id?: string | null
+          has_forfeited?: boolean | null
           id?: string
           is_connected?: boolean | null
           is_ready?: boolean | null

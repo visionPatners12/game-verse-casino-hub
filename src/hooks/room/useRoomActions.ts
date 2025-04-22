@@ -71,6 +71,12 @@ export function useRoomActions({
   const forfeitGame = useCallback(async () => {
     if (!roomId || !currentUserId) return;
     try {
+      await supabase
+        .from('game_players')
+        .update({ has_forfeited: true })
+        .eq('session_id', roomId)
+        .eq('user_id', currentUserId);
+
       await roomService.disconnectFromRoom(roomId, currentUserId);
       roomService.saveActiveRoomToStorage("", "", "");
       toast({

@@ -1,8 +1,8 @@
-
 import { useEffect } from "react";
 import { roomService } from "@/services/room";
 import { PresenceData } from "@/components/game/types";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useRoomSocketEvents({
   roomId,
@@ -48,8 +48,20 @@ export function useRoomSocketEvents({
       fetchRoomData();
     };
     
-    const handlePlayerLeft = () => {
+    const handlePlayerLeft = async () => {
       console.log("Player left event received");
+      // Check if the player forfeited
+      const { data: players } = await supabase
+        .from('game_players')
+        .select('user_id, has_forfeited')
+        .eq('session_id', roomId);
+      
+      if (players?.some(p => p.has_forfeited)) {
+        toast({
+          title: "Un joueur a abandonné",
+          description: "Un joueur a quitté la partie.",
+        });
+      }
       fetchRoomData();
     };
     
@@ -93,5 +105,5 @@ export function useRoomSocketEvents({
         roomService.disconnectFromRoom(roomId, currentUserId);
       }
     };
-  }, [roomId, currentUserId, fetchRoomData, setGameStatus, setIsReady, setPresenceState]);
+  }, [roomId, currentUserId, fetchRoomData, setGameStatus, setIsReady, setPresenceState, toast]);
 }
