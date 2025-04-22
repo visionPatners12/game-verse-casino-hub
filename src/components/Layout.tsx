@@ -1,6 +1,6 @@
 
 import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
+import { Footer } from "@/components/Footer";
 import { useActiveRoomGuard } from "@/hooks/useActiveRoomGuard";
 
 interface LayoutProps {
