@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { RoomData, DatabaseSessionStatus } from "@/components/game/types";
@@ -15,6 +16,8 @@ export function useRoomDataState(roomId: string | undefined) {
   const isFirstLoad = useRef(true);
   const lastPollTime = useRef(Date.now());
   const lastRoomDataHash = useRef<string | null>(null);
+  const lastFetchTime = useRef<number>(0);
+  const MIN_FETCH_INTERVAL = 500; // Minimum 500ms between fetches pour éviter les requêtes trop fréquentes
 
   const hashRoomData = (data: any): string => {
     if (!data) return '';
@@ -26,7 +29,8 @@ export function useRoomDataState(roomId: string | undefined) {
         id: p.id,
         is_ready: p.is_ready,
         is_connected: p.is_connected,
-        current_score: p.current_score
+        current_score: p.current_score,
+        ea_id: p.ea_id // Inclure le ea_id dans le hash pour détecter les changements
       })) : []
     };
     return JSON.stringify(simplified);
@@ -34,6 +38,13 @@ export function useRoomDataState(roomId: string | undefined) {
 
   const fetchRoomData = useCallback(async () => {
     if (!roomId || !session?.user) return;
+
+    // Éviter les requêtes trop fréquentes
+    const now = Date.now();
+    if (now - lastFetchTime.current < MIN_FETCH_INTERVAL) {
+      return;
+    }
+    lastFetchTime.current = now;
 
     try {
       if (isFirstLoad.current) {
@@ -84,6 +95,23 @@ export function useRoomDataState(roomId: string | undefined) {
       setRoomData(prevData => {
         if (!prevData || isFirstLoad.current || newDataHash !== lastRoomDataHash.current) {
           lastRoomDataHash.current = newDataHash;
+          
+          // Log des changements pour débogage
+          if (!isFirstLoad.current && newDataHash !== lastRoomDataHash.current) {
+            console.log("Room data updated:", {
+              previous: prevData ? {
+                pot: prevData.pot,
+                current_players: prevData.current_players,
+                player_count: prevData.game_players?.length
+              } : null,
+              current: {
+                pot: typedRoomData.pot,
+                current_players: typedRoomData.current_players,
+                player_count: typedRoomData.game_players?.length
+              }
+            });
+          }
+          
           return typedRoomData;
         }
         
@@ -124,7 +152,7 @@ export function useRoomDataState(roomId: string | undefined) {
     if (roomId && session?.user) {
       fetchRoomData();
       
-      const intervalId = setInterval(fetchRoomData, 5000);
+      const intervalId = setInterval(fetchRoomData, 3000);
       
       return () => clearInterval(intervalId);
     }

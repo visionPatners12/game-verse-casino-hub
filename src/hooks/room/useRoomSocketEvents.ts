@@ -91,6 +91,12 @@ export function useRoomSocketEvents({
       fetchRoomData();
     };
 
+    // Nouveau gestionnaire pour la mise à jour des données de joueur
+    const handlePlayerUpdated = () => {
+      console.log("Player data updated event received");
+      fetchRoomData();
+    };
+
     // Monitor room status changes in the database
     const roomStatusChannel = supabase
       .channel(`room-status-${roomId}`)
@@ -122,12 +128,31 @@ export function useRoomSocketEvents({
       )
       .subscribe();
 
+    // Surveiller les modifications des game_players
+    const playersChannel = supabase
+      .channel(`players-${roomId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*", // Toutes les opérations (INSERT, UPDATE, DELETE)
+          schema: "public",
+          table: "game_players",
+          filter: `session_id=eq.${roomId}`,
+        },
+        (payload) => {
+          console.log("Players data changed in DB:", payload);
+          fetchRoomData(); // Rafraîchir les données pour tous les joueurs
+        }
+      )
+      .subscribe();
+
     // Register all event handlers
     roomService.onEvent('presenceSync', handlePresenceSync);
     roomService.onEvent('playerJoined', handlePlayerJoined);
     roomService.onEvent('playerLeft', handlePlayerLeft);
     roomService.onEvent('gameStart', handleGameStart);
     roomService.onEvent('gameOver', handleGameOver);
+    roomService.onEvent('playerUpdated', handlePlayerUpdated);
 
     // Fetch initial room data
     fetchRoomData();
@@ -142,9 +167,11 @@ export function useRoomSocketEvents({
       roomService.offEvent('playerLeft', handlePlayerLeft);
       roomService.offEvent('gameStart', handleGameStart);
       roomService.offEvent('gameOver', handleGameOver);
+      roomService.offEvent('playerUpdated', handlePlayerUpdated);
       
       // Clean up the room status channel
       supabase.removeChannel(roomStatusChannel);
+      supabase.removeChannel(playersChannel);
       
       // Only disconnect if we have both room and user ID
       if (roomId && currentUserId) {

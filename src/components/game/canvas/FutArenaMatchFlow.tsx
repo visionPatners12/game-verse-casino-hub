@@ -30,48 +30,48 @@ export const FutArenaMatchFlow = ({
   );
 
   // Map joueur
-  const futPlayers = connectedPlayers.map((p) => ({
+  const futPlayers = useMemo(() => connectedPlayers.map((p) => ({
     user_id: p.user_id,
-    ea_id: null,         // sera récupéré via la table fut_players ci-dessous
+    ea_id: p.ea_id || null,
     display_name: p.display_name,
     is_ready: p.is_ready || false,
-  }));
+  })), [connectedPlayers]);
 
-  const me = futPlayers.find((p) => p.user_id === currentUserId);
+  const me = useMemo(() => futPlayers.find((p) => p.user_id === currentUserId), [futPlayers, currentUserId]);
   const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId);
 
-  // Map { user_id: fut_id }
-  const [playersFutIds, setPlayersFutIds] = useState<PlayerFutIdMap>({});
-
+  // Synchroniser le FUT ID du joueur courant avec la table game_players
   useEffect(() => {
-    // Récupère les futId de tous les joueurs dans la room (table fut_players !)
-    const fetchAllFutIds = async () => {
-      const userIds = futPlayers.map(p => p.user_id);
-      if (userIds.length === 0) {
-        setPlayersFutIds({});
-        return;
+    const syncCurrentPlayerFutId = async () => {
+      if (!currentUserId || !roomData?.id || !futId || futIdLoading) return;
+      
+      // Vérifier si le FUT ID actuel est différent de celui dans la base de données
+      const currentPlayer = connectedPlayers.find(p => p.user_id === currentUserId);
+      
+      if (currentPlayer && currentPlayer.ea_id !== futId) {
+        console.log("Synchronising FUT ID in game_players:", { 
+          current: currentPlayer.ea_id, 
+          new: futId 
+        });
+        
+        try {
+          // Mettre à jour le ea_id dans la table game_players
+          const { error } = await supabase
+            .from('game_players')
+            .update({ ea_id: futId })
+            .eq('session_id', roomData.id)
+            .eq('user_id', currentUserId);
+            
+          if (error) throw error;
+          console.log("FUT ID synchronized successfully");
+        } catch (error) {
+          console.error("Error synchronizing FUT ID:", error);
+        }
       }
-      const { data, error } = await supabase
-        .from('fut_players')
-        .select('user_id, fut_id')
-        .in('user_id', userIds);
-
-      if (error) {
-        console.error("Erreur lors de la récupération des FUT IDs:", error);
-        setPlayersFutIds({});
-        return;
-      }
-      // convert array to id -> futId map (fut_id peut être null)
-      const newMap: PlayerFutIdMap = {};
-      for (const entry of data ?? []) {
-        newMap[entry.user_id] = entry.fut_id ?? null;
-      }
-      setPlayersFutIds(newMap);
     };
-
-    fetchAllFutIds();
-  // On refresh si joueurs changent
-  }, [roomData?.game_players?.length, JSON.stringify(futPlayers.map(p => p.user_id))]);
+    
+    syncCurrentPlayerFutId();
+  }, [currentUserId, roomData?.id, futId, futIdLoading, connectedPlayers]);
 
   const gameHasStarted = gameStatus === "playing" || 
                          (gameStatus === "starting" && window.gameInitialized) || 
@@ -92,6 +92,19 @@ export const FutArenaMatchFlow = ({
 
     try {
       console.log("Starting Get Ready process as", isHost ? "host" : "player");
+
+      // Synchroniser le FUT ID avant de se mettre ready
+      const { error: syncError } = await supabase
+        .from('game_players')
+        .update({ ea_id: futId })
+        .eq('session_id', roomData.id)
+        .eq('user_id', currentUserId);
+        
+      if (syncError) {
+        console.error("Error updating FUT ID:", syncError);
+        toast.error("Couldn't update your FUT ID");
+        return;
+      }
 
       // Update player ready status first
       const { error: playerError } = await supabase
@@ -177,10 +190,11 @@ export const FutArenaMatchFlow = ({
             <span className="font-bold text-lg text-primary mb-2">{`Joueur ${idx + 1}`}</span>
             <span className="text-2xl font-semibold text-foreground mb-1">FUT ID :</span>
             <span className="mb-4 text-xl text-muted-foreground">
-              {p.user_id === currentUserId
-                ? (futId || <span className="italic text-red-500">Non défini</span>)
-                : (playersFutIds[p.user_id] || <span className="italic text-red-500">Non défini</span>)
-              }
+              {p.ea_id ? (
+                <span>{p.ea_id}</span>
+              ) : (
+                <span className="italic text-red-500">Non défini</span>
+              )}
             </span>
             {p.is_ready && (
               <div className="text-green-600 font-semibold flex items-center gap-2">
@@ -188,7 +202,7 @@ export const FutArenaMatchFlow = ({
                 Prêt
               </div>
             )}
-            {!playersFutIds[p.user_id] && p.user_id !== currentUserId && (
+            {!p.ea_id && p.user_id !== currentUserId && (
               <div className="text-sm text-red-500 italic mt-2">En attente que ce joueur renseigne son FUT ID…</div>
             )}
           </div>

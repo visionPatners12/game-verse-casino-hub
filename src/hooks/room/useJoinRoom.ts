@@ -77,6 +77,24 @@ export function useJoinRoom() {
         return;
       }
       
+      // Pour FutArena, récupérer le FUT ID du joueur
+      let futId = null;
+      if (room.game_type?.toLowerCase() === 'futarena') {
+        const { data: futPlayer } = await supabase
+          .from('fut_players')
+          .select('fut_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        futId = futPlayer?.fut_id;
+        
+        if (!futId) {
+          console.log("No FUT ID found for this user, will prompt for it later");
+        } else {
+          console.log("Found FUT ID:", futId);
+        }
+      }
+      
       // Check if player is already in the room
       const { data: existingPlayer, error: playerCheckError } = await supabase
         .from('game_players')
@@ -90,11 +108,18 @@ export function useJoinRoom() {
       }
       
       if (existingPlayer) {
-        console.log("Player already exists in room, updating connection status");
-        // Player already exists, just update connection status
+        console.log("Player already exists in room, updating connection status and FUT ID if needed");
+        // Player already exists, update connection status and potentially FUT ID
+        const updateData: any = { is_connected: true };
+        
+        // Pour FutArena, mettre à jour le ea_id si on a un futId
+        if (room.game_type?.toLowerCase() === 'futarena' && futId) {
+          updateData.ea_id = futId;
+        }
+        
         const { error: updateError } = await supabase
           .from('game_players')
-          .update({ is_connected: true })
+          .update(updateData)
           .eq('id', existingPlayer.id);
           
         if (updateError) {
@@ -104,15 +129,22 @@ export function useJoinRoom() {
       } else {
         console.log("Adding new player to room:", room.id);
         // Add player to the room
+        const newPlayerData: any = {
+          session_id: room.id,
+          display_name: userData.username,
+          user_id: user.id,
+          is_connected: true,
+          is_ready: false
+        };
+        
+        // Pour FutArena, ajouter le ea_id si on a un futId
+        if (room.game_type?.toLowerCase() === 'futarena' && futId) {
+          newPlayerData.ea_id = futId;
+        }
+        
         const { data: newPlayer, error: joinError } = await supabase
           .from('game_players')
-          .insert({
-            session_id: room.id,
-            display_name: userData.username, // Explicitly set display_name to username
-            user_id: user.id,
-            is_connected: true,
-            is_ready: false
-          })
+          .insert(newPlayerData)
           .select();
           
         if (joinError) {
