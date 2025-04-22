@@ -8,7 +8,7 @@ import LoadingState from "@/components/game/LoadingState";
 import RoomInfo from "@/components/game/RoomInfo";
 import PlayersList from "@/components/game/PlayersList";
 import GameCanvas from "@/components/game/GameCanvas";
-import { PlayCircle, PauseCircle } from "lucide-react";
+import { PlayCircle, PauseCircle, DoorOpen } from "lucide-react";
 
 interface GameRoomLayoutProps {
   loading: boolean;
@@ -19,6 +19,7 @@ interface GameRoomLayoutProps {
   gameStatus: 'waiting' | 'starting' | 'playing' | 'ended';
   onToggleReady: () => void;
   onStartGame: () => void;
+  onForfeit: () => void;
 }
 
 export const GameRoomLayout = ({ 
@@ -29,7 +30,8 @@ export const GameRoomLayout = ({
   isReady,
   gameStatus,
   onToggleReady,
-  onStartGame
+  onStartGame,
+  onForfeit
 }: GameRoomLayoutProps) => {
   const totalPot = roomData ? roomData.entry_fee * roomData.current_players * (1 - roomData.commission_rate/100) : 0;
   
@@ -53,8 +55,8 @@ export const GameRoomLayout = ({
                     />
                   </CardTitle>
                   
-                  {gameStatus === 'waiting' && (
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    {gameStatus === 'waiting' && (
                       <Button 
                         onClick={onToggleReady}
                         variant={isReady ? "default" : "outline"}
@@ -72,14 +74,23 @@ export const GameRoomLayout = ({
                           </>
                         )}
                       </Button>
-                      
-                      {isReady && canStartGame && (
-                        <Button onClick={onStartGame}>
-                          Start Game
-                        </Button>
-                      )}
-                    </div>
-                  )}
+                    )}
+                    
+                    {isReady && canStartGame && (
+                      <Button onClick={onStartGame}>
+                        Start Game
+                      </Button>
+                    )}
+
+                    <Button 
+                      onClick={onForfeit} 
+                      variant="destructive"
+                      className="flex items-center gap-2"
+                    >
+                      <DoorOpen className="h-4 w-4" />
+                      Abandonner
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardHeader>

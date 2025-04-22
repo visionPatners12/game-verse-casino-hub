@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout";
 import { GameRoomLayout } from "@/components/game/GameRoomLayout";
 import { useParams, useNavigate } from "react-router-dom";
@@ -19,10 +18,10 @@ const GameRoom = () => {
     isReady,
     gameStatus,
     toggleReady,
-    startGame
+    startGame,
+    forfeitGame
   } = useRoomWebSocket(roomId);
   
-  // Only redirect if not authenticated and auth loading is complete
   useEffect(() => {
     if (!authLoading && !session) {
       console.log("No auth session in GameRoom, redirecting to /auth");
@@ -32,12 +31,10 @@ const GameRoom = () => {
     }
   }, [authLoading, session, navigate]);
   
-  // Show nothing while checking auth or loading room data
   if (authLoading || isLoading) {
     return null;
   }
   
-  // Safely get the game name from the type
   const gameName = gameType && isValidGameType(gameType) 
     ? gameCodeToType[gameType] 
     : (gameType ? gameType.charAt(0).toUpperCase() + gameType.slice(1) : "Unknown Game");
@@ -53,6 +50,7 @@ const GameRoom = () => {
         gameStatus={gameStatus}
         onToggleReady={toggleReady}
         onStartGame={startGame}
+        onForfeit={forfeitGame}
       />
     </Layout>
   );

@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { roomService } from "@/services/room";
 import { useToast } from "@/components/ui/use-toast";
@@ -69,5 +68,23 @@ export function useRoomActions({
     }
   }, [roomId, setGameStatus, toast]);
 
-  return { toggleReady, startGame, broadcastMove, endGame };
+  const forfeitGame = useCallback(async () => {
+    if (!roomId || !currentUserId) return;
+    try {
+      await roomService.disconnectFromRoom(roomId, currentUserId);
+      roomService.saveActiveRoomToStorage("", "", "");
+      toast({
+        title: "Partie abandonnée",
+        description: "Vous avez quitté la partie.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de quitter la partie. Veuillez réessayer.",
+        variant: "destructive"
+      });
+    }
+  }, [roomId, currentUserId, toast]);
+
+  return { toggleReady, startGame, broadcastMove, endGame, forfeitGame };
 }
