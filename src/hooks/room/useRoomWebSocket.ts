@@ -8,7 +8,7 @@ import { roomService } from "@/services/room";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client"; // Add this import for supabase
+import { supabase } from "@/integrations/supabase/client";
 
 export function useRoomWebSocket(roomId: string | undefined) {
   const { gameType } = useParams<{ gameType?: string }>();
@@ -63,15 +63,10 @@ export function useRoomWebSocket(roomId: string | undefined) {
       const { roomId: storedRoomId, userId: storedUserId, gameType: storedGameType } = roomService.getStoredRoomConnection();
       
       if (storedRoomId && storedUserId && storedGameType) {
-        console.log(`Found stored room connection on page load: ${storedRoomId} (${storedGameType}) for user ${storedUserId}, redirecting...`);
-        
-        toast({
-          title: "Reconnecting to room",
-          description: "You were in an active game room. Reconnecting you...",
-        });
+        console.log(`Found stored room connection on page load: ${storedRoomId} (${storedGameType}) for user ${storedUserId}, reconnecting without redirect`);
         
         try {
-          // Connect to room before navigating
+          // Connect to room without navigating
           roomService.connectToRoom(storedRoomId, storedUserId, storedGameType);
           
           // Verify connection was successful through direct DB check
@@ -81,14 +76,9 @@ export function useRoomWebSocket(roomId: string | undefined) {
             .eq('id', storedRoomId)
             .single();
             
-          if (sessionData && sessionData.id) {
-            console.log("Room still exists, navigating...");
-            // Then navigate to the stored room
-            navigate(`/games/${storedGameType}/room/${storedRoomId}`);
-          } else {
+          if (!sessionData || !sessionData.id) {
             console.log("Room no longer exists, clearing storage");
             roomService.disconnectFromRoom(storedRoomId, storedUserId);
-            // Fix: Use the roomService method instead of accessing private property
             roomService.saveActiveRoomToStorage("", "", ""); // Clear by passing empty strings
           }
         } catch (error) {
