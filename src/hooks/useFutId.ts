@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -30,19 +29,19 @@ export function useFutId(userId: string | null | undefined) {
     fetchFutId();
   }, [fetchFutId]);
 
-  const saveFutId = async (futId: string) => {
+  const saveFutId = async (newFutId: string) => {
     if (!userId) return false;
     setIsLoading(true);
-    // Upsert the FUT id (insert if not exists, update if exists)
+    // Correction : onConflict doit être la string 'user_id'
     const { error } = await supabase
       .from('fut_players')
-      .upsert({ 
-        user_id: userId, 
-        fut_id: futId 
-      }, { onConflict: 'user_id' });
+      .upsert(
+        { user_id: userId, fut_id: newFutId },
+        { onConflict: 'user_id' }
+      );
     setIsLoading(false);
     if (!error) {
-      setFutId(futId);
+      setFutId(newFutId);
       return true;
     }
     return false;
