@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle } from "lucide-react";
@@ -36,6 +37,10 @@ export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutAr
   const otherPlayer = futPlayers.find(p => p.user_id !== currentUserId);
 
   const [timerStarted, setTimerStarted] = useState(false);
+  
+  // Check if all players are ready
+  const allPlayersReady = connectedPlayers.length > 0 && 
+    connectedPlayers.every(player => player.is_ready);
 
   useEffect(() => {
     if (!roomData?.id) return;
@@ -47,7 +52,8 @@ export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutAr
         schema: 'public',
         table: 'game_players',
         filter: `session_id=eq.${roomData.id}`
-      }, (payload) => {
+      }, () => {
+        // Reload data when any player's status changes
         window.location.reload();
       })
       .subscribe();
@@ -76,14 +82,18 @@ export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutAr
   };
 
   useEffect(() => {
+    // Start timer only when:
+    // 1. Game status is playing or starting
+    // 2. All connected players are ready
+    // 3. Timer hasn't already started
     if (
       (gameStatus === "playing" || gameStatus === "starting") &&
-      connectedPlayers.every(p => p.is_ready) &&
+      allPlayersReady &&
       !timerStarted
     ) {
       setTimerStarted(true);
     }
-  }, [connectedPlayers, timerStarted, gameStatus]);
+  }, [connectedPlayers, allPlayersReady, timerStarted, gameStatus]);
 
   if (futIdLoading) {
     return (
@@ -115,6 +125,7 @@ export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutAr
             </div>
           ))}
         </div>
+        
         {me && !me.is_ready && (
           <Button 
             onClick={handleGetReady}
@@ -125,10 +136,11 @@ export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutAr
             Get Ready
           </Button>
         )}
+        
         <div className="mt-8 text-lg font-semibold text-muted-foreground">
-          {gameStatus === "waiting" ? 
+          {!allPlayersReady ? 
             "En attente que tous les joueurs soient prêts et que la partie démarre..." : 
-            "La partie est en cours de démarrage..."}
+            "Tous les joueurs sont prêts! La partie est en cours de démarrage..."}
         </div>
       </div>
     );
