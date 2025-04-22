@@ -1,3 +1,4 @@
+
 import { memo } from "react";
 import { Loader2 } from "lucide-react";
 import { RoomData } from "../types";
@@ -11,7 +12,7 @@ interface GameCanvasContentProps {
   gameStatus: 'waiting' | 'starting' | 'playing' | 'ended';
 }
 
-// Refactoré pour déléguer le cas futarena au nouveau composant !
+// Refactoré pour déléguer le cas futarena au nouveau composant !
 export const GameCanvasContent = memo(({ roomData, currentUserId, gameStatus }: GameCanvasContentProps) => {
   // --- Mode FUTArena : affichage IDs, play, timer ---
   const isFutArena = roomData.game_type?.toLowerCase() === "futarena";

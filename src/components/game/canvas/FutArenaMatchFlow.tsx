@@ -22,11 +22,12 @@ export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutAr
     [roomData]
   );
 
-  // Pour chaque joueur connecté : id et futId (ea_id dans le player pour l'autre, hook pour moi)
+  // Pour chaque joueur connecté : id et futId (ea_id dans le player pour l'autre, hook pour moi)
   const futPlayers = connectedPlayers.map((p) => ({
     user_id: p.user_id,
     ea_id: p.ea_id || null,
     display_name: p.display_name,
+    is_ready: p.is_ready || false,
   }));
 
   // Le joueur courant
@@ -34,60 +35,23 @@ export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutAr
 
   // On gère le FUT ID du joueur courant avec le hook (si il en a pas encore, pour pouvoir le mettre à jour live)
   const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId);
+  
   // Pour l'autre joueur, on prend son ea_id direct
-
-  // Pour l'autre joueur, détecter si son FUT ID n'est pas encore renseigné (ea_id null/empty)
   const otherPlayer = futPlayers.find(p => p.user_id !== currentUserId);
 
-  // Gestion "Ready" local
-  const [playReadiness, setPlayReadiness] = useState<{ [userId: string]: boolean }>({});
+  // Gestion "Ready" local - maintenant on utilise les données de la base de données (is_ready de game_players)
   const [timerStarted, setTimerStarted] = useState(false);
 
-  // On veut persister Ready localement (pour chaque utilisateur)
-  useEffect(() => {
-    if (!currentUserId) return;
-    const storedReady = sessionStorage.getItem(`fut-play-ready-${currentUserId}-${roomData.room_id}`) === "true";
-    if (storedReady) {
-      setPlayReadiness(pr => ({
-        ...pr,
-        [currentUserId]: true
-      }));
-    }
-  }, [currentUserId, roomData.room_id]);
-
-  useEffect(() => {
-    const ids = connectedPlayers.map(p => p.user_id);
-    setPlayReadiness(existing => {
-      const updated: { [key: string]: boolean } = {};
-      ids.forEach(id => {
-        updated[id] = existing[id] || false;
-      });
-      return updated;
-    });
-  }, [roomData.game_players]);
-
-  const handlePlayClick = () => {
-    if (!currentUserId) return;
-    setPlayReadiness(pr => ({
-      ...pr,
-      [currentUserId]: true,
-    }));
-    sessionStorage.setItem(`fut-play-ready-${currentUserId}-${roomData.room_id}`, "true");
-  };
-
-  // Démarrage du timer si tout le monde est ready
+  // Démarrage du timer quand tout le monde est ready et que le jeu est en mode "playing"
   useEffect(() => {
     if (
       gameStatus === "playing" &&
-      Object.values(playReadiness).filter(v => v).length === 2 &&
+      connectedPlayers.every(p => p.is_ready) &&
       !timerStarted
     ) {
       setTimerStarted(true);
     }
-  }, [playReadiness, timerStarted, gameStatus]);
-
-  // Si FUT ID manquant pour moi on demande de le compléter (simple bouton pour l'instant, tu peux le complexifier plus tard)
-  // Ici on laisse la gestion du modal/demande de saisie FUT ID dans la room (propre).
+  }, [connectedPlayers, timerStarted, gameStatus]);
 
   // Pendant loading
   if (futIdLoading) {
@@ -109,24 +73,14 @@ export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutAr
               <span className="font-bold text-lg text-primary mb-2">{`Joueur ${idx + 1}`}</span>
               <span className="text-2xl font-semibold text-foreground mb-1">FUT ID :</span>
               <span className="mb-4 text-xl text-muted-foreground">{p.user_id === currentUserId ? (futId || <span className="italic text-red-500">Non défini</span>) : (p.ea_id || <span className="italic text-red-500">Non défini</span>)}</span>
-              {/* Si moi, et pas ready, bouton play */}
-              {p.user_id === currentUserId && !playReadiness[p.user_id] && (
-                <Button 
-                  onClick={handlePlayClick} 
-                  variant="default" 
-                  size="lg"
-                  className="mt-2 font-bold"
-                  disabled={!futId}
-                >
-                  Play
-                </Button>
-              )}
-              {playReadiness[p.user_id] && (
+              
+              {p.is_ready && (
                 <div className="text-green-600 font-semibold flex items-center gap-2">
                   Prêt <span className="ml-1">✔️</span>
                 </div>
               )}
-              {/* Si autre joueur et FID manquant : afficher message */}
+              
+              {/* Si autre joueur et FID manquant : afficher message */}
               {p.user_id !== currentUserId && !p.ea_id && (
                 <div className="text-sm text-red-500 italic mt-2">En attente que ce joueur renseigne son FUT ID…</div>
               )}
@@ -134,15 +88,15 @@ export const FutArenaMatchFlow = ({ roomData, currentUserId, gameStatus }: FutAr
           ))}
         </div>
         <div className="mt-8 text-lg font-semibold text-muted-foreground">
-          {Object.values(playReadiness).filter(v => v).length === 1
-            ? "En attente de l'autre joueur..."
-            : "Cliquez sur 'Play' pour démarrer."}
+          {gameStatus === "waiting" ? 
+            "En attente que tous les joueurs soient prêts et que la partie démarre..." : 
+            "La partie est en cours de démarrage..."}
         </div>
       </div>
     );
   }
 
-  // Timer lancé après que tout le monde ait cliqué Play
+  // Timer lancé après que tout le monde ait cliqué "Get Ready" et que le jeu est démarré
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-30">
       <div className="flex flex-col items-center animate-fade-in">
