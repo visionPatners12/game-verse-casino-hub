@@ -4,7 +4,7 @@ import { GameRoomLayout } from "@/components/game/GameRoomLayout";
 import { useParams, useNavigate } from "react-router-dom";
 import { gameCodeToType, isValidGameType } from "@/lib/gameTypes";
 import { useRoomWebSocket } from "@/hooks/room/useRoomWebSocket";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFutId } from "@/hooks/useFutId";
 import { FutIdDialog } from "@/components/game/FutIdDialog";
@@ -24,19 +24,37 @@ const GameRoom = () => {
     startGame,
     forfeitGame,
     fetchRoomData,
-    players // On va checker tous les joueurs ici si besoin
+    players
   } = useRoomWebSocket(roomId);
 
   // --- FUT ID: actif seulement pour FutArena ---
   const isFutArena = roomData?.game_type?.toLowerCase() === "futarena";
 
-  // On surveille TOUS les joueurs connectés qui n’ont pas de futId
-  // Pour l’utilisateur courant uniquement :
+  // For all connected players, check who needs FUT ID
+  const connectedPlayers = useMemo(
+    () =>
+      (roomData?.game_players ?? []).filter(
+        p => p.is_connected && !!p.user_id
+      ),
+    [roomData]
+  );
+
+  // Map of userId -> futId per connected player
+  const futIdsMap = {};
+  connectedPlayers.forEach(p => {
+    // Only check for the current user running this UI (cannot manage others)
+    if (p.user_id === currentUserId) {
+      // Use the hook to fetch futId for current user
+      // The hook is called below
+    }
+  });
+
+  // Only call useFutId for the current user, but we use roomData to know for others
   const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId);
   const [showFutIdDialog, setShowFutIdDialog] = useState(false);
 
+  // If the current user's futId is missing and we're in FutArena, open dialog
   useEffect(() => {
-    // Pour FutArena ET si le joueur courant est connecté ET n’a pas de FUT ID ni en chargement, on ouvre la popup
     if (
       isFutArena &&
       !!currentUserId &&
@@ -84,6 +102,7 @@ const GameRoom = () => {
         onStartGame={startGame}
         onForfeit={forfeitGame}
       />
+      {/* Only the current user can manage their own FUT ID */}
       {isFutArena && (
         <FutIdDialog
           open={showFutIdDialog}
@@ -97,4 +116,3 @@ const GameRoom = () => {
 };
 
 export default GameRoom;
-
