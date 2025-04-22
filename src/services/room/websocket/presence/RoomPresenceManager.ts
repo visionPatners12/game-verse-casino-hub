@@ -3,10 +3,33 @@ import { PresenceData } from "@/components/game/types";
 
 export class RoomPresenceManager {
   private lastPresenceStates: Record<string, PresenceData> = {};
+  private subscribedRooms: Set<string> = new Set();
 
   updatePresenceState(roomId: string, channel: any, presenceData: PresenceData) {
     this.lastPresenceStates[roomId] = presenceData;
-    return channel?.track(presenceData);
+    
+    if (!channel) {
+      console.warn(`Cannot track presence: no channel for room ${roomId}`);
+      return Promise.resolve(null);
+    }
+    
+    return new Promise((resolve, reject) => {
+      try {
+        const result = channel.track(presenceData);
+        resolve(result);
+      } catch (error) {
+        console.error(`Error tracking presence in room ${roomId}:`, error);
+        reject(error);
+      }
+    });
+  }
+
+  markRoomSubscribed(roomId: string) {
+    this.subscribedRooms.add(roomId);
+  }
+
+  isRoomSubscribed(roomId: string): boolean {
+    return this.subscribedRooms.has(roomId);
   }
 
   getLastPresenceState(roomId: string) {
@@ -15,5 +38,6 @@ export class RoomPresenceManager {
 
   clearPresenceState(roomId: string) {
     delete this.lastPresenceStates[roomId];
+    this.subscribedRooms.delete(roomId);
   }
 }

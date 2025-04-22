@@ -7,6 +7,7 @@ import { PresenceData } from "@/components/game/types";
 export class RoomWebSocketConnection extends WebSocketBase {
   protected channels: Record<string, RealtimeChannel> = {};
   private lastPresenceStates: Record<string, PresenceData> = {};
+  private subscribedChannels: Set<string> = new Set();
 
   setupChannel(roomId: string, userId: string | null, gameType?: string) {
     if (!roomId || !userId) {
@@ -15,6 +16,12 @@ export class RoomWebSocketConnection extends WebSocketBase {
     }
     
     console.log(`Setting up channel for room ${roomId} as user ${userId} (Game type: ${gameType || 'unknown'})`);
+    
+    // Return existing channel if already set up
+    if (this.channels[roomId]) {
+      return this.channels[roomId];
+    }
+    
     const roomChannel = supabase
       .channel(`room:${roomId}`)
       .on('presence', { event: 'sync' }, () => {
@@ -49,11 +56,28 @@ export class RoomWebSocketConnection extends WebSocketBase {
       });
 
     this.channels[roomId] = roomChannel;
+    
+    // Important: Subscribe to the channel and store the promise
+    roomChannel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log(`Successfully subscribed to room ${roomId}`);
+        this.subscribedChannels.add(roomId);
+      } else if (status === 'CHANNEL_ERROR') {
+        console.error(`Failed to subscribe to room ${roomId}`);
+      } else {
+        console.log(`Room ${roomId} subscription status: ${status}`);
+      }
+    });
+    
     return roomChannel;
   }
 
   getChannel(roomId: string) {
     return this.channels[roomId];
+  }
+
+  isSubscribed(roomId: string): boolean {
+    return this.subscribedChannels.has(roomId);
   }
 
   cleanupChannel(roomId: string) {
@@ -62,12 +86,39 @@ export class RoomWebSocketConnection extends WebSocketBase {
       supabase.removeChannel(this.channels[roomId]);
       delete this.channels[roomId];
       delete this.lastPresenceStates[roomId];
+      this.subscribedChannels.delete(roomId);
     }
   }
 
   updatePresenceState(roomId: string, presenceData: PresenceData) {
     this.lastPresenceStates[roomId] = presenceData;
-    return this.channels[roomId]?.track(presenceData);
+    const channel = this.channels[roomId];
+    
+    if (!channel) {
+      console.error(`Cannot update presence: no channel exists for room ${roomId}`);
+      return Promise.reject(new Error("No channel exists"));
+    }
+    
+    if (!this.subscribedChannels.has(roomId)) {
+      console.warn(`Waiting for subscription before tracking presence for room ${roomId}`);
+      // Return a promise that resolves when the channel is subscribed
+      return new Promise((resolve, reject) => {
+        const checkInterval = setInterval(() => {
+          if (this.subscribedChannels.has(roomId)) {
+            clearInterval(checkInterval);
+            resolve(channel.track(presenceData));
+          }
+        }, 100);
+        
+        // Set a timeout to avoid infinite waiting
+        setTimeout(() => {
+          clearInterval(checkInterval);
+          reject(new Error("Subscription timeout"));
+        }, 5000);
+      });
+    }
+    
+    return channel.track(presenceData);
   }
 
   getLastPresenceState(roomId: string) {

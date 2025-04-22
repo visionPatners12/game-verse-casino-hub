@@ -6,6 +6,7 @@ import { PresenceData } from "@/components/game/types";
 import { GameStateService } from "../game/GameStateService";
 import { RoomPresenceService } from "../presence/RoomPresenceService";
 import { RoomConnectionStorage } from "../RoomConnectionStorage";
+import { RoomWebSocketConnection } from "./RoomWebSocketConnection";
 
 export class RoomWebSocketService extends WebSocketBase {
   private channelsManager: RoomChannelsManager;
@@ -13,6 +14,7 @@ export class RoomWebSocketService extends WebSocketBase {
   private gameStateService: GameStateService;
   private presenceService: RoomPresenceService;
   private connectionStorage: RoomConnectionStorage;
+  private roomConnection: RoomWebSocketConnection;
 
   constructor() {
     super();
@@ -21,6 +23,7 @@ export class RoomWebSocketService extends WebSocketBase {
     this.gameStateService = new GameStateService();
     this.presenceService = new RoomPresenceService();
     this.connectionStorage = new RoomConnectionStorage();
+    this.roomConnection = new RoomWebSocketConnection();
   }
 
   connectToRoom(roomId: string, userId: string | null, gameType?: string) {
@@ -29,10 +32,10 @@ export class RoomWebSocketService extends WebSocketBase {
       return null;
     }
     
-    const roomChannel = this.channelsManager.setupChannel(roomId, userId);
+    const roomChannel = this.roomConnection.setupChannel(roomId, userId, gameType);
     
-    // Mark player as connected in the database
-    if (roomChannel) {
+    // Mark player as connected in the database, but don't depend on the channel being ready
+    if (roomId && userId) {
       this.presenceService.markPlayerConnected(roomId, userId);
     }
     
@@ -53,21 +56,20 @@ export class RoomWebSocketService extends WebSocketBase {
   }
 
   getChannel(roomId: string) {
-    return this.channelsManager.getChannel(roomId);
+    return this.roomConnection.getChannel(roomId);
   }
 
   cleanupChannel(roomId: string) {
-    this.channelsManager.cleanupChannel(roomId);
+    this.roomConnection.cleanupChannel(roomId);
     this.presenceManager.clearPresenceState(roomId);
   }
 
   updatePresenceState(roomId: string, presenceData: PresenceData) {
-    const channel = this.channelsManager.getChannel(roomId);
-    return this.presenceManager.updatePresenceState(roomId, channel, presenceData);
+    return this.roomConnection.updatePresenceState(roomId, presenceData);
   }
 
   getLastPresenceState(roomId: string) {
-    return this.presenceManager.getLastPresenceState(roomId);
+    return this.roomConnection.getLastPresenceState(roomId);
   }
 
   // Room connection storage methods

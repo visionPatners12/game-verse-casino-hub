@@ -19,17 +19,7 @@ export class RoomPresenceService {
     if (!roomId || !userId) return;
     
     try {
-      // Update presence data first (realtime)
-      if (channel) {
-        const presenceData: PresenceData = {
-          user_id: userId,
-          online_at: new Date().toISOString(),
-          is_ready: isReady
-        };
-        await channel.track(presenceData);
-      }
-      
-      // Update database (persistent)
+      // Update database first (persistent)
       const { error } = await supabase
         .from('game_players')
         .update({ 
@@ -41,13 +31,27 @@ export class RoomPresenceService {
         
       if (error) throw error;
       
-      // Broadcast event to all clients
+      // Then update presence data (realtime)
       if (channel) {
-        channel.send({
-          type: 'broadcast',
-          event: 'player_ready',
-          payload: { userId, isReady }
-        });
+        const presenceData: PresenceData = {
+          user_id: userId,
+          online_at: new Date().toISOString(),
+          is_ready: isReady
+        };
+        
+        try {
+          await channel.track(presenceData);
+          
+          // Broadcast event to all clients
+          channel.send({
+            type: 'broadcast',
+            event: 'player_ready',
+            payload: { userId, isReady }
+          });
+        } catch (presenceError) {
+          console.error('Error updating presence:', presenceError);
+          // We continue even if presence update fails since database was updated
+        }
       }
     } catch (error) {
       console.error('Error marking player ready:', error);
