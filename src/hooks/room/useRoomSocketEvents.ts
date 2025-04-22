@@ -78,7 +78,7 @@ export function useRoomSocketEvents({
       fetchRoomData();
     };
 
-    // Surveiller les changements de statut de la room dans la DB
+    // Monitor room status changes in the database
     const roomStatusChannel = supabase
       .channel(`room-status-${roomId}`)
       .on(

@@ -34,42 +34,15 @@ export const FutArenaMatchFlow = ({
   }));
 
   const me = futPlayers.find((p) => p.user_id === currentUserId);
-
   const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId);
 
-  const timerShouldBeStarted = (
-    gameStatus === "playing" || gameStatus === "starting" || roomData?.status === "Active"
-  );
+  const gameHasStarted = gameStatus === "playing" || gameStatus === "starting" || roomData?.status === "Active";
 
   const hostUserId =
     (roomData as any)?.created_by ||
     (roomData?.game_players && roomData?.game_players[0]?.user_id) ||
     null;
   const isHost = currentUserId && hostUserId === currentUserId;
-
-  useEffect(() => {
-    if (!roomData?.id) return;
-    const channel = supabase
-      .channel(`room-${roomData.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "game_sessions",
-          filter: `id=eq.${roomData.id}`,
-        },
-        (payload) => {
-          if (payload.new && payload.new.status === "Active") {
-            console.log("Game session status changed to Active, timer should start (by status now)");
-          }
-        }
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [roomData?.id]);
 
   const handleGetReady = async () => {
     if (!currentUserId || !roomData?.id) return;
@@ -98,6 +71,7 @@ export const FutArenaMatchFlow = ({
           .from("game_players")
           .update({ is_ready: true })
           .eq("session_id", roomData.id);
+        
         const { error: sessionError } = await supabase
           .from("game_sessions")
           .update({ 
@@ -133,7 +107,7 @@ export const FutArenaMatchFlow = ({
     );
   }
 
-  if (timerShouldBeStarted) {
+  if (gameHasStarted) {
     return (
       <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-30">
         <div className="flex flex-col items-center animate-fade-in">
