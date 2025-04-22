@@ -2,13 +2,15 @@
 import { Button } from "@/components/ui/button";
 import { Copy, Share2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { useFullScreenHandle } from "react-full-screen";
 
 interface RoomHeaderProps {
   gameName: string;
   roomId: string;
+  onToggleFullscreen?: () => void;
 }
 
-const RoomHeader = ({ gameName, roomId }: RoomHeaderProps) => {
+const RoomHeader = ({ gameName, roomId, onToggleFullscreen }: RoomHeaderProps) => {
   const copyRoomLink = () => {
     const roomUrl = `${window.location.origin}${window.location.pathname}`;
     navigator.clipboard.writeText(roomUrl);
@@ -58,11 +60,7 @@ const RoomHeader = ({ gameName, roomId }: RoomHeaderProps) => {
           variant="outline"
           size="sm"
           className="flex items-center gap-1"
-          onClick={() => {
-            toast("Opening in New Window", {
-              description: "Game opened in fullscreen mode",
-            });
-          }}
+          onClick={onToggleFullscreen}
         >
           <ExternalLink className="h-4 w-4" />
           <span className="hidden sm:inline">Fullscreen</span>

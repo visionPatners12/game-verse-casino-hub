@@ -105,10 +105,7 @@ function resizeGameFunc(){
 		}
 		
 		// Check if we're in fullscreen mode
-		const isFullscreen = document.fullscreenElement || 
-							document.webkitFullscreenElement || 
-							document.mozFullScreenElement || 
-							document.msFullscreenElement;
+		const isFullscreen = document.fullscreenElement;
 		
 		if (isFullscreen && isFullscreen.id === "game-canvas-container") {
 			// Apply fullscreen styles

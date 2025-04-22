@@ -9,6 +9,7 @@ import RoomInfo from "@/components/game/RoomInfo";
 import PlayersList from "@/components/game/PlayersList";
 import GameCanvas from "@/components/game/GameCanvas";
 import { PlayCircle, PauseCircle, DoorOpen } from "lucide-react";
+import { useRef } from "react";
 
 interface GameRoomLayoutProps {
   loading: boolean;
@@ -33,6 +34,8 @@ export const GameRoomLayout = ({
   onStartGame,
   onForfeit
 }: GameRoomLayoutProps) => {
+  const gameCanvasRef = useRef<HTMLDivElement | null>(null);
+  
   // Use the pot value directly from roomData
   const totalPot = roomData?.pot || 0;
   
@@ -40,6 +43,21 @@ export const GameRoomLayout = ({
   const enoughPlayers = roomData?.game_players?.filter(player => player.is_connected).length >= 2;
   const canStartGame = allPlayersReady && enoughPlayers && gameStatus === 'waiting';
   const isPlaying = gameStatus === 'playing' || gameStatus === 'starting';
+
+  const handleToggleFullscreen = () => {
+    const gameCanvasContainer = document.getElementById('game-canvas-container');
+    if (!gameCanvasContainer) return;
+    
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(err => {
+        console.error(`Erreur lors de la sortie du mode plein écran: ${err.message}`);
+      });
+    } else {
+      gameCanvasContainer.requestFullscreen().catch(err => {
+        console.error(`Erreur lors du passage en mode plein écran: ${err.message}`);
+      });
+    }
+  };
 
   return (
     <main className="flex-1 container mx-auto px-4 py-8">
@@ -55,6 +73,7 @@ export const GameRoomLayout = ({
                       <RoomHeader 
                         gameName={gameName} 
                         roomId={roomData.room_id}
+                        onToggleFullscreen={handleToggleFullscreen}
                       />
                     </CardTitle>
                     
@@ -116,7 +135,7 @@ export const GameRoomLayout = ({
                       />
 
                       {/* Game Canvas Section */}
-                      <div className="mt-6">
+                      <div className="mt-6" ref={gameCanvasRef}>
                         <div className="w-full rounded-lg overflow-hidden border border-border">
                           {isPlaying ? (
                             <GameCanvas 

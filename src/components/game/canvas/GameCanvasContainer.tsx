@@ -20,9 +20,12 @@ const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContain
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleChange = (state: boolean) => {
-      setIsFullscreen(state);
-      if (state) {
+    const handleChange = () => {
+      const fullscreenElement = document.fullscreenElement;
+      const isFullscreen = !!fullscreenElement;
+      setIsFullscreen(isFullscreen);
+      
+      if (isFullscreen) {
         toast.success("Mode plein écran activé");
       } else {
         toast.success("Mode plein écran désactivé");
@@ -30,55 +33,55 @@ const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContain
     };
 
     // Surveiller le changement d'état de plein écran
-    const fullscreenChangeHandler = () => {
-      handleChange(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', fullscreenChangeHandler);
+    document.addEventListener('fullscreenchange', handleChange);
 
     return () => {
-      document.removeEventListener('fullscreenchange', fullscreenChangeHandler);
+      document.removeEventListener('fullscreenchange', handleChange);
     };
   }, []);
 
   const toggleFullscreen = () => {
+    if (!containerRef.current) return;
+    
     if (isFullscreen) {
-      handle.exit();
+      document.exitFullscreen().catch(err => {
+        console.error(`Erreur lors de la sortie du mode plein écran: ${err.message}`);
+      });
     } else {
-      handle.enter();
+      containerRef.current.requestFullscreen().catch(err => {
+        console.error(`Erreur lors du passage en mode plein écran: ${err.message}`);
+      });
     }
   };
 
   return (
-    <FullScreen handle={handle}>
-      <div 
-        id="game-canvas-container" 
-        ref={containerRef}
-        className="relative bg-accent/10 rounded-lg overflow-hidden w-full aspect-video"
+    <div 
+      id="game-canvas-container" 
+      ref={containerRef}
+      className={`relative bg-accent/10 rounded-lg overflow-hidden w-full aspect-video ${isFullscreen ? 'fixed inset-0 z-50 aspect-auto' : ''}`}
+    >
+      <LudoGameScripts />
+      
+      <Button
+        variant="outline"
+        size="icon"
+        className="absolute top-4 right-4 z-50 bg-background/80 hover:bg-background/90"
+        onClick={toggleFullscreen}
+        title={isFullscreen ? "Quitter le plein écran" : "Passer en plein écran"}
       >
-        <LudoGameScripts />
-        
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute top-4 right-4 z-50 bg-background/80 hover:bg-background/90"
-          onClick={toggleFullscreen}
-          title={isFullscreen ? "Quitter le plein écran" : "Passer en plein écran"}
-        >
-          {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-        </Button>
+        {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+      </Button>
 
-        {roomData.game_type === "futarena" && roomData.match_duration && (
-          <GameTimer matchDuration={roomData.match_duration} />
-        )}
+      {roomData.game_type === "futarena" && roomData.match_duration && (
+        <GameTimer matchDuration={roomData.match_duration} />
+      )}
 
-        <GameCanvasContent 
-          roomData={roomData}
-          currentUserId={currentUserId}
-          isFullscreen={isFullscreen}
-        />
-      </div>
-    </FullScreen>
+      <GameCanvasContent 
+        roomData={roomData}
+        currentUserId={currentUserId}
+        isFullscreen={isFullscreen}
+      />
+    </div>
   );
 });
 
