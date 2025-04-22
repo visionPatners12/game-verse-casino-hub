@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { RoomData, DatabaseSessionStatus } from "@/components/game/types";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export function useRoomDataState(roomId: string | undefined) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -11,9 +12,11 @@ export function useRoomDataState(roomId: string | undefined) {
   const [players, setPlayers] = useState<any[]>([]);
   const [gameStatus, setGameStatus] = useState<'waiting' | 'starting' | 'playing' | 'ended'>('waiting');
   const { toast } = useToast();
+  const { session } = useAuth(); // Get session from auth context
 
   const fetchRoomData = useCallback(async () => {
-    if (!roomId) return;
+    if (!roomId || !session?.user) return; // Only fetch if we have both roomId and session
+
     try {
       setIsLoading(true);
       const { data: roomData, error: roomError } = await supabase
@@ -35,6 +38,7 @@ export function useRoomDataState(roomId: string | undefined) {
         .single();
 
       if (roomError) throw roomError;
+      
       const typedRoomData = roomData as unknown as RoomData;
       setRoomData(typedRoomData);
       setPlayers(typedRoomData.game_players || []);
@@ -43,7 +47,12 @@ export function useRoomDataState(roomId: string | undefined) {
       if (dbStatus === 'Active') setGameStatus('playing');
       else if (dbStatus === 'Finished') setGameStatus('ended');
       else setGameStatus('waiting');
-    } catch (error) {
+      
+    } catch (error: any) {
+      console.error('Error fetching room data:', error);
+      if (error.code === 'PGRST116') {
+        console.log('Room not found or no access');
+      }
       toast({
         title: "Error Loading Room",
         description: "Could not load game room data. Please try again.",
@@ -52,15 +61,23 @@ export function useRoomDataState(roomId: string | undefined) {
     } finally {
       setIsLoading(false);
     }
-  }, [roomId, toast]);
+  }, [roomId, toast, session?.user]);
 
+  // Update currentUserId when session changes
   useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUserId(user?.id || null);
-    };
-    getCurrentUser();
-  }, []);
+    if (session?.user) {
+      setCurrentUserId(session.user.id);
+    } else {
+      setCurrentUserId(null);
+    }
+  }, [session]);
+
+  // Only fetch room data when we have both roomId and session
+  useEffect(() => {
+    if (roomId && session?.user) {
+      fetchRoomData();
+    }
+  }, [roomId, session?.user, fetchRoomData]);
 
   return {
     roomData,

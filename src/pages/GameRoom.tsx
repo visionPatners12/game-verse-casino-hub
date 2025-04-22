@@ -5,10 +5,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { gameCodeToType, isValidGameType } from "@/lib/gameTypes";
 import { useRoomWebSocket } from "@/hooks/room/useRoomWebSocket";
 import { useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 const GameRoom = () => {
   const { roomId, gameType } = useParams<{ roomId: string; gameType: string }>();
   const navigate = useNavigate();
+  const { session, isLoading: authLoading } = useAuth();
   
   const {
     roomData,
@@ -20,13 +22,24 @@ const GameRoom = () => {
     startGame
   } = useRoomWebSocket(roomId);
   
-  // Redirect if room doesn't exist
+  // Redirect if not authenticated
   useEffect(() => {
-    if (!isLoading && !roomData && roomId) {
-      // No room data found after loading completed
+    if (!authLoading && !session) {
+      navigate("/auth");
+    }
+  }, [authLoading, session, navigate]);
+
+  // Only redirect for missing room after authentication is complete
+  useEffect(() => {
+    if (!authLoading && !isLoading && !roomData && roomId) {
       navigate("/games");
     }
-  }, [isLoading, roomData, roomId, navigate]);
+  }, [authLoading, isLoading, roomData, roomId, navigate]);
+  
+  // Show nothing while checking auth
+  if (authLoading) {
+    return null;
+  }
   
   // Safely get the game name from the type
   const gameName = gameType && isValidGameType(gameType) 
