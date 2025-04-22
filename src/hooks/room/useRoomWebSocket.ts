@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from "react";
 import { useRoomDataState } from "./useRoomDataState";
 import { useRoomSocketEvents } from "./useRoomSocketEvents";
@@ -95,16 +94,15 @@ export function useRoomWebSocket(roomId: string | undefined) {
   // Setup beforeunload handler to save room data
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (roomId && currentUserId) {
+      if (roomId && currentUserId && gameStatus !== 'ended') {
         console.log(`Page is being unloaded, saving room ${roomId} data for user ${currentUserId}...`);
-        // Save with explicit gameType from URL params
         roomService.saveActiveRoomToStorage(roomId, currentUserId, gameType);
       }
     };
     
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [roomId, currentUserId, gameType]);
+  }, [roomId, currentUserId, gameType, gameStatus]);
 
   return {
     roomData,

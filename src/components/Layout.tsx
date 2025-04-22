@@ -1,21 +1,19 @@
 
-import { ReactNode } from "react";
-import Navigation from "./Navigation";
-import { Footer } from "./Footer";
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
+import { useActiveRoomGuard } from "@/hooks/useActiveRoomGuard";
 
 interface LayoutProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export const Layout = ({ children }: LayoutProps) => {
+  useActiveRoomGuard();
+  
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex min-h-screen flex-col">
       <Navigation />
-      
-      <main className="flex-1 container mx-auto px-4 py-8">
-        {children}
-      </main>
-      
+      <main className="flex-1">{children}</main>
       <Footer />
     </div>
   );
