@@ -33,38 +33,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const initialSessionChecked = useRef(false);
+  const isAuthChangeFromExplicitAction = useRef(false);
 
   useEffect(() => {
     const setupAuth = async () => {
       try {
-        // Explicitly set Supabase auth configuration to ensure persistence
-        supabase.auth.setSession({
-          access_token: localStorage.getItem('supabase.auth.token.access_token') || '',
-          refresh_token: localStorage.getItem('supabase.auth.token.refresh_token') || '',
-        });
-        
-        // Get initial session
-        const { data: sessionData } = await supabase.auth.getSession();
-        console.log("Initial session check:", sessionData.session ? "Session exists" : "No session");
-        
-        setSession(sessionData.session);
-        setUser(sessionData.session?.user ?? null);
-        initialSessionChecked.current = true;
-        setIsLoading(false);
-        
-        // Set up auth state listener
+        // First, set up the auth state change listener before checking session
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, session) => {
+          (event, newSession) => {
             console.log("Auth state change event:", event);
             
-            setSession(session);
-            setUser(session?.user ?? null);
+            if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+              // Just update state, don't redirect for token refreshes or initial loads
+              setSession(newSession);
+              setUser(newSession?.user ?? null);
+              return;
+            }
             
-            // Only navigate on explicit sign in/out events, not on refreshes
+            // For all other events, update state
+            setSession(newSession);
+            setUser(newSession?.user ?? null);
+            
+            // Only navigate for explicit sign in/out events, not refreshes
             if (initialSessionChecked.current) {
-              if (event === 'SIGNED_IN') {
-                console.log("SIGNED_IN event - navigating to /games");
+              if (event === 'SIGNED_IN' && isAuthChangeFromExplicitAction.current) {
+                console.log("Explicit SIGNED_IN event - navigating to /games");
                 navigate('/games');
+                isAuthChangeFromExplicitAction.current = false;
               } else if (event === 'SIGNED_OUT') {
                 console.log("SIGNED_OUT event - navigating to /auth");
                 navigate('/auth');
@@ -72,6 +67,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           }
         );
+        
+        // After setting up listener, check for existing session
+        const { data: sessionData } = await supabase.auth.getSession();
+        console.log("Initial session check:", sessionData.session ? "Session exists" : "No session");
+        
+        setSession(sessionData.session);
+        setUser(sessionData.session?.user ?? null);
+        initialSessionChecked.current = true;
+        setIsLoading(false);
         
         return () => subscription.unsubscribe();
       } catch (error) {
@@ -85,6 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
+      isAuthChangeFromExplicitAction.current = true;
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -108,6 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (data: SignUpData) => {
     try {
+      isAuthChangeFromExplicitAction.current = true;
       const { error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,

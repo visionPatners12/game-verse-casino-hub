@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth as useAuthContext } from "@/contexts/AuthContext";
 
 export const useAuth = () => {
@@ -11,26 +10,14 @@ export const useAuth = () => {
   // Use the auth context - note we're using the context's useAuth hook
   const authContext = useAuthContext();
 
+  // These functions are kept for backwards compatibility but they simply 
+  // delegate to the context functions now
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Connexion réussie",
-        description: "Bienvenue sur GameVerse Casino!",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
+      await authContext.signIn(email, password);
+    } catch (error) {
+      // Error already handled in context
     } finally {
       setIsLoading(false);
     }
@@ -47,32 +34,9 @@ export const useAuth = () => {
   }) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            username: formData.username,
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            phone: formData.phone,
-            country: formData.country,
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Compte créé",
-        description: "Bienvenue sur GameVerse Casino! Vous pouvez maintenant vous connecter.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
+      await authContext.signUp(formData);
+    } catch (error) {
+      // Error already handled in context
     } finally {
       setIsLoading(false);
     }
