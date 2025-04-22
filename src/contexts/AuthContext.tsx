@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,33 +31,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const initialSessionChecked = useRef(false);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log("Auth state change event:", event);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Only navigate on explicit sign in/out events
-        if (event === 'SIGNED_IN') {
-          navigate('/games');
-        } else if (event === 'SIGNED_OUT') {
-          navigate('/auth');
-        }
-        // Other events like 'TOKEN_REFRESHED' or initial session check won't trigger navigation
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const setupAuth = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.log("Initial session check:", sessionData.session ? "Session exists" : "No session");
+      
+      setSession(sessionData.session);
+      setUser(sessionData.session?.user ?? null);
+      initialSessionChecked.current = true;
       setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+      
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (event, session) => {
+          console.log("Auth state change event:", event);
+          
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (initialSessionChecked.current) {
+            if (event === 'SIGNED_IN') {
+              console.log("SIGNED_IN event - navigating to /games");
+              navigate('/games');
+            } else if (event === 'SIGNED_OUT') {
+              console.log("SIGNED_OUT event - navigating to /auth");
+              navigate('/auth');
+            }
+          }
+        }
+      );
+      
+      return () => subscription.unsubscribe();
+    };
+    
+    setupAuth();
   }, [navigate]);
 
   const signIn = async (email: string, password: string) => {

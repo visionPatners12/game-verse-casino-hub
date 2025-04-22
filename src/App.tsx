@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import MyItems from "./pages/MyItems";
 import CreateRoom from "./pages/CreateRoom";
 import PublicRooms from "./pages/PublicRooms";
+import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/store" element={<Store />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/my-items" element={<MyItems />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

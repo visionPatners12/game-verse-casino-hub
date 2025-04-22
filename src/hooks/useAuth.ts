@@ -1,13 +1,11 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth as useAuthContext } from "@/contexts/AuthContext";
 
 export const useAuth = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   
   // Use the auth context - note we're using the context's useAuth hook
@@ -27,8 +25,6 @@ export const useAuth = () => {
         title: "Connexion réussie",
         description: "Bienvenue sur GameVerse Casino!",
       });
-      
-      navigate('/games');
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -71,8 +67,6 @@ export const useAuth = () => {
         title: "Compte créé",
         description: "Bienvenue sur GameVerse Casino! Vous pouvez maintenant vous connecter.",
       });
-      
-      navigate('/games');
     } catch (error: any) {
       toast({
         title: "Erreur",
