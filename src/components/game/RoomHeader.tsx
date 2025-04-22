@@ -1,14 +1,16 @@
 
 import { Button } from "@/components/ui/button";
-import { Copy, Share2 } from "lucide-react";
+import { Copy, Share2, Maximize2, Minimize2 } from "lucide-react";
 import { toast } from "sonner";
+import type { FullScreenHandle } from "react-full-screen";
 
 interface RoomHeaderProps {
   gameName: string;
   roomId: string;
+  fullscreenHandle?: FullScreenHandle;
 }
 
-const RoomHeader = ({ gameName, roomId }: RoomHeaderProps) => {
+const RoomHeader = ({ gameName, roomId, fullscreenHandle }: RoomHeaderProps) => {
   const copyRoomLink = () => {
     const roomUrl = `${window.location.origin}${window.location.pathname}`;
     navigator.clipboard.writeText(roomUrl);
@@ -30,6 +32,24 @@ const RoomHeader = ({ gameName, roomId }: RoomHeaderProps) => {
       </div>
       
       <div className="flex items-center gap-2">
+        {fullscreenHandle && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1"
+            onClick={fullscreenHandle.active ? fullscreenHandle.exit : fullscreenHandle.enter}
+          >
+            {fullscreenHandle.active ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
+            <span className="hidden sm:inline">
+              {fullscreenHandle.active ? 'Exit Fullscreen' : 'Fullscreen'}
+            </span>
+          </Button>
+        )}
+
         <Button
           variant="outline"
           size="sm"

@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import GameChat from "@/components/GameChat";
@@ -10,6 +9,7 @@ import PlayersList from "@/components/game/PlayersList";
 import GameCanvas from "@/components/game/GameCanvas";
 import { PlayCircle, PauseCircle, DoorOpen } from "lucide-react";
 import { useRef } from "react";
+import { useFullScreenHandle } from "react-full-screen";
 
 interface GameRoomLayoutProps {
   loading: boolean;
@@ -35,8 +35,8 @@ export const GameRoomLayout = ({
   onForfeit
 }: GameRoomLayoutProps) => {
   const gameCanvasRef = useRef<HTMLDivElement | null>(null);
+  const fullscreenHandle = useFullScreenHandle();
   
-  // Use the pot value directly from roomData
   const totalPot = roomData?.pot || 0;
   
   const allPlayersReady = roomData?.game_players?.every(player => player.is_ready || !player.is_connected);
@@ -62,7 +62,6 @@ export const GameRoomLayout = ({
   return (
     <main className="flex-1 container mx-auto px-4 py-8">
       <div className="flex flex-col gap-8">
-        {/* Room Info and Controls */}
         <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
           <div className="w-full lg:w-2/3">
             <Card>
@@ -73,7 +72,7 @@ export const GameRoomLayout = ({
                       <RoomHeader 
                         gameName={gameName} 
                         roomId={roomData.room_id}
-                        onToggleFullscreen={handleToggleFullscreen}
+                        fullscreenHandle={fullscreenHandle}
                       />
                     </CardTitle>
                     
@@ -134,7 +133,6 @@ export const GameRoomLayout = ({
                         currentUserId={currentUserId}
                       />
 
-                      {/* Game Canvas Section */}
                       <div className="mt-6" ref={gameCanvasRef}>
                         <div className="w-full rounded-lg overflow-hidden border border-border">
                           {isPlaying ? (
