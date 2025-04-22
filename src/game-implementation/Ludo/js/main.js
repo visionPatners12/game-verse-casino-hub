@@ -1,3 +1,4 @@
+
 ////////////////////////////////////////////////////////////
 // MAIN
 ////////////////////////////////////////////////////////////
@@ -103,12 +104,29 @@ function resizeGameFunc(){
 			offset.y = Math.abs((offset.top/scalePercent)/2);
 		}
 		
-		$('canvas').css({
-			width: newCanvasW,
-			height: newCanvasH,
-			left: offset.left/2,
-			top: offset.top/2
-		});
+		// Check if we're in fullscreen mode
+		const isFullscreen = document.fullscreenElement || 
+							document.webkitFullscreenElement || 
+							document.mozFullScreenElement || 
+							document.msFullscreenElement;
+		
+		if (isFullscreen && isFullscreen.id === "game-canvas-container") {
+			// Apply fullscreen styles
+			$('canvas').css({
+				width: '100%',
+				height: '100%',
+				left: 0,
+				top: 0
+			});
+		} else {
+			// Regular size styles
+			$('canvas').css({
+				width: newCanvasW,
+				height: newCanvasH,
+				left: offset.left/2,
+				top: offset.top/2
+			});
+		}
 
 		//room
 		if ( typeof initSocket == 'function' && multiplayerSettings.enable) {
@@ -129,15 +147,6 @@ function resizeGameFunc(){
 			$('#notificationHolder').css('top', (offset.top/2));
 		}
 		$(window).scrollTop(0);
-		
-		// Handle fullscreen special case
-		if (document.fullscreenElement && document.fullscreenElement.id === "game-canvas-container") {
-			console.log("Detected fullscreen mode, applying special styles");
-			$('canvas').css('width', '100%');
-			$('canvas').css('height', '100%');
-			$('canvas').css('left', 0);
-			$('canvas').css('top', 0);
-		}
 		
 		resizeCanvas();
 		if ( typeof resizeScore == 'function' ) { 

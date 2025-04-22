@@ -5,6 +5,7 @@ import { Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GameTimer } from "./GameTimer";
 import { GameCanvasContent } from "./GameCanvasContent";
+import { LudoGameScripts } from "./LudoGameScripts";
 import { RoomData } from "../types";
 import { FullScreen, useFullScreenHandle } from "react-full-screen";
 
@@ -40,7 +41,12 @@ const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContain
 
   return (
     <FullScreen handle={handle}>
-      <div className="relative bg-accent/10 rounded-lg overflow-hidden w-full aspect-video">
+      <div 
+        id="game-canvas-container" 
+        className="relative bg-accent/10 rounded-lg overflow-hidden w-full aspect-video"
+      >
+        <LudoGameScripts />
+        
         <Button
           variant="outline"
           size="icon"
