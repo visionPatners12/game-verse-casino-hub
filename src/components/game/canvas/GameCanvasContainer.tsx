@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import { toast } from "sonner";
 import { Fullscreen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,8 @@ interface GameCanvasContainerProps {
   currentUserId: string | null;
 }
 
-const GameCanvasContainer = ({ roomData, currentUserId }: GameCanvasContainerProps) => {
+// Utiliser memo pour éviter les re-renders non nécessaires
+const GameCanvasContainer = memo(({ roomData, currentUserId }: GameCanvasContainerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -72,6 +73,9 @@ const GameCanvasContainer = ({ roomData, currentUserId }: GameCanvasContainerPro
       />
     </div>
   );
-};
+});
+
+// Ajouter un displayName pour faciliter le debugging
+GameCanvasContainer.displayName = 'GameCanvasContainer';
 
 export default GameCanvasContainer;

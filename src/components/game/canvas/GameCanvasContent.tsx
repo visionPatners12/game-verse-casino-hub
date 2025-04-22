@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+
+import { useEffect, useRef, useState, memo } from "react";
 import { Loader2 } from "lucide-react";
 import { GameData } from "@/game-implementation/Ludo/types";
 import { RoomData } from "../types";
@@ -18,10 +19,12 @@ interface GameCanvasContentProps {
   currentUserId: string | null;
 }
 
-export const GameCanvasContent = ({ roomData, currentUserId }: GameCanvasContentProps) => {
+// Utiliser memo pour éviter les re-renders non nécessaires
+export const GameCanvasContent = memo(({ roomData, currentUserId }: GameCanvasContentProps) => {
   const [gameState, setGameState] = useState<'loading' | 'ready' | 'error'>('loading');
   const canvasRef = useRef<HTMLDivElement>(null);
   const gameInitialized = useRef<boolean>(false);
+  const lastGameData = useRef<GameData | null>(null);
 
   const gameData: GameData = {
     currentPlayerId: currentUserId,
@@ -56,6 +59,7 @@ export const GameCanvasContent = ({ roomData, currentUserId }: GameCanvasContent
             ...window.$.game,
             gameData: gameData,
           };
+          lastGameData.current = gameData;
           console.log("Game data set:", gameData);
         }
         
@@ -88,9 +92,19 @@ export const GameCanvasContent = ({ roomData, currentUserId }: GameCanvasContent
   }, [canvasRef, currentUserId, gameData]);
   
   useEffect(() => {
+    // Vérifier si les données de jeu ont été modifiées de manière significative
+    // pour éviter les mises à jour inutiles
     if (window.$ && window.$.game && gameInitialized.current) {
-      console.log("Updating game data:", gameData);
-      window.$.game.gameData = gameData;
+      const shouldUpdate = !lastGameData.current || 
+                          lastGameData.current.gameParams.totalPot !== gameData.gameParams.totalPot ||
+                          lastGameData.current.gameParams.currentPlayers !== gameData.gameParams.currentPlayers ||
+                          lastGameData.current.allPlayers.length !== gameData.allPlayers.length;
+      
+      if (shouldUpdate) {
+        console.log("Updating game data:", gameData);
+        window.$.game.gameData = gameData;
+        lastGameData.current = gameData;
+      }
     }
   }, [gameData]);
 
@@ -124,4 +138,7 @@ export const GameCanvasContent = ({ roomData, currentUserId }: GameCanvasContent
       className="absolute inset-0 flex items-center justify-center"
     />
   );
-};
+});
+
+// Ajouter un displayName pour faciliter le debugging
+GameCanvasContent.displayName = 'GameCanvasContent';

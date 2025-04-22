@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { RoomData, DatabaseSessionStatus } from "@/components/game/types";
 import { useToast } from "@/components/ui/use-toast";
@@ -13,12 +13,17 @@ export function useRoomDataState(roomId: string | undefined) {
   const [gameStatus, setGameStatus] = useState<'waiting' | 'starting' | 'playing' | 'ended'>('waiting');
   const { toast } = useToast();
   const { session } = useAuth();
+  const isFirstLoad = useRef(true);
 
   const fetchRoomData = useCallback(async () => {
     if (!roomId || !session?.user) return;
 
     try {
-      setIsLoading(true);
+      // Only show loading state on first load
+      if (isFirstLoad.current) {
+        setIsLoading(true);
+      }
+      
       console.log("Fetching room data for:", roomId);
       
       // Utilisez la fonction de calcul du pot prix dans la requête
@@ -67,7 +72,27 @@ export function useRoomDataState(roomId: string | undefined) {
       }
       
       const typedRoomData = roomData as unknown as RoomData;
-      setRoomData(typedRoomData);
+      
+      // Mise à jour sans provoquer de flickering
+      setRoomData(prevData => {
+        // Si c'est le premier chargement ou s'il y a des changements significatifs
+        if (!prevData || isFirstLoad.current || 
+            prevData.pot !== typedRoomData.pot || 
+            prevData.current_players !== typedRoomData.current_players ||
+            prevData.status !== typedRoomData.status) {
+          return typedRoomData;
+        }
+        
+        // Pour les mises à jour régulières, ne mettre à jour que les joueurs
+        // tout en conservant la structure générale de roomData
+        return {
+          ...prevData,
+          game_players: typedRoomData.game_players,
+          pot: typedRoomData.pot,
+          current_players: typedRoomData.current_players
+        };
+      });
+      
       setPlayers(typedRoomData.game_players || []);
 
       const dbStatus = roomData.status as DatabaseSessionStatus;
@@ -75,6 +100,9 @@ export function useRoomDataState(roomId: string | undefined) {
       else if (dbStatus === 'Finished') setGameStatus('ended');
       else setGameStatus('waiting');
       
+      if (isFirstLoad.current) {
+        isFirstLoad.current = false;
+      }
     } catch (error: any) {
       console.error('Error in room data fetch:', error);
     } finally {
