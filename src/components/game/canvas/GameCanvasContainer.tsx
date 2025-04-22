@@ -12,16 +12,19 @@ interface GameCanvasContainerProps {
   gameStatus: 'waiting' | 'starting' | 'playing' | 'ended';
 }
 
-// Add global window interface for game functions
+// Harmonisation des déclarations globales (toutes optionnelles, toutes présentes dans tous les fichiers)
 declare global {
   interface Window {
-    $: any;
-    jQuery: any;
+    $?: any;
+    jQuery?: any;
     gameInitialized?: boolean;
     initGameCanvas?: (width: number, height: number) => void;
     buildGameCanvas?: () => void;
     removeGameCanvas?: () => void;
     resizeGameFunc?: () => void;
+    initMain?: () => void;
+    changeCanvasViewport?: () => void;
+    checkMobileOrientation?: () => void;
   }
 }
 

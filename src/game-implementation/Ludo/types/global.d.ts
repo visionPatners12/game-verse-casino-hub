@@ -11,16 +11,16 @@ interface JQuery {
 
 declare global {
   interface Window {
-    $: JQuery & ((selector: string) => JQuery);
-    jQuery: any;
-    gameInitialized: boolean;
-    initGameCanvas: (width: number, height: number) => void;
-    buildGameCanvas: () => void;
-    removeGameCanvas: () => void;
-    resizeGameFunc: () => void;
-    initMain: () => void;
-    changeCanvasViewport: () => void;
-    checkMobileOrientation: () => void;
+    $?: JQuery & ((selector: string) => JQuery);
+    jQuery?: any;
+    gameInitialized?: boolean;
+    initGameCanvas?: (width: number, height: number) => void;
+    buildGameCanvas?: () => void;
+    removeGameCanvas?: () => void;
+    resizeGameFunc?: () => void;
+    initMain?: () => void;
+    changeCanvasViewport?: () => void;
+    checkMobileOrientation?: () => void;
   }
 }
 

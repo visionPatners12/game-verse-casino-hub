@@ -14,6 +14,8 @@ interface FutArenaMatchFlowProps {
   gameStatus: 'waiting' | 'starting' | 'playing' | 'ended';
 }
 
+type PlayerFutIdMap = Record<string, string | null>;
+
 export const FutArenaMatchFlow = ({
   roomData,
   currentUserId,
@@ -27,15 +29,49 @@ export const FutArenaMatchFlow = ({
     [roomData]
   );
 
+  // Map joueur
   const futPlayers = connectedPlayers.map((p) => ({
     user_id: p.user_id,
-    ea_id: p.ea_id || null,
+    ea_id: null,         // sera récupéré via la table fut_players ci-dessous
     display_name: p.display_name,
     is_ready: p.is_ready || false,
   }));
 
   const me = futPlayers.find((p) => p.user_id === currentUserId);
   const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId);
+
+  // Map { user_id: fut_id }
+  const [playersFutIds, setPlayersFutIds] = useState<PlayerFutIdMap>({});
+
+  useEffect(() => {
+    // Récupère les futId de tous les joueurs dans la room (table fut_players !)
+    const fetchAllFutIds = async () => {
+      const userIds = futPlayers.map(p => p.user_id);
+      if (userIds.length === 0) {
+        setPlayersFutIds({});
+        return;
+      }
+      const { data, error } = await supabase
+        .from('fut_players')
+        .select('user_id, fut_id')
+        .in('user_id', userIds);
+
+      if (error) {
+        console.error("Erreur lors de la récupération des FUT IDs:", error);
+        setPlayersFutIds({});
+        return;
+      }
+      // convert array to id -> futId map (fut_id peut être null)
+      const newMap: PlayerFutIdMap = {};
+      for (const entry of data ?? []) {
+        newMap[entry.user_id] = entry.fut_id ?? null;
+      }
+      setPlayersFutIds(newMap);
+    };
+
+    fetchAllFutIds();
+  // On refresh si joueurs changent
+  }, [roomData?.game_players?.length, JSON.stringify(futPlayers.map(p => p.user_id))]);
 
   const gameHasStarted = gameStatus === "playing" || 
                          (gameStatus === "starting" && window.gameInitialized) || 
@@ -140,14 +176,19 @@ export const FutArenaMatchFlow = ({
           <div key={p.user_id} className="flex flex-col items-center bg-card/70 rounded-lg px-6 py-4 m-2 shadow">
             <span className="font-bold text-lg text-primary mb-2">{`Joueur ${idx + 1}`}</span>
             <span className="text-2xl font-semibold text-foreground mb-1">FUT ID :</span>
-            <span className="mb-4 text-xl text-muted-foreground">{p.user_id === currentUserId ? (futId || <span className="italic text-red-500">Non défini</span>) : (p.ea_id || <span className="italic text-red-500">Non défini</span>)}</span>
+            <span className="mb-4 text-xl text-muted-foreground">
+              {p.user_id === currentUserId
+                ? (futId || <span className="italic text-red-500">Non défini</span>)
+                : (playersFutIds[p.user_id] || <span className="italic text-red-500">Non défini</span>)
+              }
+            </span>
             {p.is_ready && (
               <div className="text-green-600 font-semibold flex items-center gap-2">
                 <CheckCircle className="h-5 w-5" />
                 Prêt
               </div>
             )}
-            {p.user_id !== currentUserId && !p.ea_id && (
+            {!playersFutIds[p.user_id] && p.user_id !== currentUserId && (
               <div className="text-sm text-red-500 italic mt-2">En attente que ce joueur renseigne son FUT ID…</div>
             )}
           </div>
