@@ -19,6 +19,8 @@ export function useRoomDataState(roomId: string | undefined) {
 
     try {
       setIsLoading(true);
+      console.log("Fetching room data for:", roomId);
+      
       const { data: roomData, error: roomError } = await supabase
         .from('game_sessions')
         .select(`
@@ -41,6 +43,8 @@ export function useRoomDataState(roomId: string | undefined) {
         console.error('Error fetching room data:', roomError);
         return;
       }
+      
+      console.log("Fetched room data:", roomData);
       
       const typedRoomData = roomData as unknown as RoomData;
       setRoomData(typedRoomData);
