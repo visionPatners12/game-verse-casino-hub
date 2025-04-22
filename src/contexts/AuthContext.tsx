@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
@@ -37,14 +36,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log("Auth state change event:", event);
         setSession(session);
         setUser(session?.user ?? null);
         
+        // Only navigate on explicit sign in/out events
         if (event === 'SIGNED_IN') {
           navigate('/games');
         } else if (event === 'SIGNED_OUT') {
           navigate('/auth');
         }
+        // Other events like 'TOKEN_REFRESHED' or initial session check won't trigger navigation
       }
     );
 
