@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { GridSizeField } from "./components/GridSizeField";
 import { useCreateRoom } from "./hooks/useCreateRoom";
 import { Input } from "@/components/ui/input";
 import { Timer, Text } from "lucide-react";
+import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
 
 type CreateRoomFormProps = {
   username: string;
@@ -26,89 +26,95 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
       maxPlayers: gameConfig?.min_players || 2,
       winnerCount: 1,
       gridSize: gameType === 'tictactoe' ? 3 : undefined,
-      matchDuration: gameType === "futarena" ? 12 : undefined, // 12 min par défaut pour FUT
+      matchDuration: gameType === "futarena" ? 12 : undefined,
       eaId: "",
-      _gameType: gameType, // Ajout pour la validation conditionnelle
+      _gameType: gameType,
     },
     mode: "onChange"
   });
 
   const { createRoom } = useCreateRoom(username, gameType);
+  const { checkAndDeductBalance, InsufficientFundsDialog } = useWalletBalanceCheck();
 
-  // Ajout pour forcer le contexte du jeu lors du submit
-  const handleSubmit = (values: CreateRoomFormData) => {
-    createRoom({ ...values, _gameType: gameType });
+  const handleSubmit = async (values: CreateRoomFormData) => {
+    const canProceed = await checkAndDeductBalance(values.bet);
+    if (canProceed) {
+      createRoom(values);
+    }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <BetAmountField form={form} disableControls={true} />
-        <PlayersField form={form} gameConfig={gameConfig} />
-        <WinnersField form={form} />
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <BetAmountField form={form} disableControls={true} />
+          <PlayersField form={form} gameConfig={gameConfig} />
+          <WinnersField form={form} />
 
-        {gameType === 'tictactoe' && gameConfig?.is_configurable && (
-          <GridSizeField form={form} />
-        )}
+          {gameType === 'tictactoe' && gameConfig?.is_configurable && (
+            <GridSizeField form={form} />
+          )}
 
-        {gameType === "futarena" && (
-          <>
-            <FormField
-              control={form.control}
-              name="eaId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <Text className="h-4 w-4" />
-                    Ton EA - ID <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      placeholder="Ton identifiant EA"
-                      required
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          {gameType === "futarena" && (
+            <>
+              <FormField
+                control={form.control}
+                name="eaId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Text className="h-4 w-4" />
+                      Ton EA - ID <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="text"
+                        placeholder="Ton identifiant EA"
+                        required
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="matchDuration"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <Timer className="h-4 w-4" />
-                    Durée du match (minutes) <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={60}
-                      {...field}
-                      onChange={e => field.onChange(Number(e.target.value))}
-                      required
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </>
-        )}
+              <FormField
+                control={form.control}
+                name="matchDuration"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Timer className="h-4 w-4" />
+                      Durée du match (minutes) <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={60}
+                        {...field}
+                        onChange={e => field.onChange(Number(e.target.value))}
+                        required
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
+          )}
 
-        <Button 
-          type="submit" 
-          className="w-full"
-          disabled={!username}
-        >
-          Create Room
-        </Button>
-      </form>
-    </Form>
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={!username}
+          >
+            Create Room
+          </Button>
+        </form>
+      </Form>
+      <InsufficientFundsDialog />
+    </>
   );
 }

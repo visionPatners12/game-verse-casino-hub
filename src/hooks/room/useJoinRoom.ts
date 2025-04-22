@@ -1,13 +1,14 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { isValidGameType, gameCodeToType } from "@/lib/gameTypes";
+import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
 
 export function useJoinRoom() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { checkAndDeductBalance } = useWalletBalanceCheck();
 
   const joinRoom = async (roomCode: string) => {
     if (roomCode.length !== 6) {
@@ -27,6 +28,34 @@ export function useJoinRoom() {
         return;
       }
       
+      // Find the room first to check entry fee
+      const { data: room, error: roomError } = await supabase
+        .from('game_sessions')
+        .select('*')
+        .eq('room_id', roomCode)
+        .maybeSingle();
+        
+      if (roomError && roomError.code !== 'PGRST116') {
+        throw roomError;
+      }
+      
+      if (!room) {
+        toast.error("Room not found. Please check the code and try again.");
+        return;
+      }
+
+      // Check wallet balance before proceeding
+      const canProceed = await checkAndDeductBalance(room.entry_fee);
+      if (!canProceed) {
+        return;
+      }
+      
+      // Check if room is full
+      if (room.current_players >= room.max_players) {
+        toast.error("This room is full. Please try another room.");
+        return;
+      }
+
       // Check if user profile is complete
       const { data: userData, error: userError } = await supabase
         .from('users')
@@ -42,28 +71,6 @@ export function useJoinRoom() {
       if (!userData || !userData.username) {
         toast.error("Please set up your username in your profile.");
         navigate("/profile");
-        return;
-      }
-      
-      // Find the room
-      const { data: room, error: roomError } = await supabase
-        .from('game_sessions')
-        .select('*')
-        .eq('room_id', roomCode)
-        .maybeSingle();
-        
-      if (roomError && roomError.code !== 'PGRST116') {
-        throw roomError;
-      }
-      
-      if (!room) {
-        toast.error("Room not found. Please check the code and try again.");
-        return;
-      }
-      
-      // Check if room is full
-      if (room.current_players >= room.max_players) {
-        toast.error("This room is full. Please try another room.");
         return;
       }
       
