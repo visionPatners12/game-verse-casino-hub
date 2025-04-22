@@ -1,26 +1,22 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export const LudoGameScripts = () => {
+  const [scriptsLoaded, setScriptsLoaded] = useState(false);
+
   useEffect(() => {
+    if (scriptsLoaded) return;
+
+    // Check if jQuery is already loaded
+    if (window.jQuery || window.$) {
+      console.log("jQuery already loaded, skipping jQuery loading");
+      loadGameScripts();
+      return;
+    }
+
     // Function to load scripts in sequence
-    const loadScripts = (scripts: string[], index = 0) => {
-      if (index >= scripts.length) return;
-
-      const script = document.createElement('script');
-      script.src = scripts[index];
-      script.async = false;
-      script.onload = () => loadScripts(scripts, index + 1);
-      document.body.appendChild(script);
-    };
-
-    // Load jQuery first, then other scripts
-    const jqueryScript = document.createElement('script');
-    jqueryScript.src = 'https://code.jquery.com/jquery-3.6.0.min.js';
-    jqueryScript.async = false;
-    jqueryScript.onload = () => {
-      // After jQuery is loaded, load the rest of the scripts in order
-      loadScripts([
+    const loadGameScripts = () => {
+      const scripts = [
         '/src/game-implementation/Ludo/js/vendor/createjs.min.js',
         '/src/game-implementation/Ludo/js/vendor/TweenMax.min.js',
         '/src/game-implementation/Ludo/js/vendor/detectmobilebrowser.js',
@@ -34,23 +30,60 @@ export const LudoGameScripts = () => {
         '/src/game-implementation/Ludo/js/sound.js',
         '/src/game-implementation/Ludo/js/mobile.js',
         '/src/game-implementation/Ludo/js/main.js'
-      ]);
+      ];
+
+      const loadScriptSequentially = (index = 0) => {
+        if (index >= scripts.length) {
+          console.log("All game scripts loaded successfully");
+          setScriptsLoaded(true);
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.src = scripts[index];
+        script.async = false;
+        
+        script.onload = () => {
+          console.log(`Loaded script: ${scripts[index]}`);
+          loadScriptSequentially(index + 1);
+        };
+        
+        script.onerror = (e) => {
+          console.error(`Error loading script: ${scripts[index]}`, e);
+          // Continue loading other scripts even if one fails
+          loadScriptSequentially(index + 1);
+        };
+        
+        document.body.appendChild(script);
+      };
+
+      loadScriptSequentially();
     };
+
+    // Load jQuery first, then other scripts
+    console.log("Loading jQuery...");
+    const jqueryScript = document.createElement('script');
+    jqueryScript.src = 'https://code.jquery.com/jquery-3.6.0.min.js';
+    jqueryScript.async = false;
+    
+    jqueryScript.onload = () => {
+      console.log("jQuery loaded successfully");
+      loadGameScripts();
+    };
+    
+    jqueryScript.onerror = (e) => {
+      console.error("Error loading jQuery", e);
+      // Try to continue with game scripts even if jQuery fails
+      loadGameScripts();
+    };
+    
     document.body.appendChild(jqueryScript);
 
     return () => {
-      // Clean up scripts when component unmounts
-      const scripts = document.querySelectorAll('script[src*="Ludo/js"]');
-      scripts.forEach(script => {
-        document.body.removeChild(script);
-      });
-      
-      const jqueryScripts = document.querySelectorAll('script[src*="jquery"]');
-      jqueryScripts.forEach(script => {
-        document.body.removeChild(script);
-      });
+      // We don't remove the scripts on unmount because they need to persist
+      // for the game to function across component re-renders
     };
-  }, []);
+  }, [scriptsLoaded]);
 
   return null;
 };

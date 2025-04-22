@@ -37,7 +37,9 @@ export const FutArenaMatchFlow = ({
   const me = futPlayers.find((p) => p.user_id === currentUserId);
   const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId);
 
-  const gameHasStarted = gameStatus === "playing" || gameStatus === "starting" || roomData?.status === "Active";
+  const gameHasStarted = gameStatus === "playing" || 
+                         (gameStatus === "starting" && window.gameInitialized) || 
+                         roomData?.status === "Active";
 
   const hostUserId =
     (roomData as any)?.created_by ||
@@ -102,9 +104,18 @@ export const FutArenaMatchFlow = ({
     }
   };
 
+  // Watch for game status changes - if the game is marked as playing but our local state is waiting,
+  // force a refresh to ensure proper synchronization
+  useEffect(() => {
+    if (roomData?.status === "Active" && gameStatus === "waiting") {
+      console.log("Game active in database but local state is waiting - forcing refresh");
+      window.location.reload();
+    }
+  }, [roomData?.status, gameStatus]);
+
   if (futIdLoading) {
     return (
-      <div className="flex flex-col justify-center items-center h-full">
+      <div className="flex flex-col justify-center items-center h-full bg-background/80 z-30">
         <Loader2 className="h-10 w-10 animate-spin mb-2" />
         <div>Chargement de votre FUT ID…</div>
       </div>

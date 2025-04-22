@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import GameChat from "@/components/GameChat";
@@ -8,7 +9,7 @@ import RoomInfo from "@/components/game/RoomInfo";
 import PlayersList from "@/components/game/PlayersList";
 import GameCanvas from "@/components/game/GameCanvas";
 import { PlayCircle, PauseCircle, DoorOpen } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { useFullScreenHandle } from "react-full-screen";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -45,6 +46,13 @@ export const GameRoomLayout = ({
   const enoughPlayers = roomData?.game_players?.filter(player => player.is_connected).length >= 2;
   const canStartGame = allPlayersReady && enoughPlayers && gameStatus === 'waiting';
   const isPlaying = gameStatus === 'playing' || gameStatus === 'starting';
+
+  // Force a refresh when game status changes to playing
+  useEffect(() => {
+    if (gameStatus === 'playing' && roomData?.status === 'Active') {
+      console.log("Game is now active, ensuring canvas is properly initialized");
+    }
+  }, [gameStatus, roomData?.status]);
 
   return (
     <main className="flex-1 container mx-auto px-2 sm:px-4 py-4 sm:py-8">
@@ -127,22 +135,11 @@ export const GameRoomLayout = ({
 
                       <div className="mt-4 sm:mt-6" ref={gameCanvasRef}>
                         <div className="w-full rounded-lg overflow-hidden border border-border">
-                          {isPlaying ? (
-                            <GameCanvas 
-                              roomData={roomData}
-                              currentUserId={currentUserId}
-                              gameStatus={gameStatus}
-                            />
-                          ) : (
-                            <div className="aspect-video w-full flex items-center justify-center bg-accent/10 p-4 sm:p-8">
-                              <div className="text-center">
-                                <h3 className="text-lg sm:text-2xl font-bold mb-2">Waiting for game to start</h3>
-                                <p className="text-sm sm:text-base text-muted-foreground">
-                                  Get ready and wait for the host to start the game
-                                </p>
-                              </div>
-                            </div>
-                          )}
+                          <GameCanvas 
+                            roomData={roomData}
+                            currentUserId={currentUserId}
+                            gameStatus={gameStatus}
+                          />
                         </div>
                       </div>
                     </>

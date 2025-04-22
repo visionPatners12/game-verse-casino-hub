@@ -1,27 +1,26 @@
 
-import { memo } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { RoomData } from "../types";
 import { FutArenaMatchFlow } from "./FutArenaMatchFlow";
-import { useEffect, useRef, useState } from "react";
 
-// Props inchangés
 interface GameCanvasContentProps {
   roomData: RoomData;
   currentUserId: string | null;
   gameStatus: 'waiting' | 'starting' | 'playing' | 'ended';
 }
 
-// Refactoré pour déléguer le cas futarena au nouveau composant !
 export const GameCanvasContent = memo(({ roomData, currentUserId, gameStatus }: GameCanvasContentProps) => {
   // --- Mode FUTArena : affichage IDs, play, timer ---
   const isFutArena = roomData.game_type?.toLowerCase() === "futarena";
-  if (isFutArena && typeof roomData.match_duration === "number" && (gameStatus === "playing" || gameStatus === "starting" || gameStatus === "waiting")) {
+  
+  // Only show FutArenaMatchFlow for pre-game setup
+  if (isFutArena && typeof roomData.match_duration === "number" && 
+     (gameStatus === "waiting" || (gameStatus === "starting" && !window.gameInitialized))) {
     return <FutArenaMatchFlow roomData={roomData} currentUserId={currentUserId} gameStatus={gameStatus} />;
   }
 
-  // --- CANVAS LOGIC FOR OTHER MODES (inchangé) ---
-  // --- CANVAS LOGIC FOR OTHER MODES ---
+  // --- CANVAS LOGIC FOR OTHER MODES OR FUTARENA AFTER GAME STARTED ---
   const [gameState, setGameState] = useState<'loading' | 'ready' | 'error'>('loading');
   const canvasRef = useRef<HTMLDivElement>(null);
   const gameInitialized = useRef<boolean>(false);
@@ -48,31 +47,48 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, gameStatus }: 
   };
 
   useEffect(() => {
-    if (!canvasRef.current || !currentUserId || gameInitialized.current) return;
+    if (!canvasRef.current || !currentUserId) return;
+    
+    // For FutArena, only initialize in playing status
+    if (isFutArena && gameStatus !== "playing") {
+      return;
+    }
     
     const initializeGame = async () => {
       try {
+        if (gameInitialized.current) {
+          console.log("Game already initialized, skipping initialization");
+          return;
+        }
+
         setGameState('loading');
         console.log("Initializing game canvas...");
         
-        if (window.$ && typeof window.$.game !== 'undefined') {
-          window.$.game = {
-            ...window.$.game,
-            gameData: gameData,
-          };
-          lastGameData.current = gameData;
-          console.log("Game data set:", gameData);
-        }
+        // Ensure global game object exists
+        if (!window.$) window.$ = { game: {} };
+        if (!window.$.game) window.$.game = {};
         
-        if (window.initGameCanvas && window.buildGameCanvas) {
+        // Set up global window components
+        window.$.game = {
+          ...window.$.game,
+          gameData: gameData,
+        };
+        lastGameData.current = gameData;
+        console.log("Game data set:", gameData);
+        
+        if (typeof window.initGameCanvas === 'function' && typeof window.buildGameCanvas === 'function') {
           console.log("Building canvas with dimensions 1280x768");
           window.initGameCanvas(1280, 768);
           window.buildGameCanvas();
+          
+          // Mark game as initialized globally
+          window.gameInitialized = true;
           gameInitialized.current = true;
+          
           setGameState('ready');
           console.log("Canvas initialized successfully");
           
-          if (window.resizeGameFunc) {
+          if (typeof window.resizeGameFunc === 'function') {
             console.log("Initial resize after canvas initialization");
             setTimeout(window.resizeGameFunc, 200);
           }
@@ -89,13 +105,14 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, gameStatus }: 
     initializeGame();
 
     return () => {
-      gameInitialized.current = false;
-      if (window.removeGameCanvas) {
+      if (gameInitialized.current && typeof window.removeGameCanvas === 'function') {
         console.log("Removing canvas");
         window.removeGameCanvas();
+        window.gameInitialized = false;
+        gameInitialized.current = false;
       }
     };
-  }, [canvasRef, currentUserId, gameData]);
+  }, [canvasRef, currentUserId, gameData, gameStatus, isFutArena]);
 
   useEffect(() => {
     if (window.$ && window.$.game && gameInitialized.current) {
@@ -111,6 +128,18 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, gameStatus }: 
       }
     }
   }, [gameData]);
+
+  // Resize canvas on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window.resizeGameFunc === 'function' && gameInitialized.current) {
+        window.resizeGameFunc();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (gameState === 'loading') {
     return (
@@ -138,6 +167,7 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, gameStatus }: 
   return (
     <div 
       ref={canvasRef} 
+      id="game-canvas-container"
       className="absolute inset-0 flex items-center justify-center"
     />
   );

@@ -73,9 +73,16 @@ export function useRoomSocketEvents({
     
     const handleGameStart = (_: string, data: any) => {
       console.log("Game start event received:", data);
-      setGameStatus('playing');
-      fetchRoomData();
-      toast.success("La partie a démarré !");
+      
+      // First mark as "starting" to show loading UI
+      setGameStatus('starting');
+      
+      // Update to "playing" after scripts have time to initialize
+      setTimeout(() => {
+        setGameStatus('playing');
+        fetchRoomData();
+        toast.success("La partie a démarré !");
+      }, 1000);
     };
     
     const handleGameOver = (_: string, data: any) => {
@@ -98,10 +105,18 @@ export function useRoomSocketEvents({
         (payload) => {
           console.log("Room status changed in DB:", payload.new);
           if (payload.new && payload.new.status === "Active") {
-            console.log("Setting game status to playing based on DB update");
-            setGameStatus('playing');
-            toast.success("La partie a démarré !");
-            fetchRoomData();
+            console.log("Setting game status to starting based on DB update");
+            
+            // First mark as "starting" to show loading UI
+            setGameStatus('starting');
+            
+            // Switch to playing after a short delay
+            setTimeout(() => {
+              console.log("Transitioning from starting to playing");
+              setGameStatus('playing');
+              toast.success("La partie a démarré !");
+              fetchRoomData();
+            }, 1000);
           }
         }
       )
