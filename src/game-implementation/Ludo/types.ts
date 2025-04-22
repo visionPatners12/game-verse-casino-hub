@@ -1,20 +1,24 @@
 
 export interface GameData {
   currentPlayerId: string | null;
-  allPlayers: Array<{
-    id: string;
-    display_name: string;
-    user_id: string;
-    ea_id?: string;
-    current_score: number;
-  }>;
-  gameParams: {
-    gameType: string;
-    betAmount: number;
-    maxPlayers: number;
-    currentPlayers: number;
-    roomId: string;
-    totalPot: number;
-    matchDuration?: number;
-  };
+  allPlayers: PlayerData[];
+  gameParams: GameParams;
+}
+
+export interface PlayerData {
+  id: string;
+  display_name: string;
+  user_id: string;
+  current_score: number;
+  ea_id: string;
+}
+
+export interface GameParams {
+  gameType: string;
+  betAmount: number;
+  maxPlayers: number;
+  currentPlayers: number;
+  roomId: string;
+  totalPot: number;
+  matchDuration?: number;
 }

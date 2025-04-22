@@ -4,6 +4,16 @@ import { Loader2 } from "lucide-react";
 import { GameData } from "@/game-implementation/Ludo/types";
 import { RoomData } from "../types";
 
+// Define interface for the window object with jQuery and game functions
+declare global {
+  interface Window {
+    $: any;
+    initGameCanvas?: (width: number, height: number) => void;
+    buildGameCanvas?: () => void;
+    removeGameCanvas?: () => void;
+  }
+}
+
 interface GameCanvasContentProps {
   roomData: RoomData;
   currentUserId: string | null;

@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Fullscreen } from "lucide-react";
 import { Button } from "@/components/ui/button";
