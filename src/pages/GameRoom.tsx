@@ -1,9 +1,10 @@
+
 import { Layout } from "@/components/Layout";
 import { GameRoomLayout } from "@/components/game/GameRoomLayout";
 import { useParams, useNavigate } from "react-router-dom";
 import { gameCodeToType, isValidGameType } from "@/lib/gameTypes";
 import { useRoomWebSocket } from "@/hooks/room/useRoomWebSocket";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFutId } from "@/hooks/useFutId";
 import { FutIdDialog } from "@/components/game/FutIdDialog";

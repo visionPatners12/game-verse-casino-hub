@@ -36,7 +36,10 @@ export function useFutId(userId: string | null | undefined) {
     // Upsert the FUT id (insert if not exists, update if exists)
     const { error } = await supabase
       .from('fut_players')
-      .upsert({ user_id: userId, fut_id: futId }, { onConflict: ['user_id'] });
+      .upsert({ 
+        user_id: userId, 
+        fut_id: futId 
+      }, { onConflict: 'user_id' });
     setIsLoading(false);
     if (!error) {
       setFutId(futId);
