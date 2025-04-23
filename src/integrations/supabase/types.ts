@@ -841,6 +841,7 @@ export type Database = {
       }
       users: {
         Row: {
+          active_room_id: string | null
           avatar_url: string | null
           country: string | null
           created_at: string | null
@@ -858,6 +859,7 @@ export type Database = {
           username: string
         }
         Insert: {
+          active_room_id?: string | null
           avatar_url?: string | null
           country?: string | null
           created_at?: string | null
@@ -875,6 +877,7 @@ export type Database = {
           username: string
         }
         Update: {
+          active_room_id?: string | null
           avatar_url?: string | null
           country?: string | null
           created_at?: string | null
@@ -892,6 +895,13 @@ export type Database = {
           username?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "users_active_room_id_fkey"
+            columns: ["active_room_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "users_equipped_avatar_id_fkey"
             columns: ["equipped_avatar_id"]
@@ -960,6 +970,10 @@ export type Database = {
         Returns: {
           new_balance: number
         }[]
+      }
+      has_active_room: {
+        Args: { p_user_id: string }
+        Returns: string
       }
       is_admin: {
         Args: Record<PropertyKey, never>
