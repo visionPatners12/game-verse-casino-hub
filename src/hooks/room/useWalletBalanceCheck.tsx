@@ -1,7 +1,7 @@
 
 import { useWallet } from "@/hooks/useWallet";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +20,20 @@ import {
 export function useWalletBalanceCheck() {
   const { wallet } = useWallet();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Effet pour nettoyer les styles lorsque le dialogue se ferme
+  useEffect(() => {
+    if (!isDialogOpen) {
+      // Réinitialiser les styles immédiatement et à nouveau après un délai
+      document.body.style.pointerEvents = "";
+      
+      const timeoutId = setTimeout(() => {
+        document.body.style.pointerEvents = "";
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isDialogOpen]);
 
   /**
    * Vérifie côté front uniquement si le wallet a assez de solde pour l'action.
@@ -44,14 +58,21 @@ export function useWalletBalanceCheck() {
     return true;
   };
 
+  // Fonction pour fermer le dialogue et réinitialiser les styles
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    document.body.style.pointerEvents = "";
+  };
+
   // Composant de dialogue pour fonds insuffisants
   const InsufficientFundsDialog = () => (
     <AlertDialog 
       open={isDialogOpen} 
       onOpenChange={(open) => {
         setIsDialogOpen(open);
-        // Force un timeout pour s'assurer que le modal est bien fermé avant de continuer
         if (!open) {
+          // Réinitialiser immédiatement et après un petit délai pour s'assurer que ça fonctionne
+          document.body.style.pointerEvents = "";
           setTimeout(() => {
             document.body.style.pointerEvents = "";
           }, 100);
@@ -66,13 +87,21 @@ export function useWalletBalanceCheck() {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => {
-            // Assure que les clics fonctionnent après la fermeture du dialogue
-            document.body.style.pointerEvents = "";
-          }}>Fermer</AlertDialogCancel>
-          <AlertDialogAction onClick={() => {
-            window.location.href = "/wallet";
-          }}>
+          <AlertDialogCancel 
+            onClick={() => {
+              // Réinitialiser les styles de pointer-events
+              handleCloseDialog();
+            }}
+          >
+            Fermer
+          </AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={() => {
+              // Réinitialiser les styles avant la navigation
+              handleCloseDialog();
+              window.location.href = "/wallet";
+            }}
+          >
             Recharger le compte
           </AlertDialogAction>
         </AlertDialogFooter>

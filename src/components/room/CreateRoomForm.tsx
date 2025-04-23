@@ -12,6 +12,7 @@ import { useCreateRoom } from "./hooks/useCreateRoom";
 import { Input } from "@/components/ui/input";
 import { Timer, Text } from "lucide-react";
 import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
+import { useState, useEffect } from "react";
 
 type CreateRoomFormProps = {
   username: string;

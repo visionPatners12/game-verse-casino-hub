@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useWallet } from "@/hooks/useWallet";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 interface JoinGameDialogProps {
   open: boolean;
@@ -42,6 +43,26 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
 
   const { wallet } = useWallet();
   const navigate = useNavigate();
+  
+  // Effet pour nettoyer les styles lorsque le dialogue se ferme
+  useEffect(() => {
+    if (!showInsufficientDialog) {
+      // Réinitialiser les styles
+      document.body.style.pointerEvents = "";
+      
+      const timeoutId = setTimeout(() => {
+        document.body.style.pointerEvents = "";
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [showInsufficientDialog]);
+
+  // Fonction pour fermer proprement le dialogue d'insuffisance de fonds
+  const handleCloseInsufficientDialog = () => {
+    setShowInsufficientDialog(false);
+    document.body.style.pointerEvents = "";
+  };
 
   // Récupération de la room pour check montant si nécessaire
   const getRoomEntryFee = async (code: string): Promise<number | null> => {
@@ -119,8 +140,9 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
         open={showInsufficientDialog} 
         onOpenChange={(open) => {
           setShowInsufficientDialog(open);
-          // Force un timeout pour s'assurer que le modal est bien fermé
           if (!open) {
+            // Réinitialiser immédiatement et après un délai
+            document.body.style.pointerEvents = "";
             setTimeout(() => {
               document.body.style.pointerEvents = "";
             }, 100);
@@ -136,15 +158,16 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              // Assure que les clics fonctionnent après la fermeture du dialogue
-              document.body.style.pointerEvents = "";
-            }}>
+            <AlertDialogCancel 
+              onClick={() => {
+                handleCloseInsufficientDialog();
+              }}
+            >
               Annuler
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                setShowInsufficientDialog(false);
+                handleCloseInsufficientDialog();
                 navigate("/wallet");
               }}
             >
