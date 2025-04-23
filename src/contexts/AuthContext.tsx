@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
@@ -38,23 +37,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const setupAuth = async () => {
       try {
-        // First, set up the auth state change listener before checking session
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event, newSession) => {
             console.log("Auth state change event:", event);
             
             if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-              // Just update state, don't redirect for token refreshes or initial loads
               setSession(newSession);
               setUser(newSession?.user ?? null);
               return;
             }
             
-            // For all other events, update state
             setSession(newSession);
             setUser(newSession?.user ?? null);
             
-            // Only navigate for explicit sign in/out events, not refreshes
             if (initialSessionChecked.current) {
               if (event === 'SIGNED_IN' && isAuthChangeFromExplicitAction.current) {
                 console.log("Explicit SIGNED_IN event - navigating to /games");
@@ -68,7 +63,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         );
         
-        // After setting up listener, check for existing session
         const { data: sessionData } = await supabase.auth.getSession();
         console.log("Initial session check:", sessionData.session ? "Session exists" : "No session");
         
@@ -86,6 +80,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     setupAuth();
   }, [navigate]);
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      const updateConnectionStatus = async () => {
+        try {
+          const { error } = await supabase
+            .from('users')
+            .update({ is_connected: true })
+            .eq('id', session.user.id);
+            
+          if (error) {
+            console.error('Error updating connection status:', error);
+          } else {
+            console.log(`User ${session.user.id} marked as connected`);
+          }
+        } catch (err) {
+          console.error('Error in updateConnectionStatus:', err);
+        }
+      };
+      
+      updateConnectionStatus();
+
+      const handleBeforeUnload = async () => {
+        try {
+          await supabase
+            .from('users')
+            .update({ is_connected: false })
+            .eq('id', session.user.id);
+        } catch (err) {
+          console.error('Error marking user as disconnected:', err);
+        }
+      };
+
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      
+      const connectionInterval = setInterval(updateConnectionStatus, 60000); // Every minute
+
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        clearInterval(connectionInterval);
+        handleBeforeUnload();
+      };
+    }
+  }, [session?.user?.id]);
 
   const signIn = async (email: string, password: string) => {
     try {
