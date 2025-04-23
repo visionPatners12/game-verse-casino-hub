@@ -35,13 +35,11 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
   });
 
   const { createRoom } = useCreateRoom(username, gameType);
-  const { checkAndDeductBalance, InsufficientFundsDialog } = useWalletBalanceCheck();
+  const { checkBalance, InsufficientFundsDialog } = useWalletBalanceCheck();
 
   const handleSubmit = async (values: CreateRoomFormData) => {
-    const canProceed = await checkAndDeductBalance(values.bet);
-    if (canProceed) {
-      createRoom(values);
-    }
+    // La vérification de solde et l'affichage du dialog sont gérés dans useCreateRoom
+    createRoom(values);
   };
 
   return (

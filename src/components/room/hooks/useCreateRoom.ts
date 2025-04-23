@@ -10,7 +10,7 @@ import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
 export function useCreateRoom(username: string, gameType: string | undefined) {
   const navigate = useNavigate();
   const { wallet } = useWallet();
-  const { checkAndDeductBalance } = useWalletBalanceCheck();
+  const { checkBalance } = useWalletBalanceCheck();
 
   const createRoom = async (values: CreateRoomFormData) => {
     try {
@@ -26,10 +26,10 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         return;
       }
 
-      // On vérifie et DÉDUIT le montant via la fonction
-      const canProceed = await checkAndDeductBalance(values.bet);
+      // On vérifie si l'utilisateur a assez de fonds
+      const canProceed = await checkBalance(values.bet);
       if (!canProceed) {
-        // toast handled in hook
+        // toast et dialogue gérés dans le hook
         return;
       }
 
