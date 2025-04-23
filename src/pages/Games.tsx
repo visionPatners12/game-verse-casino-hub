@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GamesList from "@/components/games/GamesList";
 import { useQuery } from "@tanstack/react-query";
@@ -8,33 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 import { JoinGameDialog } from "@/components/games/JoinGameDialog";
 import { Layout } from "@/components/Layout";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 
 const Games = () => {
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
-  const { session, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   
-  // Vérification de l'authentification
-  useEffect(() => {
-    if (!authLoading && !session) {
-      console.log("Utilisateur non authentifié, redirection vers /auth");
-      toast.error("Vous devez être connecté pour accéder à cette page");
-      navigate("/auth");
-    }
-  }, [authLoading, session, navigate]);
+  // Utiliser le hook useRequireAuth pour vérifier l'authentification
+  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
   
-  // Empêcher le rendu du composant si l'utilisateur n'est pas authentifié
-  if (authLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Chargement...</div>;
-  }
-
-  if (!session) {
-    return null; // Ne rien rendre pendant la redirection
-  }
-  
-  const { data: games, isLoading } = useQuery({
+  // Définir useQuery en dehors des conditions - toujours présent mais activé sous condition
+  const { data: games, isLoading: gamesLoading } = useQuery({
     queryKey: ['game-types'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -54,8 +38,22 @@ const Games = () => {
         },
         image: game.image_url || "https://images.unsplash.com/photo-1611996575749-79a3a250f948?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3"
       }));
-    }
+    },
+    // Désactiver la requête si l'utilisateur n'est pas authentifié
+    enabled: isAuthenticated
   });
+  
+  const isLoading = authLoading || gamesLoading;
+  
+  // Afficher un indicateur de chargement pendant la vérification d'authentification
+  if (authLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Chargement...</div>;
+  }
+
+  // Si l'utilisateur n'est pas authentifié, le hook useRequireAuth s'occupe de la redirection
+  if (!isAuthenticated) {
+    return null;
+  }
   
   return (
     <Layout>
