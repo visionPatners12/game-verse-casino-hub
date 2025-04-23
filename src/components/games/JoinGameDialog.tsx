@@ -79,3 +79,4 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
       </DialogContent>
     </Dialog>
   );
+}
