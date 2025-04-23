@@ -14,8 +14,8 @@ export const Layout = ({
   hideNavigation = false,
   hideFooter = false,
 }: LayoutProps) => {
-  // Appliquer le hook de garde de room active sur chaque layout
-  // Cela assurera que toutes les pages utilisant le Layout seront protégées
+  // Apply the active room guard to every layout
+  // This ensures all pages using the Layout will be protected
   useActiveRoomGuard();
 
   return (

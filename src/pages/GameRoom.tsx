@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout";
 import { GameRoomLayout } from "@/components/game/GameRoomLayout";
 import { useParams, useNavigate } from "react-router-dom";
@@ -40,8 +41,8 @@ const GameRoom = () => {
   
   useEffect(() => {
     if (!authLoading && !session) {
-      console.log("Utilisateur non authentifié, redirection vers /auth");
-      toast.error("Vous devez être connecté pour accéder à cette page");
+      console.log("User not authenticated, redirecting to /auth");
+      toast.error("You must be logged in to access this page");
       navigate("/auth");
     }
   }, [authLoading, session, navigate]);
@@ -86,11 +87,11 @@ const GameRoom = () => {
   }, [roomId, fetchRoomData, loading]);
 
   if (authLoading || loading) {
-    return <div className="flex items-center justify-center min-h-screen">Chargement...</div>;
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
   if (!session) {
-    return <Layout><div className="flex items-center justify-center min-h-screen">Redirection vers la page d'authentification...</div></Layout>;
+    return <Layout><div className="flex items-center justify-center min-h-screen">Redirecting to authentication page...</div></Layout>;
   }
 
   return (

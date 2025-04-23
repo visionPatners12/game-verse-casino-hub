@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,7 +16,7 @@ export const useActiveRoomGuard = () => {
       // Early check if not logged in
       if (!user?.id) return;
 
-      console.log("Vérification d'une room active pour l'utilisateur", user.id);
+      console.log("Checking for active room for user", user.id);
 
       // Always fetch from server to get up-to-date active room state
       const { data, error } = await supabase
@@ -25,25 +26,25 @@ export const useActiveRoomGuard = () => {
         .maybeSingle();
 
       if (error) {
-        console.warn("Failed to get active_room_id:", error);
+        console.error("Failed to get active_room_id:", error);
         return;
       }
 
       const activeRoomId = data?.active_room_id;
-      console.log("Active room ID trouvé:", activeRoomId);
+      console.log("Active room ID found:", activeRoomId);
 
       // If user has no active room, allow navigation everywhere
       if (!activeRoomId) return;
 
       // If user is already in the active room route, allow it
       if (location.pathname.includes(`/room/${activeRoomId}`)) {
-        console.log("L'utilisateur est déjà dans sa room active, navigation autorisée");
+        console.log("User is already in their active room, navigation allowed");
         return;
       }
       
       // Allow navigation to the games page if the user is trying to leave
       if (location.pathname === '/games' || location.pathname.startsWith('/games/')) {
-        console.log("Navigation vers la page des jeux autorisée pour quitter la room");
+        console.log("Navigation to games page allowed to leave room");
         // We won't clear the active room when going to games page - let the Leave Room button handle this
         // Otherwise users could bypass the leave room confirmation by just navigating away
         return;
@@ -51,14 +52,14 @@ export const useActiveRoomGuard = () => {
       
       // If user is on the forfeit page, allow the navigation
       if (location.pathname.includes('/forfeit')) {
-        console.log("Page de forfait, navigation autorisée");
+        console.log("Forfeit page, navigation allowed");
         return;
       }
 
       // If user is not on their active room, block and redirect
       toast({
-        title: "Partie en cours",
-        description: "Vous devez quitter la partie en utilisant le bouton 'Quitter' pour pouvoir naviguer ailleurs.",
+        title: "Active Game",
+        description: "You must leave the current game using the 'Leave' button before navigating elsewhere.",
         variant: "destructive",
       });
 
@@ -70,7 +71,7 @@ export const useActiveRoomGuard = () => {
         .maybeSingle();
 
       const gameType = session?.game_type?.toLowerCase() || 'unknown';
-      console.log("Redirection vers la room active:", gameType, activeRoomId);
+      console.log("Redirecting to active room:", gameType, activeRoomId);
 
       // Redirect to the correct room route
       navigate(`/games/${gameType}/room/${activeRoomId}`);
