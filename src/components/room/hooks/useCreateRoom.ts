@@ -44,6 +44,9 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         insertData["ea_id"] = values.eaId;
       }
 
+      console.log("Creating room with data:", insertData);
+
+      // STEP 1: Create the game session first
       const { data, error } = await supabase
         .from('game_sessions')
         .insert(insertData)
@@ -59,6 +62,8 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         toast.error("Failed to create room");
         return;
       }
+
+      console.log("Room created:", data);
 
       // Get the username from the users table to ensure it's not null
       const { data: userData, error: userError } = await supabase
@@ -77,7 +82,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         return;
       }
 
-      // Ajout du joueur à la room avec son EA-ID pour FUT Arena
+      // STEP 2: Add player to the room
       const playerInsert: any = {
         session_id: data.id,
         display_name: userData.username,
@@ -89,6 +94,8 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         playerInsert.ea_id = values.eaId;
       }
 
+      console.log("Adding player to room:", playerInsert);
+
       const { error: playerError } = await supabase
         .from('game_players')
         .insert(playerInsert);
@@ -98,16 +105,8 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         throw playerError;
       }
 
-      // Explicitly update the user's active_room_id
-      const { error: userUpdateError } = await supabase
-        .from('users')
-        .update({ active_room_id: data.id })
-        .eq('id', authData.user.id);
-        
-      if (userUpdateError) {
-        console.error("Erreur lors de la mise à jour de l'active_room_id:", userUpdateError);
-        throw userUpdateError;
-      }
+      // We don't need to explicitly update active_room_id anymore
+      // The database trigger will handle this automatically when we insert into game_players
 
       toast.success("Room created successfully!");
       navigate(`/games/${gameType}/room/${data.id}`);

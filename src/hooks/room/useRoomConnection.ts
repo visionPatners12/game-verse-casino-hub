@@ -119,7 +119,9 @@ export function useRoomConnection(roomId: string | undefined) {
     setHasAttemptedReconnect(true);
   };
   
-  checkStoredConnection();
+  useEffect(() => {
+    checkStoredConnection();
+  }, [roomId, hasAttemptedReconnect, user]);
 
   useEffect(() => {
     // Setup beforeunload handler to save room data
