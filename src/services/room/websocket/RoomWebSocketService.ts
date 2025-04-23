@@ -37,9 +37,6 @@ export class RoomWebSocketService extends WebSocketBase {
     // Mark player as connected in the database with comprehensive error handling
     if (roomId && userId) {
       this.connectWithRetry(roomId, userId);
-      
-      // Explicitly update the user's active_room_id in the database
-      this.updateActiveRoomId(roomId, userId);
     }
     
     return roomChannel;
