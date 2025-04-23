@@ -11,9 +11,13 @@ import { gameCodeToType } from "@/lib/gameTypes";
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { useWallet } from "@/hooks/useWallet"; // Import useWallet
+import { useWallet } from "@/hooks/useWallet";
+import { useActiveRoomGuard } from "@/hooks/useActiveRoomGuard"; // Ajout du hook
 
 const PublicRooms = () => {
+  // Ajouter le hook de garde pour les rooms actives
+  useActiveRoomGuard();
+  
   const { gameType } = useParams<{ gameType: string }>();
   const navigate = useNavigate();
   const { session, isLoading: authLoading } = useAuth();

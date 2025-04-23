@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useItemPurchase } from "@/hooks/useItemPurchase";
@@ -6,8 +7,12 @@ import { useStoreData } from "@/hooks/store/useStoreData";
 import { StoreHeader } from "@/components/store/StoreHeader";
 import { StoreItems } from "@/components/store/StoreItems";
 import { Layout } from "@/components/Layout";
+import { useActiveRoomGuard } from "@/hooks/useActiveRoomGuard"; // Ajout du hook
 
 const Store = () => {
+  // Ajouter le hook de garde pour les rooms actives
+  useActiveRoomGuard();
+  
   const { toast } = useToast();
   const { purchaseItem, isPurchasing } = useItemPurchase();
   const { equipAvatar, isEquipping } = useEquipItem();
