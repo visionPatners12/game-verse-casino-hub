@@ -4,14 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { isValidGameType } from "@/lib/gameTypes";
-import { useWallet } from "@/hooks/useWallet";
+import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
 
 export function useJoinRoom() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { wallet } = useWallet();
+  const { hasSufficientBalance } = useWalletBalanceCheck();
 
-  const joinRoom = async (roomCode: string) => {
+  const joinRoom = async (roomCode: string, onOpenChange?: (open: boolean) => void) => {
     if (roomCode.length !== 6) {
       toast.error("Code de salon invalide. Veuillez entrer un code à 6 caractères.");
       return;
@@ -53,10 +53,15 @@ export function useJoinRoom() {
         return;
       }
       
-      // Vérifier le solde du portefeuille directement
-      if (room.entry_fee > 0 && (!wallet || wallet.real_balance < room.entry_fee)) {
-        toast.error("Fonds insuffisants pour rejoindre ce salon");
-        return;
+      // Check wallet balance if entry fee is required
+      if (room.entry_fee > 0) {
+        if (!hasSufficientBalance(room.entry_fee)) {
+          // Close dialog if provided
+          if (onOpenChange) {
+            onOpenChange(false);
+          }
+          return;
+        }
       }
       
       // Check if user profile is complete
@@ -164,6 +169,11 @@ export function useJoinRoom() {
       if (!isValidGameType(gameType)) {
         toast.error("Type de jeu invalide. Veuillez contacter le support.");
         return;
+      }
+      
+      // Close dialog if provided
+      if (onOpenChange) {
+        onOpenChange(false);
       }
       
       // Navigate to game room

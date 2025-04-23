@@ -11,13 +11,11 @@ import { gameCodeToType } from "@/lib/gameTypes";
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
 
 const PublicRooms = () => {
   const { gameType } = useParams();
   const navigate = useNavigate();
   const { session, isLoading: authLoading } = useAuth();
-  const { InsufficientFundsDialog } = useWalletBalanceCheck();
   
   // Vérification de l'authentification
   useEffect(() => {
@@ -120,11 +118,8 @@ const PublicRooms = () => {
           ))}
         </div>
       )}
-      
-      {/* Afficher la boîte de dialogue pour solde insuffisant */}
-      <InsufficientFundsDialog />
     </Layout>
   );
-};
+}
 
 export default PublicRooms;

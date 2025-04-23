@@ -25,42 +25,11 @@ interface JoinGameDialogProps {
 export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
   const [roomCode, setRoomCode] = useState("");
   const { joinRoom, isLoading } = useJoinRoom();
-  const { wallet } = useWallet();
   const navigate = useNavigate();
-
-  // Récupération de la room pour check montant si nécessaire
-  const getRoomEntryFee = async (code: string): Promise<number | null> => {
-    const { supabase } = await import("@/integrations/supabase/client");
-    const { data: room } = await supabase
-      .from("game_sessions")
-      .select("entry_fee")
-      .eq("room_id", code)
-      .maybeSingle();
-    return room?.entry_fee ?? null;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Chercher entry_fee de la room
-    const entryFee = await getRoomEntryFee(roomCode.toUpperCase());
-    if (entryFee == null) {
-      // La validation de joinRoom s'occupera de l'erreur room introuvable
-      await joinRoom(roomCode);
-      return;
-    }
-    
-    // Vérifie le solde directement
-    if (!wallet || wallet.real_balance < entryFee) {
-      toast.error("Solde insuffisant", {
-        description: "Vous n'avez pas assez d'argent dans votre portefeuille pour rejoindre cette partie."
-      });
-      onOpenChange(false); // Fermer la boîte de dialogue
-      return;
-    }
-    
-    // Si on a assez d'argent, on rejoint la room
-    await joinRoom(roomCode);
+    await joinRoom(roomCode, onOpenChange);
   };
 
   return (

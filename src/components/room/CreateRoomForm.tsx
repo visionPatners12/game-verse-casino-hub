@@ -11,8 +11,7 @@ import { GridSizeField } from "./components/GridSizeField";
 import { useCreateRoom } from "./hooks/useCreateRoom";
 import { Input } from "@/components/ui/input";
 import { Timer, Text } from "lucide-react";
-import { useWallet } from "@/hooks/useWallet";
-import { toast } from "sonner";
+import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
 
 type CreateRoomFormProps = {
   username: string;
@@ -36,14 +35,11 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
   });
 
   const { createRoom } = useCreateRoom(username, gameType);
-  const { wallet } = useWallet();
+  const { hasSufficientBalance } = useWalletBalanceCheck();
 
   const handleSubmit = async (values: CreateRoomFormData) => {
-    // Vérifier le solde directement
-    if (values.bet > 0 && (!wallet || wallet.real_balance < values.bet)) {
-      toast.error("Solde insuffisant", {
-        description: "Vous n'avez pas assez d'argent dans votre portefeuille pour créer cette partie."
-      });
+    // Vérifier le solde si un pari est défini
+    if (values.bet > 0 && !hasSufficientBalance(values.bet)) {
       return;
     }
     

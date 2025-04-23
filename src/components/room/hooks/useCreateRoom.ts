@@ -5,12 +5,9 @@ import { GameCode, isValidGameType, gameCodeToType, GameVariant } from "@/lib/ga
 import { CreateRoomFormData } from "../schemas/createRoomSchema";
 import { toast } from "sonner";
 import { useWallet } from "@/hooks/useWallet";
-import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
 
 export function useCreateRoom(username: string, gameType: string | undefined) {
   const navigate = useNavigate();
-  const { wallet } = useWallet();
-  const { checkBalance } = useWalletBalanceCheck();
 
   const createRoom = async (values: CreateRoomFormData) => {
     try {
@@ -23,15 +20,6 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
 
       if (!isValidGameType(gameType)) {
         toast.error("Invalid game type");
-        return;
-      }
-
-      // On vérifie si l'utilisateur a assez de fonds
-      const canProceed = await checkBalance(values.bet);
-      if (!canProceed) {
-        // On affiche simplement une notification supplémentaire pour être plus clair
-        console.log("Fonds insuffisants pour créer cette salle");
-        toast.error("Fonds insuffisants pour créer cette salle");
         return;
       }
 
