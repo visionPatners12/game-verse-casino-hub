@@ -105,8 +105,21 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         throw playerError;
       }
 
-      // We don't need to explicitly update active_room_id anymore
-      // The database trigger will handle this automatically when we insert into game_players
+      // STEP 3: Explicitly update active_room_id to ensure it's set correctly
+      // This provides a redundant mechanism in case the trigger fails
+      console.log(`Setting active_room_id=${data.id} for user ${authData.user.id} explicitly`);
+      const { error: userUpdateError } = await supabase
+        .from('users')
+        .update({ active_room_id: data.id })
+        .eq('id', authData.user.id);
+        
+      if (userUpdateError) {
+        console.error("Error updating active_room_id:", userUpdateError);
+        // Continue despite the error since the trigger may have worked
+        // but log it for monitoring purposes
+      } else {
+        console.log(`Successfully set active_room_id=${data.id} for user ${authData.user.id}`);
+      }
 
       toast.success("Room created successfully!");
       navigate(`/games/${gameType}/room/${data.id}`);

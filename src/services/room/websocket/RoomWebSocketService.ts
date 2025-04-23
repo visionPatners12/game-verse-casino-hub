@@ -41,6 +41,7 @@ export class RoomWebSocketService extends WebSocketBase {
       
       // Explicitly update the user's active_room_id in the database
       try {
+        console.log(`Setting active_room_id=${roomId} for user ${userId} in connectToRoom`);
         supabase
           .from('users')
           .update({ active_room_id: roomId })
