@@ -5,6 +5,7 @@ import { LogOut, Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NavItem } from "./types";
+import { toast } from "sonner";
 
 interface NavigationMobileProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ interface NavigationMobileProps {
     };
   };
   onLogout: () => void;
+  disableNavigation?: boolean;
 }
 
 export const NavigationMobile = ({
@@ -29,7 +31,18 @@ export const NavigationMobile = ({
   isActivePath,
   user,
   onLogout,
+  disableNavigation = false,
 }: NavigationMobileProps) => {
+  const handleDisabledClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (disableNavigation) {
+      e.preventDefault();
+      toast.error("Vous devez d'abord quitter la salle de jeu", {
+        description: "Terminez votre partie avant de naviguer ailleurs."
+      });
+      setIsOpen(false);
+    }
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
@@ -70,9 +83,14 @@ export const NavigationMobile = ({
                     className={`flex items-center gap-3 px-2 py-2 rounded-md transition-colors ${
                       isActivePath(item.href)
                         ? "bg-primary/10 text-primary font-medium"
-                        : "hover:bg-primary/10"
+                        : disableNavigation
+                          ? "text-foreground/40 pointer-events-none"
+                          : "hover:bg-primary/10"
                     }`}
-                    onClick={() => setIsOpen(false)}
+                    onClick={(e) => {
+                      handleDisabledClick(e);
+                      if (!disableNavigation) setIsOpen(false);
+                    }}
                   >
                     {item.icon}
                     {item.label}

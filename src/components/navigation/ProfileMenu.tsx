@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut, User, Package2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useIsInGameRoom } from "@/hooks/room/useIsInGameRoom";
+import { toast } from "sonner";
 
 interface ProfileMenuProps {
   user: {
@@ -21,6 +23,17 @@ interface ProfileMenuProps {
 }
 
 export const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
+  const isInGameRoom = useIsInGameRoom();
+
+  const handleDisabledClick = (e: React.MouseEvent) => {
+    if (isInGameRoom) {
+      e.preventDefault();
+      toast.error("Vous devez d'abord quitter la salle de jeu", {
+        description: "Terminez votre partie avant de naviguer ailleurs."
+      });
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -39,17 +52,39 @@ export const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
           <span>{user.name}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <Link to="/profile">
-          <DropdownMenuItem className="cursor-pointer">
-            Profile Settings
-          </DropdownMenuItem>
-        </Link>
-        <Link to="/my-items">
-          <DropdownMenuItem className="cursor-pointer">
-            <Package2 className="h-4 w-4 mr-2" />
-            <span>My Items</span>
-          </DropdownMenuItem>
-        </Link>
+        
+        {isInGameRoom ? (
+          <>
+            <DropdownMenuItem 
+              className="cursor-not-allowed opacity-50"
+              onClick={handleDisabledClick}
+            >
+              Profile Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="cursor-not-allowed opacity-50"
+              onClick={handleDisabledClick}
+            >
+              <Package2 className="h-4 w-4 mr-2" />
+              <span>My Items</span>
+            </DropdownMenuItem>
+          </>
+        ) : (
+          <>
+            <Link to="/profile">
+              <DropdownMenuItem className="cursor-pointer">
+                Profile Settings
+              </DropdownMenuItem>
+            </Link>
+            <Link to="/my-items">
+              <DropdownMenuItem className="cursor-pointer">
+                <Package2 className="h-4 w-4 mr-2" />
+                <span>My Items</span>
+              </DropdownMenuItem>
+            </Link>
+          </>
+        )}
+        
         <DropdownMenuItem 
           className="text-destructive cursor-pointer" 
           onClick={onLogout}

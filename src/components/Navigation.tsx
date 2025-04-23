@@ -11,7 +11,11 @@ import { useWallet } from "@/hooks/useWallet";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-const Navigation = () => {
+interface NavigationProps {
+  disableNavigation?: boolean;
+}
+
+const Navigation = ({ disableNavigation = false }: NavigationProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
   const location = useLocation();
@@ -80,7 +84,7 @@ const Navigation = () => {
           <span className="text-xl font-bold">Casino</span>
         </Link>
         
-        <NavigationDesktop navItems={navItems} isActivePath={isActivePath} />
+        <NavigationDesktop navItems={navItems} isActivePath={isActivePath} disableNavigation={disableNavigation} />
         
         <div className="flex items-center gap-4">
           <div className="hidden sm:flex items-center gap-2">
@@ -102,6 +106,7 @@ const Navigation = () => {
             isActivePath={isActivePath}
             user={user}
             onLogout={handleLogout}
+            disableNavigation={disableNavigation}
           />
           
           <ProfileMenu user={user} onLogout={handleLogout} />
