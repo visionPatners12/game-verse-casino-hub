@@ -34,10 +34,7 @@ export const useActiveRoomGuard = () => {
       console.log("Active room ID trouvé:", activeRoomId);
 
       // If user has no active room, allow navigation everywhere
-      if (!activeRoomId) {
-        console.log("Aucune room active, navigation autorisée partout");
-        return;
-      }
+      if (!activeRoomId) return;
 
       // If user is already in the active room route, allow it
       if (location.pathname.includes(`/room/${activeRoomId}`)) {
@@ -45,13 +42,9 @@ export const useActiveRoomGuard = () => {
         return;
       }
       
-      // Si l'utilisateur est sur la page forfeit, jeu, ou quitter, permettre la navigation
-      if (
-        location.pathname.includes('/games') && (
-        location.pathname.includes('/forfeit') || 
-        location.pathname === '/games')
-      ) {
-        console.log("Navigation vers page spéciale autorisée:", location.pathname);
+      // Si l'utilisateur est sur la page forfeit ou quitter, permettre la navigation
+      if (location.pathname.includes('/games') && location.pathname.includes('/forfeit')) {
+        console.log("Page de forfait, navigation autorisée");
         return;
       }
 

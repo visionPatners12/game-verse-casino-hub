@@ -1,3 +1,4 @@
+
 import { RoomChannelsManager } from "./channels/RoomChannelsManager";
 import { RoomPresenceManager } from "./presence/RoomPresenceManager";
 import { WebSocketBase } from "./WebSocketBase";
@@ -49,8 +50,8 @@ export class RoomWebSocketService extends WebSocketBase {
     
     console.log(`Disconnecting from room ${roomId} for user ${userId}`);
     
-    // Clear active room storage first - importante étape de nettoyage
-    this.connectionStorage.clear();
+    // Clear active room storage first
+    this.connectionStorage.save("", "", "");
     
     try {
       // Mark player as disconnected in the database
@@ -59,22 +60,6 @@ export class RoomWebSocketService extends WebSocketBase {
       
       // Clean up channel and presence data
       await this.cleanupChannel(roomId);
-      
-      // Mise à jour supplémentaire pour s'assurer que active_room_id est null
-      try {
-        const { error } = await supabase
-          .from('users')
-          .update({ active_room_id: null })
-          .eq('id', userId);
-        
-        if (error) {
-          console.error(`Error updating active_room_id for user ${userId}:`, error);
-        } else {
-          console.log(`Successfully cleared active_room_id for user ${userId}`);
-        }
-      } catch (e) {
-        console.error(`Error in additional active_room_id update:`, e);
-      }
       
       console.log(`Successfully disconnected from room ${roomId}`);
     } catch (error) {
