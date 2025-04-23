@@ -98,6 +98,20 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         throw playerError;
       }
 
+      // Explicitly update the user's active_room_id - for redundancy with the trigger
+      console.log(`Setting active_room_id=${data.id} for user ${authData.user.id} explicitly`);
+      const { error: userUpdateError } = await supabase
+        .from('users')
+        .update({ active_room_id: data.id })
+        .eq('id', authData.user.id);
+        
+      if (userUpdateError) {
+        console.error("Error updating active_room_id:", userUpdateError);
+        // Continue even if this fails since the trigger should handle it
+      } else {
+        console.log(`Successfully updated active_room_id to ${data.id} for user ${authData.user.id}`);
+      }
+
       toast.success("Room created successfully!");
       navigate(`/games/${gameType}/room/${data.id}`);
     } catch (error: any) {
@@ -108,3 +122,4 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
 
   return { createRoom };
 }
+

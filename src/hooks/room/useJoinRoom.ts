@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +19,6 @@ export function useJoinRoom() {
     try {
       setIsLoading(true);
       
-      // Check if user is authenticated
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -29,7 +27,6 @@ export function useJoinRoom() {
         return;
       }
       
-      // Find the room first to check entry fee
       const { data: room, error: roomError } = await supabase
         .from('game_sessions')
         .select('*')
@@ -47,16 +44,13 @@ export function useJoinRoom() {
 
       console.log("Salon trouvé:", room);
 
-      // Check if room is full
       if (room.current_players >= room.max_players) {
         toast.error("Ce salon est complet. Veuillez essayer un autre salon.");
         return;
       }
       
-      // Check wallet balance if entry fee is required
       if (room.entry_fee > 0) {
         if (!hasSufficientBalance(room.entry_fee)) {
-          // Close dialog if provided
           if (onOpenChange) {
             onOpenChange(false);
           }
@@ -64,7 +58,6 @@ export function useJoinRoom() {
         }
       }
       
-      // Check if user profile is complete
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('username')
@@ -82,7 +75,6 @@ export function useJoinRoom() {
         return;
       }
       
-      // Pour FutArena, récupérer le FUT ID du joueur
       let futId = null;
       if (room.game_type?.toLowerCase() === 'futarena') {
         const { data: futPlayer } = await supabase
@@ -100,7 +92,6 @@ export function useJoinRoom() {
         }
       }
       
-      // Check if player is already in the room
       const { data: existingPlayer, error: playerCheckError } = await supabase
         .from('game_players')
         .select('id, is_connected')
@@ -114,10 +105,8 @@ export function useJoinRoom() {
       
       if (existingPlayer) {
         console.log("Le joueur existe déjà dans la salle, mise à jour du statut de connexion et du FUT ID si nécessaire");
-        // Player already exists, update connection status and potentially FUT ID
         const updateData: any = { is_connected: true };
         
-        // Pour FutArena, mettre à jour le ea_id si on a un futId
         if (room.game_type?.toLowerCase() === 'futarena' && futId) {
           updateData.ea_id = futId;
         }
@@ -132,7 +121,6 @@ export function useJoinRoom() {
           throw updateError;
         }
 
-        // Explicitly update the user's active_room_id - for redundancy with the trigger
         console.log(`Setting active_room_id=${room.id} for user ${user.id} explicitly`);
         const { error: userUpdateError } = await supabase
           .from('users')
@@ -141,13 +129,11 @@ export function useJoinRoom() {
           
         if (userUpdateError) {
           console.error("Erreur lors de la mise à jour de l'active_room_id:", userUpdateError);
-          // Continue even if this fails since the trigger should handle it
         } else {
           console.log(`Successfully updated active_room_id to ${room.id} for user ${user.id}`);
         }
       } else {
         console.log("Ajout d'un nouveau joueur à la salle:", room.id);
-        // Add player to the room
         const newPlayerData: any = {
           session_id: room.id,
           display_name: userData.username,
@@ -156,7 +142,6 @@ export function useJoinRoom() {
           is_ready: false
         };
         
-        // Pour FutArena, ajouter le ea_id si on a un futId
         if (room.game_type?.toLowerCase() === 'futarena' && futId) {
           newPlayerData.ea_id = futId;
         }
@@ -172,7 +157,6 @@ export function useJoinRoom() {
           throw joinError;
         }
 
-        // Explicitly update the user's active_room_id - for redundancy with the trigger
         console.log(`Setting active_room_id=${room.id} for user ${user.id} explicitly`);
         const { error: userUpdateError } = await supabase
           .from('users')
@@ -181,7 +165,6 @@ export function useJoinRoom() {
           
         if (userUpdateError) {
           console.error("Erreur lors de la mise à jour de l'active_room_id:", userUpdateError);
-          // Continue even if this fails since the trigger should handle it
         } else {
           console.log(`Successfully updated active_room_id to ${room.id} for user ${user.id}`);
         }
@@ -189,7 +172,6 @@ export function useJoinRoom() {
         console.log("Joueur ajouté avec succès à la salle:", newPlayer);
       }
       
-      // Find game type for navigation
       const gameType = typeof room.game_type === 'string' 
         ? room.game_type.toLowerCase() 
         : String(room.game_type).toLowerCase();
@@ -199,12 +181,10 @@ export function useJoinRoom() {
         return;
       }
       
-      // Close dialog if provided
       if (onOpenChange) {
         onOpenChange(false);
       }
       
-      // Navigate to game room
       console.log(`Navigation vers /games/${gameType}/room/${room.id}`);
       navigate(`/games/${gameType}/room/${room.id}`);
       toast.success("Vous avez rejoint le salon avec succès !");
