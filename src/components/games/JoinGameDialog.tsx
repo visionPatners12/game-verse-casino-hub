@@ -16,7 +16,7 @@ import { useJoinRoom } from "@/hooks/room/useJoinRoom";
 import { JoinRoomConfirmDialog } from "./JoinRoomConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { GameType } from "@/lib/gameTypes";
+import { GameType } from "@/components/GameCard";
 
 interface JoinGameDialogProps {
   open: boolean;
@@ -67,7 +67,7 @@ export function JoinGameDialog({ open, onOpenChange, slim = false }: JoinGameDia
         entry_fee: room.entry_fee,
         max_players: room.max_players,
         current_players: room.current_players,
-        winner_count: room.winner_count,
+        winner_count: room.winner_count || 1, // Add default value if not present
         commission_rate: room.commission_rate
       });
       

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, Lock, Unlock, DollarSign, PlayCircle, Trophy } from "lucide-react";
@@ -37,6 +38,9 @@ const RoomCard = ({
   const { joinRoom } = useJoinRoom();
   
   const roomCode = id.substring(0, 6).toUpperCase().padEnd(6, 'A1B2C3').substring(0, 6);
+  
+  // Calculate total pot with commission taken into account
+  const totalPot = bet * currentPlayers * (1 - (commissionRate / 100));
   
   const handleJoinConfirm = async () => {
     setIsJoining(true);
