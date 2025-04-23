@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { useRoomWebSocket } from "@/hooks/room/useRoomWebSocket";
 import { gameCodeToType, isValidGameType } from "@/lib/gameTypes";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
 
 export const useGameRoom = () => {
   // Vérification de l'authentification avant d'accéder aux données de jeu
@@ -17,6 +18,9 @@ export const useGameRoom = () => {
     gameStatus,
     fetchRoomData
   } = useRoomWebSocket(roomId);
+
+  // Ajout du hook pour la vérification du solde
+  const { InsufficientFundsDialog } = useWalletBalanceCheck();
   
   // Safely get the game name from the type
   const gameName = gameType && isValidGameType(gameType)
@@ -30,6 +34,7 @@ export const useGameRoom = () => {
     gameType,
     gameName,
     gameStatus,
-    fetchRoomData
+    fetchRoomData,
+    InsufficientFundsDialog
   };
 };

@@ -1,18 +1,29 @@
+
 import { Layout } from "@/components/Layout";
 import { GameRoomLayout } from "@/components/game/GameRoomLayout";
 import { useParams, useNavigate } from "react-router-dom";
-import { gameCodeToType, isValidGameType } from "@/lib/gameTypes";
 import { useRoomWebSocket } from "@/hooks/room/useRoomWebSocket";
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFutId } from "@/hooks/useFutId";
 import { FutIdDialog } from "@/components/game/FutIdDialog";
 import { toast } from "sonner";
+import { useGameRoom } from "@/hooks/useGameRoom";
 
 const GameRoom = () => {
-  const { roomId, gameType } = useParams<{ roomId: string; gameType: string }>();
   const navigate = useNavigate();
   const { session, isLoading: authLoading } = useAuth();
+
+  // Utiliser le hook useGameRoom pour la logique des salles de jeu
+  const { 
+    loading, 
+    roomData, 
+    currentUserId, 
+    gameName, 
+    gameStatus, 
+    fetchRoomData,
+    InsufficientFundsDialog 
+  } = useGameRoom();
 
   // Vérification renforcée de l'authentification
   useEffect(() => {
@@ -24,7 +35,7 @@ const GameRoom = () => {
   }, [authLoading, session, navigate]);
 
   // Empêcher le rendu du composant si l'utilisateur n'est pas authentifié
-  if (authLoading) {
+  if (authLoading || loading) {
     return <div className="flex items-center justify-center min-h-screen">Chargement...</div>;
   }
 
@@ -32,16 +43,13 @@ const GameRoom = () => {
     return null; // Ne rien rendre pendant la redirection
   }
 
+  // Récupérer les données de WebSocket pour la room
+  const { roomId } = useParams<{ roomId: string }>();
   const {
-    roomData,
-    isLoading,
-    currentUserId,
     isReady,
-    gameStatus,
     toggleReady,
     startGame,
     forfeitGame,
-    fetchRoomData,
     players
   } = useRoomWebSocket(roomId);
 
@@ -97,7 +105,7 @@ const GameRoom = () => {
 
   // Forcer un refresh des données de room au montage et sur changement important
   useEffect(() => {
-    if (roomId && !isLoading) {
+    if (roomId && !loading) {
       fetchRoomData();
       
       // Créer un intervalle de rafraîchissement plus fréquent pour les données importantes
@@ -107,7 +115,7 @@ const GameRoom = () => {
       
       return () => clearInterval(refreshInterval);
     }
-  }, [roomId, fetchRoomData, isLoading]);
+  }, [roomId, fetchRoomData, loading]);
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -115,18 +123,10 @@ const GameRoom = () => {
     }
   }, [authLoading, session, navigate]);
 
-  if (authLoading || isLoading) {
-    return null;
-  }
-
-  const gameName = gameType && isValidGameType(gameType)
-    ? gameCodeToType[gameType]
-    : (gameType ? gameType.charAt(0).toUpperCase() + gameType.slice(1) : "Unknown Game");
-
   return (
     <Layout>
       <GameRoomLayout
-        loading={isLoading}
+        loading={loading}
         roomData={roomData}
         currentUserId={currentUserId}
         gameName={gameName}
@@ -145,6 +145,8 @@ const GameRoom = () => {
           isLoading={futIdLoading}
         />
       )}
+      {/* Afficher la boîte de dialogue pour solde insuffisant */}
+      <InsufficientFundsDialog />
     </Layout>
   );
 };
