@@ -1,129 +1,19 @@
-import { createContext, useContext, useEffect, useState, useRef } from "react";
-import { Session, User } from "@supabase/supabase-js";
-import { useNavigate } from "react-router-dom";
+
+import { createContext, useContext } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-type AuthContextType = {
-  session: Session | null;
-  user: User | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (data: SignUpData) => Promise<void>;
-  signOut: () => Promise<void>;
-  isLoading: boolean;
-};
-
-type SignUpData = {
-  email: string;
-  password: string;
-  username: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  country: string;
-};
+import { AuthContextType, SignUpData } from "./auth/types";
+import { useAuthStatus } from "./auth/useAuthStatus";
+import { useAuthConnectionStatus } from "./auth/useAuthConnectionStatus";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
   const { toast } = useToast();
-  const initialSessionChecked = useRef(false);
-  const isAuthChangeFromExplicitAction = useRef(false);
-
-  useEffect(() => {
-    const setupAuth = async () => {
-      try {
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, newSession) => {
-            console.log("Auth state change event:", event);
-            
-            if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-              setSession(newSession);
-              setUser(newSession?.user ?? null);
-              return;
-            }
-            
-            setSession(newSession);
-            setUser(newSession?.user ?? null);
-            
-            if (initialSessionChecked.current) {
-              if (event === 'SIGNED_IN' && isAuthChangeFromExplicitAction.current) {
-                console.log("Explicit SIGNED_IN event - navigating to /games");
-                navigate('/games');
-                isAuthChangeFromExplicitAction.current = false;
-              } else if (event === 'SIGNED_OUT') {
-                console.log("SIGNED_OUT event - navigating to /auth");
-                navigate('/auth');
-              }
-            }
-          }
-        );
-        
-        const { data: sessionData } = await supabase.auth.getSession();
-        console.log("Initial session check:", sessionData.session ? "Session exists" : "No session");
-        
-        setSession(sessionData.session);
-        setUser(sessionData.session?.user ?? null);
-        initialSessionChecked.current = true;
-        setIsLoading(false);
-        
-        return () => subscription.unsubscribe();
-      } catch (error) {
-        console.error("Error setting up auth:", error);
-        setIsLoading(false);
-      }
-    };
-    
-    setupAuth();
-  }, [navigate]);
-
-  useEffect(() => {
-    if (session?.user?.id) {
-      const updateConnectionStatus = async () => {
-        try {
-          const { error } = await supabase
-            .from('users')
-            .update({ is_connected: true })
-            .eq('id', session.user.id);
-            
-          if (error) {
-            console.error('Error updating connection status:', error);
-          } else {
-            console.log(`User ${session.user.id} marked as connected`);
-          }
-        } catch (err) {
-          console.error('Error in updateConnectionStatus:', err);
-        }
-      };
-      
-      updateConnectionStatus();
-
-      const handleBeforeUnload = async () => {
-        try {
-          await supabase
-            .from('users')
-            .update({ is_connected: false })
-            .eq('id', session.user.id);
-        } catch (err) {
-          console.error('Error marking user as disconnected:', err);
-        }
-      };
-
-      window.addEventListener('beforeunload', handleBeforeUnload);
-      
-      const connectionInterval = setInterval(updateConnectionStatus, 60000); // Every minute
-
-      return () => {
-        window.removeEventListener('beforeunload', handleBeforeUnload);
-        clearInterval(connectionInterval);
-        handleBeforeUnload();
-      };
-    }
-  }, [session?.user?.id]);
+  const { session, user, isLoading, isAuthChangeFromExplicitAction } = useAuthStatus();
+  
+  // Set up connection status monitoring
+  useAuthConnectionStatus(session);
 
   const signIn = async (email: string, password: string) => {
     try {
