@@ -13,8 +13,8 @@ const GameRoom = () => {
   const navigate = useNavigate();
   const { session, isLoading: authLoading } = useAuth();
   const { roomId } = useParams<{ roomId: string }>();
-
-  // Utiliser le hook useGameRoom pour la logique des salles de jeu et la websocket
+  
+  // Utilize the useGameRoom hook - will be called unconditionally
   const { 
     loading, 
     roomData, 
@@ -30,6 +30,13 @@ const GameRoom = () => {
     InsufficientFundsDialog 
   } = useGameRoom();
 
+  // Always call hooks regardless of conditions - move any conditional logic inside effect callbacks
+  const [showFutIdDialog, setShowFutIdDialog] = useState(false);
+  
+  // Ensure this hook is always called - moved outside of any conditional blocks
+  const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId || "");
+  const [isFutArena, setIsFutArena] = useState(false);
+  
   // Vérification renforcée de l'authentification
   useEffect(() => {
     if (!authLoading && !session) {
@@ -39,23 +46,14 @@ const GameRoom = () => {
     }
   }, [authLoading, session, navigate]);
 
-  // Empêcher le rendu du composant si l'utilisateur n'est pas authentifié
-  if (authLoading || loading) {
-    return <div className="flex items-center justify-center min-h-screen">Chargement...</div>;
-  }
+  // Check if the game is FutArena
+  useEffect(() => {
+    if (roomData?.game_type) {
+      setIsFutArena(roomData.game_type.toLowerCase() === "futarena");
+    }
+  }, [roomData?.game_type]);
 
-  if (!session) {
-    return null; // Ne rien rendre pendant la redirection
-  }
-
-  // Déterminer si on est dans FutArena (déplacé après les early returns)
-  const isFutArena = roomData?.game_type?.toLowerCase() === "futarena";
-  
-  // Hook pour le FUT ID - appelé de manière inconditionnelle pour assurer l'ordre des hooks
-  const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId || "");
-  const [showFutIdDialog, setShowFutIdDialog] = useState(false);
-
-  // Si la room est active, mettre à jour l'état du jeu
+  // If the room is active, mettre à jour l'état du jeu
   useEffect(() => {
     if (roomData?.status === "Active" && gameStatus === "waiting") {
       console.log("Room is active but gameStatus is waiting, updating to playing");
@@ -64,7 +62,7 @@ const GameRoom = () => {
     }
   }, [roomData?.status, gameStatus, startGame]);
 
-  // If the current user's futId is missing and we're in FutArena, open dialog
+  // Handle FutId dialog visibility
   useEffect(() => {
     if (
       isFutArena &&
@@ -92,6 +90,15 @@ const GameRoom = () => {
       return () => clearInterval(refreshInterval);
     }
   }, [roomId, fetchRoomData, loading]);
+
+  // Early returns with loading indicators instead of conditional rendering that skips hooks
+  if (authLoading || loading) {
+    return <div className="flex items-center justify-center min-h-screen">Chargement...</div>;
+  }
+
+  if (!session) {
+    return <Layout><div className="flex items-center justify-center min-h-screen">Redirection vers la page d'authentification...</div></Layout>;
+  }
 
   return (
     <Layout>
