@@ -56,14 +56,34 @@ export function useRoomActionsSlim(
     try {
       console.log(`Player ${currentUserId} is forfeiting game in room ${roomId}`);
       
-      // Clear storage first to prevent automatic reconnection attempts
+      // IMPORTANT: Effacer ces données AVANT toutes les autres opérations
+      // Cela empêche les tentatives de reconnexion automatiques
+      console.log("Clearing client storage...");
       roomService.saveActiveRoomToStorage("", "", "");
       sessionStorage.removeItem('activeRoomId');
       sessionStorage.removeItem('activeUserId');
       sessionStorage.removeItem('activeGameType');
-      console.log("Storage cleared");
+      localStorage.removeItem('activeRoomId'); // Vérifier aussi le localStorage au cas où
+      localStorage.removeItem('activeUserId');
+      localStorage.removeItem('activeGameType');
+      console.log("Client storage cleared successfully");
       
-      // Mark player as forfeited and disconnected
+      // Mettre à jour le champ active_room_id de l'utilisateur en priorité
+      console.log(`Clearing active_room_id for user ${currentUserId}`);
+      const { error: userError } = await supabase
+        .from('users')
+        .update({ active_room_id: null })
+        .eq('id', currentUserId);
+      
+      if (userError) {
+        console.error("Failed to clear active room ID:", userError);
+        // On continue même en cas d'erreur
+      } else {
+        console.log("Active room ID cleared successfully in database");
+      }
+      
+      // Marquer le joueur comme ayant abandonné
+      console.log(`Marking player ${currentUserId} as forfeited in room ${roomId}`);
       const { error } = await supabase
         .from('game_players')
         .update({ 
@@ -76,42 +96,35 @@ export function useRoomActionsSlim(
       if (error) {
         console.error("Failed to forfeit game:", error);
         toast.error("Échec lors de l'abandon de la partie. Veuillez réessayer.");
-        return;
-      }
-      
-      console.log("Database updated successfully");
-      
-      // Clear user's active_room_id in the users table
-      const { error: userError } = await supabase
-        .from('users')
-        .update({ active_room_id: null })
-        .eq('id', currentUserId);
-      
-      if (userError) {
-        console.error("Failed to clear active room ID:", userError);
-        // Continue even if this update fails
       } else {
-        console.log("Active room ID cleared successfully");
+        console.log("Player marked as forfeited in database");
       }
       
-      // Disconnect from room
+      // Déconnecter du canal de la salle
       try {
+        console.log(`Disconnecting from room channel for room ${roomId}`);
         await roomService.disconnectFromRoom(roomId, currentUserId);
-        console.log("Room disconnection successful");
+        console.log("Successfully disconnected from room channel");
       } catch (disconnectError) {
         console.error("Error during room disconnection:", disconnectError);
-        // Continue even if disconnection fails
+        // On continue même si la déconnexion échoue
       }
       
-      // Update game status
+      // Mettre à jour l'état du jeu
       setGameStatus('ended');
       
-      // Redirect to games page
+      // Rediriger vers la page des jeux avec un délai pour s'assurer que tout est bien traité
+      console.log("Preparing to navigate to games page");
       toast.success("Vous avez quitté la partie");
+      
+      // Redirection immédiate vers /games
       navigate('/games');
     } catch (error) {
       console.error("Failed to forfeit game:", error);
       toast.error("Échec lors de l'abandon de la partie. Veuillez réessayer.");
+      
+      // En cas d'erreur critique, forcer la navigation tout de même
+      navigate('/games');
     }
   }, [roomId, currentUserId, navigate]);
 

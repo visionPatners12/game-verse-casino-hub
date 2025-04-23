@@ -23,13 +23,22 @@ export class RoomConnectionStorage {
 
   clear() {
     try {
-      console.log('Clearing room connection data from session storage');
+      console.log('Clearing room connection data from storage');
+      
+      // Nettoyer à la fois sessionStorage et localStorage par sécurité
+      // SessionStorage
       sessionStorage.removeItem('activeRoomId');
       sessionStorage.removeItem('activeUserId');
       sessionStorage.removeItem('activeGameType');
-      console.log('Cleared room data from session storage');
+      
+      // LocalStorage (au cas où)
+      localStorage.removeItem('activeRoomId');
+      localStorage.removeItem('activeUserId');
+      localStorage.removeItem('activeGameType');
+      
+      console.log('Cleared room data from all storage mechanisms');
     } catch (error) {
-      console.error('Failed to clear room data from session storage:', error);
+      console.error('Failed to clear room data from storage:', error);
     }
   }
 
