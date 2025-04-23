@@ -5,6 +5,7 @@ import { GameCode, isValidGameType, gameCodeToType, GameVariant } from "@/lib/ga
 import { CreateRoomFormData } from "../schemas/createRoomSchema";
 import { toast } from "sonner";
 import { useWallet } from "@/hooks/useWallet";
+import { roomService } from "@/services/room";
 
 export function useCreateRoom(username: string, gameType: string | undefined) {
   const navigate = useNavigate();
@@ -120,6 +121,9 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       } else {
         console.log(`Successfully set active_room_id=${data.id} for user ${authData.user.id}`);
       }
+
+      // STEP 4: Save room connection to storage for reconnection capability
+      roomService.saveActiveRoomToStorage(data.id, authData.user.id, gameType);
 
       toast.success("Room created successfully!");
       navigate(`/games/${gameType}/room/${data.id}`);
