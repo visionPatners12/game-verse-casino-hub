@@ -1,54 +1,87 @@
 
-import React from 'react';
-import GamesList from '@/components/games/GamesList';  // Changed from named to default import
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import GamesList from "@/components/games/GamesList";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Users } from "lucide-react";
+import { JoinGameDialog } from "@/components/games/JoinGameDialog";
+import { Layout } from "@/components/Layout";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 
 const Games = () => {
-  const { user } = useAuth();
-
-  const handleGameSelection = async (gameType: string) => {
-    if (!user?.id) {
-      toast.error("Vous devez être connecté");
-      return;
-    }
-
-    try {
-      // Vérifier si l'utilisateur a une room active
+  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
+  const navigate = useNavigate();
+  
+  // Utiliser le hook useRequireAuth pour vérifier l'authentification
+  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
+  
+  // Définir useQuery en dehors des conditions - toujours présent mais activé sous condition
+  const { data: games, isLoading: gamesLoading } = useQuery({
+    queryKey: ['game-types'],
+    queryFn: async () => {
       const { data, error } = await supabase
-        .from('users')
-        .select('active_room_id')
-        .eq('id', user.id)
-        .single();
+        .from('game_types')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      return data.map(game => ({
+        id: game.id,
+        name: game.name,
+        type: game.code,
+        description: `${game.min_players}${game.max_players > game.min_players ? `-${game.max_players}` : ''} players`,
+        players: {
+          min: game.min_players,
+          max: game.max_players
+        },
+        image: game.image_url || "https://images.unsplash.com/photo-1611996575749-79a3a250f948?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3"
+      }));
+    },
+    // Désactiver la requête si l'utilisateur n'est pas authentifié
+    enabled: isAuthenticated
+  });
+  
+  const isLoading = authLoading || gamesLoading;
+  
+  // Afficher un indicateur de chargement pendant la vérification d'authentification
+  if (authLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Chargement...</div>;
+  }
 
-      if (error) {
-        console.error("Erreur lors de la vérification de la room active:", error);
-        toast.error("Une erreur est survenue");
-        return;
-      }
-
-      if (data?.active_room_id) {
-        toast.warning(
-          "Vous ne pouvez pas quitter la partie en cours", 
-          {
-            description: "Terminez d'abord votre partie actuelle",
-            duration: 4000
-          }
-        );
-        return;
-      }
-
-      // Si pas de room active, continuer normalement
-      window.location.href = `/games/${gameType}/public`;
-    } catch (err) {
-      console.error("Erreur inattendue:", err);
-      toast.error("Une erreur est survenue");
-    }
-  };
-
+  // Si l'utilisateur n'est pas authentifié, le hook useRequireAuth s'occupe de la redirection
+  if (!isAuthenticated) {
+    return null;
+  }
+  
   return (
-    <GamesList onGameSelect={handleGameSelection} />
+    <Layout>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Games</h1>
+        <Button 
+          onClick={() => setIsJoinDialogOpen(true)}
+          variant="outline"
+          className="gap-2"
+        >
+          <Users className="h-4 w-4" />
+          Join a Room
+        </Button>
+      </div>
+      
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <p>Loading games...</p>
+        </div>
+      ) : games ? (
+        <GamesList games={games} />
+      ) : null}
+
+      <JoinGameDialog 
+        open={isJoinDialogOpen} 
+        onOpenChange={setIsJoinDialogOpen} 
+      />
+    </Layout>
   );
 };
 
