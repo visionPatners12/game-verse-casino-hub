@@ -18,9 +18,10 @@ import { useWalletCheck } from "@/hooks/room/useWalletCheck";
 interface JoinGameDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  slim?: boolean;
 }
 
-export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
+export function JoinGameDialog({ open, onOpenChange, slim = false }: JoinGameDialogProps) {
   const [roomCode, setRoomCode] = useState("");
   const { joinRoom, isLoading } = useJoinRoom();
   const { wallet } = useWalletCheck();
@@ -32,13 +33,15 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className={slim ? "sm:max-w-[350px]" : "sm:max-w-[425px]"}>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Rejoindre un salon de jeu</DialogTitle>
-            <DialogDescription>
-              Entrez le code de salon à 6 caractères pour rejoindre la partie.
-            </DialogDescription>
+            {!slim && (
+              <DialogDescription>
+                Entrez le code de salon à 6 caractères pour rejoindre la partie.
+              </DialogDescription>
+            )}
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
