@@ -56,15 +56,9 @@ export function useRoomActionsSlim(
     try {
       console.log(`Player ${currentUserId} is forfeiting game in room ${roomId}`);
       
-      // Clear storage first to prevent automatic reconnection attempts
-      roomService.saveActiveRoomToStorage("", "", "");
-      sessionStorage.removeItem('activeRoomId');
-      sessionStorage.removeItem('activeUserId');
-      sessionStorage.removeItem('activeGameType');
-      console.log("Storage cleared");
-      
-      // Mark player as forfeited and disconnected
-      const { error } = await supabase
+      // Update the database FIRST - mark player as forfeited and disconnected
+      console.log("Updating game_players table to mark player as forfeited");
+      const { error: playerError } = await supabase
         .from('game_players')
         .update({ 
           has_forfeited: true, 
@@ -73,15 +67,16 @@ export function useRoomActionsSlim(
         .eq('session_id', roomId)
         .eq('user_id', currentUserId);
         
-      if (error) {
-        console.error("Failed to forfeit game:", error);
-        toast.error("Échec lors de l'abandon de la partie. Veuillez réessayer.");
+      if (playerError) {
+        console.error("Failed to update player status:", playerError);
+        toast.error("Failed to leave the game. Please try again.");
         return;
       }
       
-      console.log("Database updated successfully");
+      console.log("Game player marked as forfeited and disconnected successfully");
       
-      // Clear user's active_room_id in the users table
+      // Clear user's active_room_id explicitly
+      console.log("Clearing active_room_id in users table");
       const { error: userError } = await supabase
         .from('users')
         .update({ active_room_id: null })
@@ -89,29 +84,51 @@ export function useRoomActionsSlim(
       
       if (userError) {
         console.error("Failed to clear active room ID:", userError);
-        // Continue even if this update fails
+        // Continue even if this fails since other cleanup steps are more important
       } else {
-        console.log("Active room ID cleared successfully");
+        console.log("Active room ID cleared successfully in database");
       }
       
-      // Disconnect from room
+      // Clear storage AFTER database updates to prevent automatic reconnection
+      console.log("Clearing session storage");
+      roomService.saveActiveRoomToStorage("", "", "");
+      sessionStorage.removeItem('activeRoomId');
+      sessionStorage.removeItem('activeUserId');
+      sessionStorage.removeItem('activeGameType');
+      localStorage.removeItem('activeRoomId');
+      localStorage.removeItem('activeUserId');
+      localStorage.removeItem('activeGameType');
+      
+      console.log("Session and local storage cleared");
+      
+      // Disconnect from room websocket connection
       try {
+        console.log("Disconnecting from room websocket");
         await roomService.disconnectFromRoom(roomId, currentUserId);
         console.log("Room disconnection successful");
       } catch (disconnectError) {
         console.error("Error during room disconnection:", disconnectError);
-        // Continue even if disconnection fails
+        // Continue execution even if disconnection fails
       }
       
-      // Update game status
+      // Update UI state
       setGameStatus('ended');
       
-      // Redirect to games page
+      // Show success message and navigate away
       toast.success("Vous avez quitté la partie");
-      navigate('/games');
+      
+      // Force navigation with a slight delay to ensure all cleanup is done
+      setTimeout(() => {
+        console.log("Navigating to games page");
+        navigate('/games', { replace: true });
+      }, 100);
+      
     } catch (error) {
-      console.error("Failed to forfeit game:", error);
+      console.error("Failed during forfeit process:", error);
       toast.error("Échec lors de l'abandon de la partie. Veuillez réessayer.");
+      
+      // Try to navigate anyway as a fallback
+      navigate('/games');
     }
   }, [roomId, currentUserId, navigate]);
 

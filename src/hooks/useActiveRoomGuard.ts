@@ -42,8 +42,27 @@ export const useActiveRoomGuard = () => {
         return;
       }
       
-      // Si l'utilisateur est sur la page forfeit ou quitter, permettre la navigation
-      if (location.pathname.includes('/games') && location.pathname.includes('/forfeit')) {
+      // Allow navigation to the games page if the user is trying to leave
+      if (location.pathname === '/games' || location.pathname.includes('/games/')) {
+        console.log("Navigation vers la page des jeux autorisée pour quitter la room");
+        // Ensure we clear the active room when going to games page
+        try {
+          const { error: updateError } = await supabase
+            .from('users')
+            .update({ active_room_id: null })
+            .eq('id', user.id);
+            
+          if (!updateError) {
+            console.log("Active room ID cleared when navigating to games page");
+          }
+        } catch (e) {
+          console.error("Failed to clear active room when navigating:", e);
+        }
+        return;
+      }
+      
+      // If user is on the forfeit page, allow the navigation
+      if (location.pathname.includes('/forfeit')) {
         console.log("Page de forfait, navigation autorisée");
         return;
       }

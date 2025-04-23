@@ -7,6 +7,7 @@ import { GameStateService } from "../game/GameStateService";
 import { RoomPresenceService } from "../presence/RoomPresenceService";
 import { RoomConnectionStorage } from "../RoomConnectionStorage";
 import { RoomWebSocketConnection } from "./RoomWebSocketConnection";
+import { supabase } from "@/integrations/supabase/client";
 
 export class RoomWebSocketService extends WebSocketBase {
   private channelsManager: RoomChannelsManager;
@@ -52,11 +53,33 @@ export class RoomWebSocketService extends WebSocketBase {
     
     // Clear active room storage first
     this.connectionStorage.save("", "", "");
+    this.connectionStorage.clear(); // Explicitly call clear to ensure both session and local storage are cleared
     
     try {
-      // Mark player as disconnected in the database
-      await this.presenceService.markPlayerDisconnected(roomId, userId);
-      console.log(`Player ${userId} marked as disconnected in database for room ${roomId}`);
+      // Mark player as disconnected in the database with direct Supabase call for reliability
+      const { error } = await supabase
+        .from('game_players')
+        .update({ is_connected: false })
+        .eq('session_id', roomId)
+        .eq('user_id', userId);
+        
+      if (error) {
+        console.error(`Error updating game_players: ${error.message}`);
+      } else {
+        console.log(`Player ${userId} marked as disconnected in database for room ${roomId}`);
+      }
+      
+      // Update user's active_room_id as well for redundancy
+      const { error: userError } = await supabase
+        .from('users')
+        .update({ active_room_id: null })
+        .eq('id', userId);
+        
+      if (userError) {
+        console.error(`Error updating user's active_room_id: ${userError.message}`);
+      } else {
+        console.log(`User ${userId} active_room_id cleared in database`);
+      }
       
       // Clean up channel and presence data
       await this.cleanupChannel(roomId);
