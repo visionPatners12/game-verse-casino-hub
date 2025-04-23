@@ -13,9 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useJoinRoom } from "@/hooks/room/useJoinRoom";
-import { useWallet } from "@/hooks/useWallet";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { useWalletCheck } from "@/hooks/room/useWalletCheck";
 
 interface JoinGameDialogProps {
   open: boolean;
@@ -25,10 +23,7 @@ interface JoinGameDialogProps {
 export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
   const [roomCode, setRoomCode] = useState("");
   const { joinRoom, isLoading } = useJoinRoom();
-  const navigate = useNavigate();
-  
-  // Disable transactions loading
-  const { wallet } = useWallet({ enableTransactions: false });
+  const { wallet } = useWalletCheck();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
