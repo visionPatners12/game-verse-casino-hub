@@ -8,16 +8,16 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Auth() {
-  const { session } = useAuth();
+  const { session, isLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Only redirect if there's an active session
-    if (session) {
+    // Only redirect if there's an active session and we're not still loading
+    if (session && !isLoading) {
       console.log("Active session detected on Auth page, redirecting to /games");
       navigate('/games');
     }
-  }, [session, navigate]);
+  }, [session, navigate, isLoading]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background/95 to-background/90">

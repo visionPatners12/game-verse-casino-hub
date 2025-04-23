@@ -15,6 +15,7 @@ export function useAuthStatus() {
   useEffect(() => {
     const setupAuth = async () => {
       try {
+        // First set up the auth state listener to catch any changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event, newSession) => {
             console.log("Auth state change event:", event);
@@ -41,11 +42,29 @@ export function useAuthStatus() {
           }
         );
         
-        const { data: sessionData } = await supabase.auth.getSession();
-        console.log("Initial session check:", sessionData.session ? "Session exists" : "No session");
+        // Then check for an existing session
+        const { data: sessionData, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Error getting session:", error);
+          // Try to refresh session if there's an error
+          try {
+            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+            if (refreshError) {
+              console.error("Error refreshing session:", refreshError);
+            } else if (refreshData.session) {
+              console.log("Session successfully refreshed");
+              setSession(refreshData.session);
+              setUser(refreshData.session.user);
+            }
+          } catch (refreshErr) {
+            console.error("Exception during session refresh:", refreshErr);
+          }
+        } else {
+          console.log("Initial session check:", sessionData.session ? "Session exists" : "No session");
+          setSession(sessionData.session);
+          setUser(sessionData.session?.user ?? null);
+        }
         
-        setSession(sessionData.session);
-        setUser(sessionData.session?.user ?? null);
         initialSessionChecked.current = true;
         setIsLoading(false);
         
@@ -58,6 +77,35 @@ export function useAuthStatus() {
     
     setupAuth();
   }, [navigate]);
+
+  // Add a session recovery mechanism that runs periodically
+  useEffect(() => {
+    const recoverSession = async () => {
+      if (!session && !isLoading && initialSessionChecked.current) {
+        try {
+          console.log("Attempting to recover session...");
+          const { data, error } = await supabase.auth.refreshSession();
+          if (error) {
+            console.log("Session recovery failed:", error.message);
+          } else if (data.session) {
+            console.log("Session recovered successfully");
+            setSession(data.session);
+            setUser(data.session.user);
+          }
+        } catch (err) {
+          console.error("Error during session recovery:", err);
+        }
+      }
+    };
+
+    // Try to recover session once on mount
+    recoverSession();
+
+    // Also set up a periodic session check (every 5 minutes)
+    const sessionCheckInterval = setInterval(recoverSession, 300000);
+    
+    return () => clearInterval(sessionCheckInterval);
+  }, [session, isLoading]);
 
   return {
     session,
