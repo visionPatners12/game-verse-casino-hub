@@ -81,7 +81,8 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       const playerInsert: any = {
         session_id: data.id,
         display_name: userData.username,
-        user_id: authData.user.id
+        user_id: authData.user.id,
+        is_connected: true // Assurer que le joueur est marqué comme connecté
       };
 
       if (gameType === "futarena" && values.eaId) {
@@ -95,6 +96,17 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       if (playerError) {
         toast.error("Error joining room: " + playerError.message);
         throw playerError;
+      }
+
+      // Explicitly update the user's active_room_id
+      const { error: userUpdateError } = await supabase
+        .from('users')
+        .update({ active_room_id: data.id })
+        .eq('id', authData.user.id);
+        
+      if (userUpdateError) {
+        console.error("Erreur lors de la mise à jour de l'active_room_id:", userUpdateError);
+        throw userUpdateError;
       }
 
       toast.success("Room created successfully!");

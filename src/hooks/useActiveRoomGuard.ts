@@ -16,6 +16,8 @@ export const useActiveRoomGuard = () => {
       // Early check if not logged in
       if (!user?.id) return;
 
+      console.log("Vérification d'une room active pour l'utilisateur", user.id);
+
       // Always fetch from server to get up-to-date active room state
       const { data, error } = await supabase
         .from('users')
@@ -29,12 +31,14 @@ export const useActiveRoomGuard = () => {
       }
 
       const activeRoomId = data?.active_room_id;
+      console.log("Active room ID trouvé:", activeRoomId);
 
       // If user has no active room, allow navigation everywhere
       if (!activeRoomId) return;
 
       // If user is already in the active room route, allow it
       if (location.pathname.includes(`/room/${activeRoomId}`)) {
+        console.log("L'utilisateur est déjà dans sa room active, navigation autorisée");
         return;
       }
 
@@ -46,7 +50,6 @@ export const useActiveRoomGuard = () => {
       });
 
       // Find which game type this room corresponds to
-      // NOTE: You might need to adjust this query if you move to a separate profiles table!
       const { data: session } = await supabase
         .from('game_sessions')
         .select('game_type')
@@ -54,6 +57,7 @@ export const useActiveRoomGuard = () => {
         .maybeSingle();
 
       const gameType = session?.game_type?.toLowerCase() || 'unknown';
+      console.log("Redirection vers la room active:", gameType, activeRoomId);
 
       // Redirect to the correct room route
       navigate(`/games/${gameType}/room/${activeRoomId}`);

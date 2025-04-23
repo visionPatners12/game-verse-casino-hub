@@ -131,6 +131,17 @@ export function useJoinRoom() {
           console.error("Erreur lors de la mise à jour de la connexion du joueur:", updateError);
           throw updateError;
         }
+
+        // Explicitly update the user's active_room_id
+        const { error: userUpdateError } = await supabase
+          .from('users')
+          .update({ active_room_id: room.id })
+          .eq('id', user.id);
+          
+        if (userUpdateError) {
+          console.error("Erreur lors de la mise à jour de l'active_room_id:", userUpdateError);
+          throw userUpdateError;
+        }
       } else {
         console.log("Ajout d'un nouveau joueur à la salle:", room.id);
         // Add player to the room
@@ -156,6 +167,17 @@ export function useJoinRoom() {
           console.error("Erreur lors de l'ajout du joueur à la salle:", joinError);
           toast.error("Erreur lors de l'ajout du joueur à la salle: " + joinError.message);
           throw joinError;
+        }
+
+        // Explicitly update the user's active_room_id
+        const { error: userUpdateError } = await supabase
+          .from('users')
+          .update({ active_room_id: room.id })
+          .eq('id', user.id);
+          
+        if (userUpdateError) {
+          console.error("Erreur lors de la mise à jour de l'active_room_id:", userUpdateError);
+          throw userUpdateError;
         }
         
         console.log("Joueur ajouté avec succès à la salle:", newPlayer);

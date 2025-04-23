@@ -3,13 +3,16 @@ import { useParams } from "react-router-dom";
 import { useRoomWebSocketSlim } from "@/hooks/room/useRoomWebSocketSlim";
 import { gameCodeToType, isValidGameType } from "@/lib/gameTypes";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
-import { useActiveRoomGuard } from "@/hooks/useActiveRoomGuard"; // Ajout du hook
+import { useActiveRoomGuard } from "@/hooks/useActiveRoomGuard"; 
 
 /**
  * Hook that provides simplified access to game room data and functionality
  * Handles authentication verification and room connection
  */
 export const useSimpleGameRoom = () => {
+  // Use active room guard to redirect if user has an active room elsewhere
+  useActiveRoomGuard();
+  
   // Verify authentication before accessing game data
   const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
   
