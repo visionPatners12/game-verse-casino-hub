@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GameType } from "./GameCard";
 import { JoinRoomConfirmDialog } from "./games/JoinRoomConfirmDialog";
+import { useJoinRoom } from "@/hooks/room/useJoinRoom";
 
 interface RoomCardProps {
   id: string;
@@ -31,19 +32,16 @@ const RoomCard = ({
   winnerCount,
   commissionRate = 5,
 }: RoomCardProps) => {
-  const navigate = useNavigate();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+  const { joinRoom } = useJoinRoom();
   
-  // Generate a 6-character room code display (first 6 chars or padded if shorter)
   const roomCode = id.substring(0, 6).toUpperCase().padEnd(6, 'A1B2C3').substring(0, 6);
   
-  // Calculate the total pot with commission already deducted
-  const totalPot = bet * currentPlayers * (1 - commissionRate/100);
-  
-  const handleJoinConfirm = () => {
+  const handleJoinConfirm = async () => {
     setIsJoining(true);
-    navigate(`/games/${gameType}/room/${id}`);
+    await joinRoom(roomCode, () => setShowConfirmDialog(false));
+    setIsJoining(false);
   };
 
   return (
