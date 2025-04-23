@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { roomService } from "@/services/room";
 import { useParams } from "react-router-dom";
@@ -119,10 +120,9 @@ export function useRoomConnection(roomId: string | undefined) {
   };
   
   checkStoredConnection();
-}, [roomId, hasAttemptedReconnect, user]);
 
-  // Setup beforeunload handler to save room data
   useEffect(() => {
+    // Setup beforeunload handler to save room data
     if (!roomId || !user?.id) return;
     
     const handleBeforeUnload = () => {
