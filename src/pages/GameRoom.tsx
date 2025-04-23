@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout";
 import { GameRoomLayout } from "@/components/game/GameRoomLayout";
 import { useParams, useNavigate } from "react-router-dom";
@@ -8,11 +7,30 @@ import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFutId } from "@/hooks/useFutId";
 import { FutIdDialog } from "@/components/game/FutIdDialog";
+import { toast } from "sonner";
 
 const GameRoom = () => {
   const { roomId, gameType } = useParams<{ roomId: string; gameType: string }>();
   const navigate = useNavigate();
   const { session, isLoading: authLoading } = useAuth();
+
+  // Vérification renforcée de l'authentification
+  useEffect(() => {
+    if (!authLoading && !session) {
+      console.log("Utilisateur non authentifié, redirection vers /auth");
+      toast.error("Vous devez être connecté pour accéder à cette page");
+      navigate("/auth");
+    }
+  }, [authLoading, session, navigate]);
+
+  // Empêcher le rendu du composant si l'utilisateur n'est pas authentifié
+  if (authLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Chargement...</div>;
+  }
+
+  if (!session) {
+    return null; // Ne rien rendre pendant la redirection
+  }
 
   const {
     roomData,

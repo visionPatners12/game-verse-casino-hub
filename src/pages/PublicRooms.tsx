@@ -1,6 +1,6 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
@@ -9,10 +9,31 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Users, DollarSign } from "lucide-react";
 import { gameCodeToType } from "@/lib/gameTypes";
 import { Layout } from "@/components/Layout";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const PublicRooms = () => {
   const { gameType } = useParams();
   const navigate = useNavigate();
+  const { session, isLoading: authLoading } = useAuth();
+  
+  // Vérification de l'authentification
+  useEffect(() => {
+    if (!authLoading && !session) {
+      console.log("Utilisateur non authentifié, redirection vers /auth");
+      toast.error("Vous devez être connecté pour accéder à cette page");
+      navigate("/auth");
+    }
+  }, [authLoading, session, navigate]);
+  
+  // Empêcher le rendu du composant si l'utilisateur n'est pas authentifié
+  if (authLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Chargement...</div>;
+  }
+
+  if (!session) {
+    return null; // Ne rien rendre pendant la redirection
+  }
   
   const { data: rooms, isLoading } = useQuery({
     queryKey: ['public-rooms', gameType],

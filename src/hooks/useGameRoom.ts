@@ -2,8 +2,12 @@
 import { useParams } from "react-router-dom";
 import { useRoomWebSocket } from "@/hooks/room/useRoomWebSocket";
 import { gameCodeToType, isValidGameType } from "@/lib/gameTypes";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 
 export const useGameRoom = () => {
+  // Vérification de l'authentification avant d'accéder aux données de jeu
+  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
+  
   const { gameType, roomId } = useParams<{ gameType: string; roomId: string }>();
   
   const {
@@ -20,8 +24,8 @@ export const useGameRoom = () => {
     : (gameType ? gameType.charAt(0).toUpperCase() + gameType.slice(1) : "Unknown Game");
 
   return {
-    loading: isLoading,
-    roomData,
+    loading: isLoading || authLoading,
+    roomData: isAuthenticated ? roomData : null,
     currentUserId,
     gameType,
     gameName,

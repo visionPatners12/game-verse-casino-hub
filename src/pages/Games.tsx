@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import GamesList from "@/components/games/GamesList";
 import { useQuery } from "@tanstack/react-query";
@@ -7,9 +8,31 @@ import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 import { JoinGameDialog } from "@/components/games/JoinGameDialog";
 import { Layout } from "@/components/Layout";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const Games = () => {
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
+  const { session, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  
+  // Vérification de l'authentification
+  useEffect(() => {
+    if (!authLoading && !session) {
+      console.log("Utilisateur non authentifié, redirection vers /auth");
+      toast.error("Vous devez être connecté pour accéder à cette page");
+      navigate("/auth");
+    }
+  }, [authLoading, session, navigate]);
+  
+  // Empêcher le rendu du composant si l'utilisateur n'est pas authentifié
+  if (authLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Chargement...</div>;
+  }
+
+  if (!session) {
+    return null; // Ne rien rendre pendant la redirection
+  }
   
   const { data: games, isLoading } = useQuery({
     queryKey: ['game-types'],
