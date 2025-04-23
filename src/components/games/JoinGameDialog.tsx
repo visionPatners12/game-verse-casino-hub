@@ -14,6 +14,16 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useJoinRoom } from "@/hooks/room/useJoinRoom";
 import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useWallet } from "@/hooks/useWallet";
 import { useNavigate } from "react-router-dom";
 
@@ -25,7 +35,10 @@ interface JoinGameDialogProps {
 export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
   const [roomCode, setRoomCode] = useState("");
   const { joinRoom, isLoading } = useJoinRoom();
-  const { hasSufficientBalance, InsufficientFundsDialog } = useWalletBalanceCheck();
+  const { hasSufficientBalance } = useWalletBalanceCheck();
+
+  // Statut de la dialog "fonds insuffisants"
+  const [showInsufficientDialog, setShowInsufficientDialog] = useState(false);
 
   const { wallet } = useWallet();
   const navigate = useNavigate();
@@ -46,13 +59,13 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
     // Chercher entry_fee de la room
     const entryFee = await getRoomEntryFee(roomCode.toUpperCase());
     if (entryFee == null) {
-      // La validation de joinRoom s'occupera de l'erreur room introuvable
+      // La validation de joinRoom s’occupera de l’erreur room introuvable
       await joinRoom(roomCode);
       return;
     }
     // Vérifie le solde.
     if (!hasSufficientBalance(entryFee)) {
-      // Le dialogue est géré par le hook useWalletBalanceCheck
+      setShowInsufficientDialog(true);
       return;
     }
     await joinRoom(roomCode);
@@ -102,7 +115,28 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
           </form>
         </DialogContent>
       </Dialog>
-      <InsufficientFundsDialog />
+      <AlertDialog open={showInsufficientDialog} onOpenChange={setShowInsufficientDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Solde insuffisant</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vous n&apos;avez pas assez d&apos;argent dans votre portefeuille pour rejoindre cette partie.<br />
+              Ajoutez des fonds pour continuer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowInsufficientDialog(false);
+                navigate("/wallet");
+              }}
+            >
+              Ajouter des fonds
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

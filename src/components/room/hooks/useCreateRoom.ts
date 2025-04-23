@@ -10,7 +10,7 @@ import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
 export function useCreateRoom(username: string, gameType: string | undefined) {
   const navigate = useNavigate();
   const { wallet } = useWallet();
-  const { hasSufficientBalance, checkAndDeductBalance } = useWalletBalanceCheck();
+  const { checkAndDeductBalance } = useWalletBalanceCheck();
 
   const createRoom = async (values: CreateRoomFormData) => {
     try {
