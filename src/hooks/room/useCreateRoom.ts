@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { GameCode, isValidGameType, gameCodeToType } from "@/lib/gameTypes";
-import { CreateRoomFormData } from "../schemas/createRoomSchema";
+import { CreateRoomFormData } from "@/components/room/schemas/createRoomSchema";
 import { toast } from "sonner";
 import { useWallet } from "@/hooks/useWallet";
 
