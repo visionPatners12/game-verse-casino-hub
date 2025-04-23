@@ -8,19 +8,12 @@ import { useAuth } from '@/contexts/AuthContext';
 export const useActiveRoomGuard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
   const { user } = useAuth();
 
   useEffect(() => {
-    const checkActiveRooms = async () => {
-      if (!user?.id) return;
-
-      // Permet la navigation libre sans contraintes liées à active_room_id
-      if (location.pathname === '/games' || location.pathname.startsWith('/games/')) {
-        return;
-      }
-    };
-
-    checkActiveRooms();
-  }, [navigate, location.pathname, toast, user]);
+    // Permet la navigation libre sans contraintes
+    if (location.pathname === '/games' || location.pathname.startsWith('/games/')) {
+      return;
+    }
+  }, [navigate, location.pathname, user]);
 };
