@@ -1,27 +1,22 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wallet, PlusCircle, ArrowDownCircle, Clock, DollarSign } from "lucide-react";
-import { useWallet } from "@/hooks/useWallet";
+// Remove useWallet import, will get wallet and isLoading from props
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 
-const WalletInfo = () => {
-  const { wallet, transactions, isLoading } = useWallet();
-  
-  const getTransactionIcon = (type: string) => {
-    switch (type) {
-      case 'Winnings':
-        return <DollarSign className="h-4 w-4 text-green-500" />;
-      case 'Stake':
-        return <DollarSign className="h-4 w-4 text-red-500" />;
-      case 'Deposit':
-        return <PlusCircle className="h-4 w-4 text-blue-500" />;
-      default:
-        return <DollarSign className="h-4 w-4" />;
-    }
-  };
+// Ajoutez ces props pour être utilisé avec ou sans transactions
+interface WalletInfoProps {
+  wallet: {
+    real_balance: number;
+    bonus_balance: number;
+    currency: string;
+  } | null | undefined;
+  isLoading: boolean;
+}
 
+const WalletInfo = ({ wallet, isLoading }: WalletInfoProps) => {
+  // suppression des transactions et du getTransactionIcon
   if (!wallet && !isLoading) {
     return (
       <Card className="p-6">
@@ -89,51 +84,7 @@ const WalletInfo = () => {
           </CardFooter>
         </Card>
       </div>
-      
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle>Recent Transactions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-1">
-            {isLoading ? (
-              <p className="text-center text-muted-foreground py-4">Loading transactions...</p>
-            ) : !transactions || transactions.length === 0 ? (
-              <p className="text-center text-muted-foreground py-4">No transactions yet</p>
-            ) : (
-              transactions.slice(0, 5).map((tx) => (
-                <div key={tx.id} className="transaction-item">
-                  <div className="flex items-center gap-3">
-                    <div className={`bg-${tx.type === 'Winnings' ? 'green' : tx.type === 'Stake' ? 'red' : 'blue'}-500/10 p-2 rounded-full`}>
-                      {getTransactionIcon(tx.type)}
-                    </div>
-                    <div>
-                      <p className="font-medium">{tx.type}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {tx.description || `${tx.type} Transaction`}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className={`font-medium ${tx.amount > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {tx.amount > 0 ? '+' : ''}{tx.amount} {wallet?.currency || 'USD'}
-                    </p>
-                    <p className="text-xs flex items-center justify-end gap-1 text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      {format(new Date(tx.created_at), 'MMM d, yyyy HH:mm')}
-                    </p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button variant="outline" className="w-full" asChild>
-            <Link to="/wallet?tab=history">View All Transactions</Link>
-          </Button>
-        </CardFooter>
-      </Card>
+      {/* Suppression du bloc Transactions récentes ici */}
     </div>
   );
 };

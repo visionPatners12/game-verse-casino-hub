@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import WalletInfo from "@/components/WalletInfo";
@@ -21,15 +22,18 @@ const Wallet = () => {
     setSearchParams({ tab: value });
   };
   
-  // Get actual transactions from our hook
-  const { transactions } = useWallet();
+  // On ne charge les transactions que si l'onglet actif est "history"
+  const enableTransactions = activeTab === "history";
+
+  const { wallet, transactions, isLoading } = useWallet({ enableTransactions });
 
   return (
     <Layout>
       <h1 className="text-3xl font-bold mb-8">Your Wallet</h1>
       
-      <WalletInfo />
-      
+      {/* Les infos du wallet seulement */}
+      <WalletInfo wallet={wallet} isLoading={isLoading} />
+
       <div className="mt-10">
         <Tabs defaultValue={activeTab} onValueChange={handleTabChange}>
           <TabsList className="grid w-full grid-cols-3 md:w-auto">
@@ -72,3 +76,4 @@ const Wallet = () => {
 };
 
 export default Wallet;
+

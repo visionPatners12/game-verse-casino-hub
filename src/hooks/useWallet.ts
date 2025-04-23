@@ -24,7 +24,8 @@ export type Wallet = {
   user_id: string;
 };
 
-export const useWallet = () => {
+// On ajoute une option enableTransactions (par défaut: true)
+export const useWallet = (options?: { enableTransactions?: boolean }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -68,8 +69,11 @@ export const useWallet = () => {
     enabled: !!session, // Only run this query if we have a session
   });
 
+  // Ajout: l'option enableTransactions décide si on charge les transactions
+  const enableTransactions = options?.enableTransactions !== undefined ? options.enableTransactions : true;
+
   const { data: transactions, isLoading: isLoadingTransactions } = useQuery({
-    queryKey: ['transactions'],
+    queryKey: ['transactions', wallet?.id],
     queryFn: async () => {
       // First check if user is authenticated
       if (!session) {
@@ -77,10 +81,13 @@ export const useWallet = () => {
         return [];
       }
 
+      // Si le wallet n'existe pas encore, return empty array
+      if (!wallet?.id) { return []; }
+
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
-        .eq('wallet_id', wallet?.id)
+        .eq('wallet_id', wallet.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -95,12 +102,12 @@ export const useWallet = () => {
 
       return data as Transaction[];
     },
-    enabled: !!session && !!wallet?.id, // Only run this query if we have a session and wallet
+    enabled: !!session && !!wallet?.id && enableTransactions, // <= Ici on utilise uniquement si activé !
   });
 
   return {
     wallet,
     transactions,
-    isLoading: isLoadingWallet || isLoadingTransactions,
+    isLoading: isLoadingWallet || (enableTransactions && isLoadingTransactions),
   };
 };
