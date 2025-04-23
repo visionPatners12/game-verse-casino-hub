@@ -46,7 +46,18 @@ export function useWalletBalanceCheck() {
 
   // Composant de dialogue pour fonds insuffisants
   const InsufficientFundsDialog = () => (
-    <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <AlertDialog 
+      open={isDialogOpen} 
+      onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        // Force un timeout pour s'assurer que le modal est bien fermé avant de continuer
+        if (!open) {
+          setTimeout(() => {
+            document.body.style.pointerEvents = "";
+          }, 100);
+        }
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Fonds insuffisants</AlertDialogTitle>
@@ -55,8 +66,13 @@ export function useWalletBalanceCheck() {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Fermer</AlertDialogCancel>
-          <AlertDialogAction onClick={() => window.location.href = "/wallet"}>
+          <AlertDialogCancel onClick={() => {
+            // Assure que les clics fonctionnent après la fermeture du dialogue
+            document.body.style.pointerEvents = "";
+          }}>Fermer</AlertDialogCancel>
+          <AlertDialogAction onClick={() => {
+            window.location.href = "/wallet";
+          }}>
             Recharger le compte
           </AlertDialogAction>
         </AlertDialogFooter>

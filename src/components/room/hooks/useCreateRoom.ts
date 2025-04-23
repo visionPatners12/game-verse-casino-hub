@@ -29,7 +29,9 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       // On vérifie si l'utilisateur a assez de fonds
       const canProceed = await checkBalance(values.bet);
       if (!canProceed) {
-        // toast et dialogue gérés dans le hook
+        // On affiche simplement une notification supplémentaire pour être plus clair
+        console.log("Fonds insuffisants pour créer cette salle");
+        toast.error("Fonds insuffisants pour créer cette salle");
         return;
       }
 

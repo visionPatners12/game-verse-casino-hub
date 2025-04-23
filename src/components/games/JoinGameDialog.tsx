@@ -59,7 +59,7 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
     // Chercher entry_fee de la room
     const entryFee = await getRoomEntryFee(roomCode.toUpperCase());
     if (entryFee == null) {
-      // La validation de joinRoom s’occupera de l’erreur room introuvable
+      // La validation de joinRoom s'occupera de l'erreur room introuvable
       await joinRoom(roomCode);
       return;
     }
@@ -115,7 +115,18 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
           </form>
         </DialogContent>
       </Dialog>
-      <AlertDialog open={showInsufficientDialog} onOpenChange={setShowInsufficientDialog}>
+      <AlertDialog 
+        open={showInsufficientDialog} 
+        onOpenChange={(open) => {
+          setShowInsufficientDialog(open);
+          // Force un timeout pour s'assurer que le modal est bien fermé
+          if (!open) {
+            setTimeout(() => {
+              document.body.style.pointerEvents = "";
+            }, 100);
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Solde insuffisant</AlertDialogTitle>
@@ -125,7 +136,12 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => {
+              // Assure que les clics fonctionnent après la fermeture du dialogue
+              document.body.style.pointerEvents = "";
+            }}>
+              Annuler
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 setShowInsufficientDialog(false);
