@@ -56,6 +56,13 @@ export function useRoomActionsSlim(
     try {
       console.log(`Player ${currentUserId} is forfeiting game in room ${roomId}`);
       
+      // Clear storage first to prevent automatic reconnection attempts
+      roomService.saveActiveRoomToStorage("", "", "");
+      sessionStorage.removeItem('activeRoomId');
+      sessionStorage.removeItem('activeUserId');
+      sessionStorage.removeItem('activeGameType');
+      console.log("Storage cleared");
+      
       // Mark player as forfeited and disconnected
       const { error } = await supabase
         .from('game_players')
@@ -68,28 +75,43 @@ export function useRoomActionsSlim(
         
       if (error) {
         console.error("Failed to forfeit game:", error);
-        toast.error("Failed to forfeit the game. Please try again.");
+        toast.error("Échec lors de l'abandon de la partie. Veuillez réessayer.");
         return;
       }
       
-      // Clear storage
-      roomService.saveActiveRoomToStorage("", "", "");
-      sessionStorage.removeItem('activeRoomId');
-      sessionStorage.removeItem('activeUserId');
-      sessionStorage.removeItem('activeGameType');
+      console.log("Database updated successfully");
+      
+      // Clear user's active_room_id in the users table
+      const { error: userError } = await supabase
+        .from('users')
+        .update({ active_room_id: null })
+        .eq('id', currentUserId);
+      
+      if (userError) {
+        console.error("Failed to clear active room ID:", userError);
+        // Continue even if this update fails
+      } else {
+        console.log("Active room ID cleared successfully");
+      }
       
       // Disconnect from room
-      await roomService.disconnectFromRoom(roomId, currentUserId);
+      try {
+        await roomService.disconnectFromRoom(roomId, currentUserId);
+        console.log("Room disconnection successful");
+      } catch (disconnectError) {
+        console.error("Error during room disconnection:", disconnectError);
+        // Continue even if disconnection fails
+      }
       
       // Update game status
       setGameStatus('ended');
       
       // Redirect to games page
-      toast.success("You left the game");
+      toast.success("Vous avez quitté la partie");
       navigate('/games');
     } catch (error) {
       console.error("Failed to forfeit game:", error);
-      toast.error("Failed to leave the game. Please try again.");
+      toast.error("Échec lors de l'abandon de la partie. Veuillez réessayer.");
     }
   }, [roomId, currentUserId, navigate]);
 

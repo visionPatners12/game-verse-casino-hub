@@ -41,11 +41,17 @@ export const useActiveRoomGuard = () => {
         console.log("L'utilisateur est déjà dans sa room active, navigation autorisée");
         return;
       }
+      
+      // Si l'utilisateur est sur la page forfeit ou quitter, permettre la navigation
+      if (location.pathname.includes('/games') && location.pathname.includes('/forfeit')) {
+        console.log("Page de forfait, navigation autorisée");
+        return;
+      }
 
       // If user is not on their active room, block and redirect
       toast({
         title: "Partie en cours",
-        description: "Vous ne pouvez pas quitter la partie tant qu'elle n'est pas terminée ou abandonnée.",
+        description: "Vous devez quitter la partie en utilisant le bouton 'Quitter' pour pouvoir naviguer ailleurs.",
         variant: "destructive",
       });
 
