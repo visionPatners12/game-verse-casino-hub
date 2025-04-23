@@ -78,3 +78,4 @@ export class RoomConnectionStorage {
     return Boolean(roomId && userId);
   }
 }
+

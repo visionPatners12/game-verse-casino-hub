@@ -93,7 +93,6 @@ export class RoomPresenceService {
     }
   }
   
-  // Updated to accept a shouldLog parameter
   private async updateRoomPot(roomId: string, shouldLog: boolean = false) {
     try {
       const { data: players, error: playersError } = await supabase
@@ -156,3 +155,4 @@ export class RoomPresenceService {
     }
   }
 }
+

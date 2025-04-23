@@ -66,3 +66,4 @@ export const clearActiveRoomFromStorage = () => {
     console.error('Failed to clear room data from session storage:', error);
   }
 };
+

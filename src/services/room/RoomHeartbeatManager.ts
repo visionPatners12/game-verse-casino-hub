@@ -73,3 +73,4 @@ export class RoomHeartbeatManager {
     return this.heartbeatFrequency;
   }
 }
+

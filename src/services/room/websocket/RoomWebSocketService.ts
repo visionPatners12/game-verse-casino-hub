@@ -92,53 +92,7 @@ export class RoomWebSocketService extends WebSocketBase {
     
     try {
       // Mark player as disconnected with retries
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          const { error } = await supabase
-            .from('game_players')
-            .update({ is_connected: false })
-            .eq('session_id', roomId)
-            .eq('user_id', userId);
-            
-          if (!error) {
-            console.log(`Successfully marked player ${userId} as disconnected from room ${roomId}`);
-            break;
-          }
-          
-          if (attempt === 3) {
-            console.error(`Failed to mark player as disconnected after 3 attempts:`, error);
-          }
-        } catch (error) {
-          console.error(`Attempt ${attempt} to mark player as disconnected failed:`, error);
-          if (attempt < 3) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-          }
-        }
-      }
-      
-      // Update user's active_room_id with retries
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          const { error } = await supabase
-            .from('users')
-            .update({ active_room_id: null })
-            .eq('id', userId);
-            
-          if (!error) {
-            console.log(`Successfully cleared active_room_id for user ${userId}`);
-            break;
-          }
-          
-          if (attempt === 3) {
-            console.error(`Failed to clear active_room_id after 3 attempts:`, error);
-          }
-        } catch (error) {
-          console.error(`Attempt ${attempt} to clear active_room_id failed:`, error);
-          if (attempt < 3) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-          }
-        }
-      }
+      await this.presenceService.markPlayerDisconnected(roomId, userId);
       
       // Clean up channel and presence data
       await this.cleanupChannel(roomId);
