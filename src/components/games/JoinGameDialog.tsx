@@ -13,10 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useJoinRoom } from "@/hooks/room/useJoinRoom";
-import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
 import { useWallet } from "@/hooks/useWallet";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 interface JoinGameDialogProps {
   open: boolean;
@@ -26,8 +25,8 @@ interface JoinGameDialogProps {
 export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
   const [roomCode, setRoomCode] = useState("");
   const { joinRoom, isLoading } = useJoinRoom();
-  const { hasSufficientBalance } = useWalletBalanceCheck();
-  const { toast } = useToast();
+  const { wallet } = useWallet();
+  const navigate = useNavigate();
 
   // Récupération de la room pour check montant si nécessaire
   const getRoomEntryFee = async (code: string): Promise<number | null> => {
@@ -42,6 +41,7 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     // Chercher entry_fee de la room
     const entryFee = await getRoomEntryFee(roomCode.toUpperCase());
     if (entryFee == null) {
@@ -49,17 +49,17 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
       await joinRoom(roomCode);
       return;
     }
-    // Vérifie le solde.
-    if (!hasSufficientBalance(entryFee)) {
-      toast({
-        title: "Solde insuffisant",
-        description:
-          "Vous n'avez pas assez d'argent dans votre portefeuille pour rejoindre cette partie.",
-        variant: "destructive",
+    
+    // Vérifie le solde directement
+    if (!wallet || wallet.real_balance < entryFee) {
+      toast.error("Solde insuffisant", {
+        description: "Vous n'avez pas assez d'argent dans votre portefeuille pour rejoindre cette partie."
       });
-      onOpenChange(false); // Fermer la boîte
+      onOpenChange(false); // Fermer la boîte de dialogue
       return;
     }
+    
+    // Si on a assez d'argent, on rejoint la room
     await joinRoom(roomCode);
   };
 

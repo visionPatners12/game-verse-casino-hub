@@ -3,13 +3,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { isValidGameType, gameCodeToType } from "@/lib/gameTypes";
-import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
+import { isValidGameType } from "@/lib/gameTypes";
+import { useWallet } from "@/hooks/useWallet";
 
 export function useJoinRoom() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { hasSufficientBalance, checkBalance } = useWalletBalanceCheck();
+  const { wallet } = useWallet();
 
   const joinRoom = async (roomCode: string) => {
     if (roomCode.length !== 6) {
@@ -52,11 +52,10 @@ export function useJoinRoom() {
         toast.error("Ce salon est complet. Veuillez essayer un autre salon.");
         return;
       }
-
-      // Vérifier le solde du portefeuille
-      const canProceed = await checkBalance(room.entry_fee);
-      if (!canProceed) {
-        console.log("Fonds insuffisants pour rejoindre ce salon");
+      
+      // Vérifier le solde du portefeuille directement
+      if (room.entry_fee > 0 && (!wallet || wallet.real_balance < room.entry_fee)) {
+        toast.error("Fonds insuffisants pour rejoindre ce salon");
         return;
       }
       
