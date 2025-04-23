@@ -2,7 +2,7 @@
 import { Layout } from "@/components/Layout";
 import { GameRoomLayout } from "@/components/game/GameRoomLayout";
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFutId } from "@/hooks/useFutId";
 import { FutIdDialog } from "@/components/game/FutIdDialog";
@@ -51,26 +51,7 @@ const GameRoom = () => {
   // --- FUT ID: actif seulement pour FutArena ---
   const isFutArena = roomData?.game_type?.toLowerCase() === "futarena";
 
-  // For all connected players, check who needs FUT ID
-  const connectedPlayers = useMemo(
-    () =>
-      (roomData?.game_players ?? []).filter(
-        p => p.is_connected && !!p.user_id
-      ),
-    [roomData]
-  );
-
-  // Map of userId -> futId per connected player
-  const futIdsMap = {};
-  connectedPlayers.forEach(p => {
-    // Only check for the current user running this UI (cannot manage others)
-    if (p.user_id === currentUserId) {
-      // Use the hook to fetch futId for current user
-      // The hook is called below
-    }
-  });
-
-  // Only call useFutId for the current user, but we use roomData to know for others
+  // Hook pour le FUT ID
   const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId);
   const [showFutIdDialog, setShowFutIdDialog] = useState(false);
 
