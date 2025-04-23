@@ -26,6 +26,9 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
   const [roomCode, setRoomCode] = useState("");
   const { joinRoom, isLoading } = useJoinRoom();
   const navigate = useNavigate();
+  
+  // Disable transactions loading
+  const { wallet } = useWallet({ enableTransactions: false });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,4 +79,3 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
       </DialogContent>
     </Dialog>
   );
-}

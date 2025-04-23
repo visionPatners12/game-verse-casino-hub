@@ -7,7 +7,8 @@ import { toast } from "sonner";
  * @returns hasSufficientBalance: fonction qui vérifie si le montant peut être débité
  */
 export function useWalletBalanceCheck() {
-  const { wallet } = useWallet();
+  // Disable transaction loading since we only need the wallet balance
+  const { wallet } = useWallet({ enableTransactions: false });
 
   /**
    * Vérifie côté front uniquement si le wallet a assez de solde pour l'action.

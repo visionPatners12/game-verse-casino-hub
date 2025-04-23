@@ -8,6 +8,9 @@ import { useWallet } from "@/hooks/useWallet";
 
 export function useCreateRoom(username: string, gameType: string | undefined) {
   const navigate = useNavigate();
+  
+  // Add enableTransactions: false to prevent unnecessary transaction loading
+  const { wallet } = useWallet({ enableTransactions: false });
 
   const createRoom = async (values: CreateRoomFormData) => {
     try {

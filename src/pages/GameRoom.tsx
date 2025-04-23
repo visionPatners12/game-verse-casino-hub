@@ -8,11 +8,15 @@ import { useFutId } from "@/hooks/useFutId";
 import { FutIdDialog } from "@/components/game/FutIdDialog";
 import { toast } from "sonner";
 import { useGameRoom } from "@/hooks/useGameRoom";
+import { useWallet } from "@/hooks/useWallet"; // Import useWallet
 
 const GameRoom = () => {
   const navigate = useNavigate();
   const { session, isLoading: authLoading } = useAuth();
   const { roomId } = useParams<{ roomId: string }>();
+  
+  // Add wallet without transactions
+  const { wallet } = useWallet({ enableTransactions: false });
   
   // Utilize the useGameRoom hook - will be called unconditionally
   const { 

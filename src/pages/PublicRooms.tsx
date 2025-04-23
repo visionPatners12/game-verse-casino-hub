@@ -11,11 +11,15 @@ import { gameCodeToType } from "@/lib/gameTypes";
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useWallet } from "@/hooks/useWallet"; // Import useWallet
 
 const PublicRooms = () => {
-  const { gameType } = useParams();
+  const { gameType } = useParams<{ gameType: string }>();
   const navigate = useNavigate();
   const { session, isLoading: authLoading } = useAuth();
+  
+  // Add wallet without transactions
+  const { wallet } = useWallet({ enableTransactions: false });
   
   // Vérification de l'authentification
   useEffect(() => {
