@@ -2,14 +2,13 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
-export const useActiveRoomGuard = () => {
+export const useRouteGuard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) return;
@@ -20,32 +19,35 @@ export const useActiveRoomGuard = () => {
         .select('active_room_id')
         .eq('id', user.id)
         .single();
-        
+
       if (error) {
         console.error('Error checking active room:', error);
         return;
       }
 
-      if (userData?.active_room_id) {
-        // Si l'utilisateur a une room active
+      const activeRoomId = userData?.active_room_id;
+
+      if (activeRoomId) {
+        // Si l'utilisateur est dans une room
         const { data: roomData } = await supabase
           .from('game_sessions')
           .select('game_type')
-          .eq('id', userData.active_room_id)
+          .eq('id', activeRoomId)
           .single();
-          
-        if (roomData) {
-          const gameType = roomData.game_type.toLowerCase();
-          // Rediriger seulement si pas déjà sur la page de room
-          if (!location.pathname.includes(`/games/${gameType}/room/${userData.active_room_id}`)) {
-            toast.info("Redirecting to your active game room...");
-            navigate(`/games/${gameType}/room/${userData.active_room_id}`);
+
+        const gameType = roomData?.game_type?.toLowerCase();
+
+        // Si l'utilisateur n'est pas déjà sur la page de la room
+        if (!location.pathname.includes(`/games/${gameType}/room/${activeRoomId}`)) {
+          if (location.pathname !== '/games' && !location.pathname.startsWith('/games/')) {
+            toast.error("You must leave the current room first");
+            navigate(`/games/${gameType}/room/${activeRoomId}`);
           }
         }
       }
     };
 
-    // Vérifier au chargement initial
+    // Vérifier au chargement initial et lors des changements de route
     checkActiveRoom();
   }, [navigate, location.pathname, user]);
 };

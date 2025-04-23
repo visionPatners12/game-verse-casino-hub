@@ -1,8 +1,8 @@
 
 import { PropsWithChildren } from "react";
-import Navigation from "@/components/Navigation"; // Changed to default import
+import Navigation from "@/components/Navigation";
 import { Footer } from "./Footer";
-import { useActiveRoomGuard } from "@/hooks/useActiveRoomGuard";
+import { useRouteGuard } from "@/hooks/room/useRouteGuard";
 
 interface LayoutProps extends PropsWithChildren {
   hideNavigation?: boolean;
@@ -14,9 +14,8 @@ export const Layout = ({
   hideNavigation = false,
   hideFooter = false,
 }: LayoutProps) => {
-  // Apply the active room guard to every layout
-  // This ensures all pages using the Layout will be protected
-  useActiveRoomGuard();
+  // Apply the route guard to every layout
+  useRouteGuard();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
