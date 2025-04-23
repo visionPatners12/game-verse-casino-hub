@@ -48,11 +48,11 @@ const GameRoom = () => {
     return null; // Ne rien rendre pendant la redirection
   }
 
-  // --- FUT ID: actif seulement pour FutArena ---
+  // Déterminer si on est dans FutArena (déplacé après les early returns)
   const isFutArena = roomData?.game_type?.toLowerCase() === "futarena";
-
-  // Hook pour le FUT ID
-  const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId);
+  
+  // Hook pour le FUT ID - appelé de manière inconditionnelle pour assurer l'ordre des hooks
+  const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId || "");
   const [showFutIdDialog, setShowFutIdDialog] = useState(false);
 
   // Si la room est active, mettre à jour l'état du jeu
@@ -106,7 +106,7 @@ const GameRoom = () => {
         onStartGame={startGame}
         onForfeit={forfeitGame}
       />
-      {/* Only the current user can manage their own FUT ID */}
+      {/* Only show FutID dialog for FutArena games */}
       {isFutArena && (
         <FutIdDialog
           open={showFutIdDialog}
