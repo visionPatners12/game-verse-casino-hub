@@ -2,7 +2,6 @@
 import { Layout } from "@/components/Layout";
 import { GameRoomLayout } from "@/components/game/GameRoomLayout";
 import { useParams, useNavigate } from "react-router-dom";
-import { useRoomWebSocket } from "@/hooks/room/useRoomWebSocket";
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFutId } from "@/hooks/useFutId";
@@ -13,14 +12,20 @@ import { useGameRoom } from "@/hooks/useGameRoom";
 const GameRoom = () => {
   const navigate = useNavigate();
   const { session, isLoading: authLoading } = useAuth();
+  const { roomId } = useParams<{ roomId: string }>();
 
-  // Utiliser le hook useGameRoom pour la logique des salles de jeu
+  // Utiliser le hook useGameRoom pour la logique des salles de jeu et la websocket
   const { 
     loading, 
     roomData, 
     currentUserId, 
     gameName, 
-    gameStatus, 
+    gameStatus,
+    isReady,
+    toggleReady,
+    startGame,
+    forfeitGame,
+    players,
     fetchRoomData,
     InsufficientFundsDialog 
   } = useGameRoom();
@@ -42,16 +47,6 @@ const GameRoom = () => {
   if (!session) {
     return null; // Ne rien rendre pendant la redirection
   }
-
-  // Récupérer les données de WebSocket pour la room
-  const { roomId } = useParams<{ roomId: string }>();
-  const {
-    isReady,
-    toggleReady,
-    startGame,
-    forfeitGame,
-    players
-  } = useRoomWebSocket(roomId);
 
   // --- FUT ID: actif seulement pour FutArena ---
   const isFutArena = roomData?.game_type?.toLowerCase() === "futarena";
@@ -116,12 +111,6 @@ const GameRoom = () => {
       return () => clearInterval(refreshInterval);
     }
   }, [roomId, fetchRoomData, loading]);
-
-  useEffect(() => {
-    if (!authLoading && !session) {
-      navigate("/auth");
-    }
-  }, [authLoading, session, navigate]);
 
   return (
     <Layout>

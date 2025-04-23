@@ -16,7 +16,12 @@ export const useGameRoom = () => {
     isLoading,
     currentUserId,
     gameStatus,
-    fetchRoomData
+    fetchRoomData,
+    isReady,
+    toggleReady,
+    startGame,
+    forfeitGame,
+    players
   } = useRoomWebSocket(roomId);
 
   // Ajout du hook pour la vérification du solde
@@ -34,6 +39,11 @@ export const useGameRoom = () => {
     gameType,
     gameName,
     gameStatus,
+    isReady,
+    toggleReady,
+    startGame,
+    forfeitGame,
+    players,
     fetchRoomData,
     InsufficientFundsDialog
   };
