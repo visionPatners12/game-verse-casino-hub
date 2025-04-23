@@ -38,7 +38,10 @@ export const useActiveRoomGuard = () => {
           const gameType = roomData.game_type.toLowerCase();
           // Rediriger seulement si pas déjà sur la page de room
           if (!location.pathname.includes(`/games/${gameType}/room/${userData.active_room_id}`)) {
-            toast.info("Redirecting to your active game room...");
+            toast({
+              title: "Active Room Detected",
+              description: "Redirecting to your active game room...",
+            });
             navigate(`/games/${gameType}/room/${userData.active_room_id}`);
           }
         }
@@ -47,5 +50,5 @@ export const useActiveRoomGuard = () => {
 
     // Vérifier au chargement initial
     checkActiveRoom();
-  }, [navigate, location.pathname, user]);
+  }, [navigate, location.pathname, user, toast]);
 };
