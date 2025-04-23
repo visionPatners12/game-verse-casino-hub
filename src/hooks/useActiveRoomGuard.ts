@@ -43,7 +43,7 @@ export const useActiveRoomGuard = () => {
       }
       
       // Allow navigation to the games page if the user is trying to leave
-      if (location.pathname === '/games' || location.pathname.includes('/games/')) {
+      if (location.pathname === '/games' || location.pathname.startsWith('/games/')) {
         console.log("Navigation vers la page des jeux autorisée pour quitter la room");
         // Ensure we clear the active room when going to games page
         try {

@@ -38,6 +38,23 @@ export class RoomWebSocketService extends WebSocketBase {
     // Mark player as connected in the database, but don't depend on the channel being ready
     if (roomId && userId) {
       this.presenceService.markPlayerConnected(roomId, userId);
+      
+      // Explicitly update the user's active_room_id in the database
+      try {
+        supabase
+          .from('users')
+          .update({ active_room_id: roomId })
+          .eq('id', userId)
+          .then(({ error }) => {
+            if (error) {
+              console.error(`Error setting active_room_id=${roomId} for user ${userId}:`, error);
+            } else {
+              console.log(`Successfully set active_room_id=${roomId} for user ${userId}`);
+            }
+          });
+      } catch (error) {
+        console.error("Failed to update active_room_id:", error);
+      }
     }
     
     return roomChannel;
