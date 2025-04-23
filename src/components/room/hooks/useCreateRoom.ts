@@ -5,12 +5,9 @@ import { GameCode, isValidGameType, gameCodeToType, GameVariant } from "@/lib/ga
 import { CreateRoomFormData } from "../schemas/createRoomSchema";
 import { toast } from "sonner";
 import { useWallet } from "@/hooks/useWallet";
-import { roomService } from "@/services/room";
 
 export function useCreateRoom(username: string, gameType: string | undefined) {
   const navigate = useNavigate();
-  
-  // Add enableTransactions: false to prevent unnecessary transaction loading
   const { wallet } = useWallet({ enableTransactions: false });
 
   const createRoom = async (values: CreateRoomFormData) => {
@@ -47,7 +44,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
 
       console.log("Creating room with data:", insertData);
 
-      // STEP 1: Create the game session first
+      // STEP 1: Create the game session
       const { data, error } = await supabase
         .from('game_sessions')
         .insert(insertData)
@@ -66,7 +63,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
 
       console.log("Room created:", data);
 
-      // Get the username from the users table to ensure it's not null
+      // Get the username from the users table
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('username')
@@ -88,7 +85,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         session_id: data.id,
         display_name: userData.username,
         user_id: authData.user.id,
-        is_connected: true // Assurer que le joueur est marqué comme connecté
+        is_connected: true
       };
 
       if (gameType === "futarena" && values.eaId) {
@@ -105,25 +102,6 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         toast.error("Error joining room: " + playerError.message);
         throw playerError;
       }
-
-      // STEP 3: Explicitly update active_room_id to ensure it's set correctly
-      // This provides a redundant mechanism in case the trigger fails
-      console.log(`Setting active_room_id=${data.id} for user ${authData.user.id} explicitly`);
-      const { error: userUpdateError } = await supabase
-        .from('users')
-        .update({ active_room_id: data.id })
-        .eq('id', authData.user.id);
-        
-      if (userUpdateError) {
-        console.error("Error updating active_room_id:", userUpdateError);
-        // Continue despite the error since the trigger may have worked
-        // but log it for monitoring purposes
-      } else {
-        console.log(`Successfully set active_room_id=${data.id} for user ${authData.user.id}`);
-      }
-
-      // STEP 4: Save room connection to storage for reconnection capability
-      roomService.saveActiveRoomToStorage(data.id, authData.user.id, gameType);
 
       toast.success("Room created successfully!");
       navigate(`/games/${gameType}/room/${data.id}`);
