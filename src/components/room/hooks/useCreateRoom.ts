@@ -1,7 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { GameCode, isValidGameType, gameCodeToType, GameVariant } from "@/lib/gameTypes";
+import { GameCode, isValidGameType, gameCodeToType } from "@/lib/gameTypes";
 import { CreateRoomFormData } from "../schemas/createRoomSchema";
 import { toast } from "sonner";
 import { useWallet } from "@/hooks/useWallet";
@@ -12,7 +12,6 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
 
   const createRoom = async (values: CreateRoomFormData) => {
     try {
-      // First, check if user is authenticated
       const { data: authData } = await supabase.auth.getUser();
       if (!authData.user) {
         toast.error("You must be logged in to create a room");
@@ -36,7 +35,6 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         commission_rate: 5,
       };
 
-      // Ajout des champs spécifiques pour ArenaPlay Football
       if (gameType === "futarena") {
         insertData["match_duration"] = values.matchDuration || 12;
         insertData["ea_id"] = values.eaId;
@@ -44,7 +42,6 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
 
       console.log("Creating room with data:", insertData);
 
-      // STEP 1: Create the game session
       const { data, error } = await supabase
         .from('game_sessions')
         .insert(insertData)
@@ -63,7 +60,6 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
 
       console.log("Room created:", data);
 
-      // Get the username from the users table
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('username')
@@ -80,7 +76,6 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         return;
       }
 
-      // STEP 2: Add player to the room
       const playerInsert: any = {
         session_id: data.id,
         display_name: userData.username,
@@ -107,7 +102,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       navigate(`/games/${gameType}/room/${data.id}`);
     } catch (error: any) {
       console.error('Error creating room:', error);
-      toast.error(error.message || "Erreur inattendue.");
+      toast.error(error.message || "Unexpected error.");
     }
   };
 
