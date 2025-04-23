@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { GamesList } from '@/components/games/GamesList';
+import GamesList from '@/components/games/GamesList';  // Changed from named to default import
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';

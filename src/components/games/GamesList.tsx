@@ -15,18 +15,21 @@ interface Game {
 }
 
 interface GamesListProps {
-  games: Game[];
+  onGameSelect: (gameType: string) => void;  // Updated to match the new prop
 }
 
-const GamesList = ({ games }: GamesListProps) => {
+const GamesList = ({ onGameSelect }: GamesListProps) => {
   const navigate = useNavigate();
   
+  // Modify the rendering to use onGameSelect
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Assuming you want to pass the game type when selecting */}
       {games.map((game) => (
         <div key={game.id} className="flex flex-col gap-4">
           <GameCard 
-            {...game} 
+            {...game}
+            onClick={() => onGameSelect(game.type)}  // Added onClick handler
           />
         </div>
       ))}
@@ -34,4 +37,4 @@ const GamesList = ({ games }: GamesListProps) => {
   );
 };
 
-export default GamesList;
+export default GamesList;  // Ensuring default export
