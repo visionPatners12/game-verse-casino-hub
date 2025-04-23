@@ -9,7 +9,7 @@ import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
 export function useJoinRoom() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { checkAndDeductBalance } = useWalletBalanceCheck();
+  const { hasSufficientBalance } = useWalletBalanceCheck();
 
   const joinRoom = async (roomCode: string) => {
     if (roomCode.length !== 6) {
@@ -53,12 +53,7 @@ export function useJoinRoom() {
         return;
       }
 
-      // Vérifier le solde du portefeuille et essayer de déduire en base de données avant de continuer
-      const canProceed = await checkAndDeductBalance(room.entry_fee);
-      if (!canProceed) {
-        console.log("Fonds insuffisants pour rejoindre ce salon");
-        return;
-      }
+      // Vérifier le solde du portefeuille est géré dans le handleSubmit du JoinGameDialog
       
       // Check if user profile is complete
       const { data: userData, error: userError } = await supabase

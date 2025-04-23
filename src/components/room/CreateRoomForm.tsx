@@ -35,11 +35,10 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
   });
 
   const { createRoom } = useCreateRoom(username, gameType);
-  const { checkAndDeductBalance, InsufficientFundsDialog } = useWalletBalanceCheck();
+  const { hasSufficientBalance, InsufficientFundsDialog } = useWalletBalanceCheck();
 
   const handleSubmit = async (values: CreateRoomFormData) => {
-    const canProceed = await checkAndDeductBalance(values.bet);
-    if (canProceed) {
+    if (hasSufficientBalance(values.bet)) {
       createRoom(values);
     }
   };
