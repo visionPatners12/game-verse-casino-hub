@@ -14,6 +14,32 @@ export function useRoomConnection(roomId: string | undefined) {
   const { gameType } = useParams<{ gameType?: string }>();
   const { user } = useAuth();
 
+  // When user connects to a room, explicitly update the active_room_id in the database
+  useEffect(() => {
+    if (roomId && user?.id) {
+      // Update user's active_room_id directly in the database
+      const updateActiveRoom = async () => {
+        try {
+          console.log(`Setting active room ${roomId} for user ${user.id} in database`);
+          const { error } = await supabase
+            .from('users')
+            .update({ active_room_id: roomId })
+            .eq('id', user.id);
+            
+          if (error) {
+            console.error('Failed to update active_room_id in database:', error);
+          } else {
+            console.log(`Successfully set active_room_id=${roomId} for user ${user.id} in database`);
+          }
+        } catch (err) {
+          console.error('Error updating active_room_id:', err);
+        }
+      };
+      
+      updateActiveRoom();
+    }
+  }, [roomId, user?.id]);
+
   useEffect(() => {
     // Early return if we already have a roomId
     if (roomId) {
@@ -30,9 +56,6 @@ export function useRoomConnection(roomId: string | undefined) {
       if (!user || !user.id) {
         console.log("No authenticated user, clearing any stored room connection");
         roomService.saveActiveRoomToStorage("", "", "");
-        sessionStorage.removeItem('activeRoomId');
-        sessionStorage.removeItem('activeUserId');
-        sessionStorage.removeItem('activeGameType');
         setHasAttemptedReconnect(true);
         return;
       }
@@ -54,9 +77,6 @@ export function useRoomConnection(roomId: string | undefined) {
           if (!sessionData || !sessionData.id) {
             console.log("Room no longer exists, clearing storage");
             roomService.saveActiveRoomToStorage("", "", "");
-            sessionStorage.removeItem('activeRoomId');
-            sessionStorage.removeItem('activeUserId');
-            sessionStorage.removeItem('activeGameType');
           } else {
             // Check if player is actually in this room
             const { data: playerData } = await supabase
@@ -67,31 +87,34 @@ export function useRoomConnection(roomId: string | undefined) {
               .maybeSingle();
               
             if (playerData && playerData.id) {
+              // Update user's active_room_id in the database
+              const { error } = await supabase
+                .from('users')
+                .update({ active_room_id: storedRoomId })
+                .eq('id', user.id);
+                
+              if (error) {
+                console.error('Failed to update active_room_id on reconnection:', error);
+              } else {
+                console.log(`Updated active_room_id=${storedRoomId} for user ${user.id} on reconnection`);
+              }
+              
               // Only connect to room if this user is actually a player in that room
               console.log("User is a valid player in this room, reconnecting");
               roomService.connectToRoom(storedRoomId, storedUserId, storedGameType);
             } else {
               console.log("User is not a player in this room, clearing storage");
               roomService.saveActiveRoomToStorage("", "", "");
-              sessionStorage.removeItem('activeRoomId');
-              sessionStorage.removeItem('activeUserId');
-              sessionStorage.removeItem('activeGameType');
             }
           }
         } catch (error) {
           console.error("Error reconnecting to room:", error);
           roomService.saveActiveRoomToStorage("", "", "");
-          sessionStorage.removeItem('activeRoomId');
-          sessionStorage.removeItem('activeUserId');
-          sessionStorage.removeItem('activeGameType');
         }
       } else if (storedRoomId || storedUserId || storedGameType) {
         // If there's partial data or user mismatch, clear it all
         console.log("Invalid stored room data or user mismatch, clearing storage");
         roomService.saveActiveRoomToStorage("", "", "");
-        sessionStorage.removeItem('activeRoomId');
-        sessionStorage.removeItem('activeUserId');
-        sessionStorage.removeItem('activeGameType');
       }
       
       setHasAttemptedReconnect(true);

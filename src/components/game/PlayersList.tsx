@@ -10,7 +10,7 @@ interface Player {
   current_score: number;
   is_connected?: boolean;
   is_ready?: boolean;
-  has_forfeited?: boolean; // Ajout
+  has_forfeited?: boolean;
   users?: {
     username: string;
     avatar_url?: string;
@@ -44,7 +44,7 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
                   : 'bg-muted/50 text-muted-foreground'
             }`}
           >
-            <div className="flex items-center">
+            <div className="flex items-center gap-1">
               <Avatar className="h-6 w-6 mr-2">
                 {player.users?.avatar_url && (
                   <AvatarImage src={player.users.avatar_url} alt={player.users?.username || player.display_name} />
@@ -61,11 +61,11 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
                   <X className="w-4 h-4 text-destructive ml-1" aria-label="Forfait" />
                 )}
               </div>
-              {player.current_score > 0 && (
-                <span className="text-xs">{player.current_score} pts</span>
-              )}
             </div>
             <div className="flex items-center gap-1">
+              {player.current_score > 0 && (
+                <span className="text-xs mr-1">{player.current_score} pts</span>
+              )}
               {player.is_ready && player.is_connected && !player.has_forfeited && (
                 <Badge variant="default" className="flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" />

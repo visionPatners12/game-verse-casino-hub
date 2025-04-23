@@ -9,15 +9,23 @@ export class RoomConnectionStorage {
       }
       
       console.log(`Saving room connection data: roomId=${roomId}, userId=${userId}, gameType=${gameType}`);
+      
+      // Store both in sessionStorage and localStorage for redundancy
       sessionStorage.setItem('activeRoomId', roomId);
+      localStorage.setItem('activeRoomId', roomId);
+      
       sessionStorage.setItem('activeUserId', userId);
+      localStorage.setItem('activeUserId', userId);
+      
       // Always store the gameType if provided
       if (gameType) {
         sessionStorage.setItem('activeGameType', gameType);
+        localStorage.setItem('activeGameType', gameType);
       }
-      console.log(`Saved room ${roomId} and user ${userId} to session storage for reconnection. Game type: ${gameType}`);
+      
+      console.log(`Saved room ${roomId} and user ${userId} to storage for reconnection. Game type: ${gameType}`);
     } catch (error) {
-      console.error('Failed to save room data to session storage:', error);
+      console.error('Failed to save room data to storage:', error);
     }
   }
 
@@ -42,9 +50,10 @@ export class RoomConnectionStorage {
 
   getStored() {
     try {
-      const roomId = sessionStorage.getItem('activeRoomId');
-      const userId = sessionStorage.getItem('activeUserId');
-      const gameType = sessionStorage.getItem('activeGameType');
+      // First try sessionStorage, then fall back to localStorage
+      const roomId = sessionStorage.getItem('activeRoomId') || localStorage.getItem('activeRoomId');
+      const userId = sessionStorage.getItem('activeUserId') || localStorage.getItem('activeUserId');
+      const gameType = sessionStorage.getItem('activeGameType') || localStorage.getItem('activeGameType');
       
       // Only return valid values if all required fields exist
       if (roomId && userId) {
@@ -59,7 +68,7 @@ export class RoomConnectionStorage {
         return { roomId: null, userId: null, gameType: null };
       }
     } catch (error) {
-      console.error('Failed to get room data from session storage:', error);
+      console.error('Failed to get room data from storage:', error);
       return { roomId: null, userId: null, gameType: null };
     }
   }

@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import GameChat from "@/components/GameChat";
@@ -115,15 +116,38 @@ export function GameRoomLayout({
                           </Button>
                         )}
 
-                        <Button 
-                          onClick={onForfeit} 
-                          variant="destructive"
-                          className="flex items-center gap-2 text-sm"
-                          size={isMobile ? "sm" : "default"}
-                        >
-                          <DoorOpen className="h-4 w-4" />
-                          {!isMobile && "Leave Room"}
-                        </Button>
+                        <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="destructive"
+                              className="flex items-center gap-2 text-sm"
+                              size={isMobile ? "sm" : "default"}
+                            >
+                              <DoorOpen className="h-4 w-4" />
+                              {!isMobile && "Leave Room"}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmer l'abandon</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Êtes-vous sûr de vouloir quitter la partie ? Cela sera considéré comme un <b>abandon</b> (<span className="text-destructive">défaite automatique</span>) et sera visible par les autres joueurs.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-destructive text-destructive-foreground"
+                                onClick={() => {
+                                  setShowLeaveDialog(false);
+                                  onForfeit && onForfeit();
+                                }}
+                              >
+                                Oui, je quitte et j'abandonne
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   )}
@@ -169,39 +193,7 @@ export function GameRoomLayout({
         </div>
       </main>
 
-      <div className="flex justify-end mt-4">
-        <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
-          <AlertDialogTrigger asChild>
-            <button
-              className="bg-destructive text-destructive-foreground px-4 py-2 rounded shadow hover:bg-destructive/80 transition"
-              onClick={() => setShowLeaveDialog(true)}
-              data-testid="leave-room-btn"
-            >
-              Quitter la partie
-            </button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirmer l'abandon</AlertDialogTitle>
-              <AlertDialogDescription>
-                Êtes-vous sûr de vouloir quitter la partie ? Cela sera considéré comme un <b>abandon</b> (<span className="text-destructive">défaite automatique</span>) et sera visible par les autres joueurs.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Annuler</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-destructive-foreground"
-                onClick={() => {
-                  setShowLeaveDialog(false);
-                  onForfeit && onForfeit();
-                }}
-              >
-                Oui, je quitte et j'abandonne
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+      {/* Remove this duplicate leave room button */}
     </div>
   );
 }
