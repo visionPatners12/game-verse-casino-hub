@@ -26,8 +26,7 @@ const GameRoom = () => {
     startGame,
     forfeitGame,
     players,
-    fetchRoomData,
-    InsufficientFundsDialog 
+    fetchRoomData
   } = useGameRoom();
 
   // Always call hooks regardless of conditions - move any conditional logic inside effect callbacks
@@ -122,8 +121,6 @@ const GameRoom = () => {
           isLoading={futIdLoading}
         />
       )}
-      {/* Afficher la boîte de dialogue pour solde insuffisant */}
-      <InsufficientFundsDialog />
     </Layout>
   );
 };
