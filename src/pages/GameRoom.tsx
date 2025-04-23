@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout";
 import { GameRoomLayout } from "@/components/game/GameRoomLayout";
 import { useParams, useNavigate } from "react-router-dom";
@@ -10,6 +9,7 @@ import { toast } from "sonner";
 import { useGameRoom } from "@/hooks/useGameRoom";
 import { useWallet } from "@/hooks/useWallet";
 import { useActiveRoomGuard } from "@/hooks/useActiveRoomGuard";
+import { useRoomConnectionStatus } from "@/hooks/room/useRoomConnectionStatus";
 
 const GameRoom = () => {
   useActiveRoomGuard();
@@ -23,7 +23,7 @@ const GameRoom = () => {
   const { 
     loading, 
     roomData, 
-    currentUserId, 
+    currentUserId,
     gameName, 
     gameStatus,
     isReady,
@@ -39,6 +39,8 @@ const GameRoom = () => {
   const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId || "");
   const [isFutArena, setIsFutArena] = useState(false);
   
+  const { isConnecting, connectionVerified } = useRoomConnectionStatus(roomId, currentUserId);
+
   useEffect(() => {
     if (!authLoading && !session) {
       console.log("User not authenticated, redirecting to /auth");
@@ -86,12 +88,16 @@ const GameRoom = () => {
     }
   }, [roomId, fetchRoomData, loading]);
 
-  if (authLoading || loading) {
+  if (authLoading || loading || isConnecting) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
   if (!session) {
     return <Layout><div className="flex items-center justify-center min-h-screen">Redirecting to authentication page...</div></Layout>;
+  }
+
+  if (!connectionVerified) {
+    return <Layout><div className="flex items-center justify-center min-h-screen">Verifying room connection...</div></Layout>;
   }
 
   return (

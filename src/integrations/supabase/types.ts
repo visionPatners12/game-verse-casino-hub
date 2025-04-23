@@ -994,6 +994,13 @@ export type Database = {
     Enums: {
       balance_source: "real" | "bonus"
       document_type: "ID" | "ProofOfAddress" | "Passport"
+      game_code:
+        | "ludo"
+        | "tictactoe"
+        | "chess"
+        | "checkers"
+        | "futarena"
+        | "checkgame"
       game_type: "Ludo" | "Checkers" | "TicTacToe" | "CheckGame" | "FUTArena"
       game_variant: "ludo" | "checkers" | "tictactoe" | "checkgame" | "futarena"
       kyc_status: "Pending" | "Approved" | "Rejected"
@@ -1128,6 +1135,14 @@ export const Constants = {
     Enums: {
       balance_source: ["real", "bonus"],
       document_type: ["ID", "ProofOfAddress", "Passport"],
+      game_code: [
+        "ludo",
+        "tictactoe",
+        "chess",
+        "checkers",
+        "futarena",
+        "checkgame",
+      ],
       game_type: ["Ludo", "Checkers", "TicTacToe", "CheckGame", "FUTArena"],
       game_variant: ["ludo", "checkers", "tictactoe", "checkgame", "futarena"],
       kyc_status: ["Pending", "Approved", "Rejected"],

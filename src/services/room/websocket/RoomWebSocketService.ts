@@ -1,4 +1,3 @@
-
 import { RoomChannelsManager } from "./channels/RoomChannelsManager";
 import { RoomPresenceManager } from "./presence/RoomPresenceManager";
 import { WebSocketBase } from "./WebSocketBase";
@@ -35,30 +34,51 @@ export class RoomWebSocketService extends WebSocketBase {
     
     const roomChannel = this.roomConnection.setupChannel(roomId, userId, gameType);
     
-    // Mark player as connected in the database, but don't depend on the channel being ready
+    // Mark player as connected in the database with comprehensive error handling
     if (roomId && userId) {
-      this.presenceService.markPlayerConnected(roomId, userId);
+      this.connectWithRetry(roomId, userId);
       
       // Explicitly update the user's active_room_id in the database
-      try {
-        console.log(`Setting active_room_id=${roomId} for user ${userId} in connectToRoom`);
-        supabase
-          .from('users')
-          .update({ active_room_id: roomId })
-          .eq('id', userId)
-          .then(({ error }) => {
-            if (error) {
-              console.error(`Error setting active_room_id=${roomId} for user ${userId}:`, error);
-            } else {
-              console.log(`Successfully set active_room_id=${roomId} for user ${userId}`);
-            }
-          });
-      } catch (error) {
-        console.error("Failed to update active_room_id:", error);
-      }
+      this.updateActiveRoomId(roomId, userId);
     }
     
     return roomChannel;
+  }
+
+  private async connectWithRetry(roomId: string, userId: string, retries = 3) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        await this.presenceService.markPlayerConnected(roomId, userId);
+        console.log(`Successfully connected player ${userId} to room ${roomId} on attempt ${attempt}`);
+        return;
+      } catch (error) {
+        console.error(`Connection attempt ${attempt} failed:`, error);
+        if (attempt === retries) {
+          console.error("Max retries reached, connection failed");
+          throw error;
+        }
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+  }
+
+  private async updateActiveRoomId(roomId: string, userId: string) {
+    try {
+      console.log(`Setting active_room_id=${roomId} for user ${userId}`);
+      const { error } = await supabase
+        .from('users')
+        .update({ active_room_id: roomId })
+        .eq('id', userId);
+        
+      if (error) {
+        console.error(`Error updating active_room_id: ${error.message}`);
+      } else {
+        console.log(`Successfully set active_room_id=${roomId} for user ${userId}`);
+      }
+    } catch (error) {
+      console.error("Failed to update active_room_id:", error);
+    }
   }
 
   async disconnectFromRoom(roomId: string, userId: string | null) {
@@ -71,32 +91,56 @@ export class RoomWebSocketService extends WebSocketBase {
     
     // Clear active room storage first
     this.connectionStorage.save("", "", "");
-    this.connectionStorage.clear(); // Explicitly call clear to ensure both session and local storage are cleared
+    this.connectionStorage.clear();
     
     try {
-      // Mark player as disconnected in the database with direct Supabase call for reliability
-      const { error } = await supabase
-        .from('game_players')
-        .update({ is_connected: false })
-        .eq('session_id', roomId)
-        .eq('user_id', userId);
-        
-      if (error) {
-        console.error(`Error updating game_players: ${error.message}`);
-      } else {
-        console.log(`Player ${userId} marked as disconnected in database for room ${roomId}`);
+      // Mark player as disconnected with retries
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const { error } = await supabase
+            .from('game_players')
+            .update({ is_connected: false })
+            .eq('session_id', roomId)
+            .eq('user_id', userId);
+            
+          if (!error) {
+            console.log(`Successfully marked player ${userId} as disconnected from room ${roomId}`);
+            break;
+          }
+          
+          if (attempt === 3) {
+            console.error(`Failed to mark player as disconnected after 3 attempts:`, error);
+          }
+        } catch (error) {
+          console.error(`Attempt ${attempt} to mark player as disconnected failed:`, error);
+          if (attempt < 3) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          }
+        }
       }
       
-      // Update user's active_room_id as well for redundancy
-      const { error: userError } = await supabase
-        .from('users')
-        .update({ active_room_id: null })
-        .eq('id', userId);
-        
-      if (userError) {
-        console.error(`Error updating user's active_room_id: ${userError.message}`);
-      } else {
-        console.log(`User ${userId} active_room_id cleared in database`);
+      // Update user's active_room_id with retries
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const { error } = await supabase
+            .from('users')
+            .update({ active_room_id: null })
+            .eq('id', userId);
+            
+          if (!error) {
+            console.log(`Successfully cleared active_room_id for user ${userId}`);
+            break;
+          }
+          
+          if (attempt === 3) {
+            console.error(`Failed to clear active_room_id after 3 attempts:`, error);
+          }
+        } catch (error) {
+          console.error(`Attempt ${attempt} to clear active_room_id failed:`, error);
+          if (attempt < 3) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          }
+        }
       }
       
       // Clean up channel and presence data
@@ -105,8 +149,6 @@ export class RoomWebSocketService extends WebSocketBase {
       console.log(`Successfully disconnected from room ${roomId}`);
     } catch (error) {
       console.error(`Error during disconnection from room ${roomId}:`, error);
-      // Still consider disconnection successful even if there's an error
-      // since we've already cleared the storage
     }
   }
 
@@ -134,7 +176,6 @@ export class RoomWebSocketService extends WebSocketBase {
     return this.roomConnection.getLastPresenceState(roomId);
   }
 
-  // Room connection storage methods
   saveActiveRoomToStorage(roomId: string, userId: string, gameType?: string) {
     this.connectionStorage.save(roomId, userId, gameType);
   }
@@ -143,7 +184,6 @@ export class RoomWebSocketService extends WebSocketBase {
     return this.connectionStorage.getStored();
   }
 
-  // Game state methods
   async startGame(roomId: string) {
     const channel = this.getChannel(roomId);
     return this.gameStateService.startGame(roomId, channel);
@@ -159,7 +199,6 @@ export class RoomWebSocketService extends WebSocketBase {
     this.gameStateService.broadcastMove(roomId, moveData, channel);
   }
 
-  // Player presence methods
   async markPlayerReady(roomId: string, userId: string, isReady: boolean = true) {
     const channel = this.getChannel(roomId);
     return this.presenceService.markPlayerReady(roomId, userId, isReady, channel);
