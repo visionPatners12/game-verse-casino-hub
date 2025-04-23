@@ -1,12 +1,31 @@
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useJoinRoom } from "@/hooks/room/useJoinRoom";
 import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useWallet } from "@/hooks/useWallet";
+import { useNavigate } from "react-router-dom";
 
 interface JoinGameDialogProps {
   open: boolean;
@@ -16,10 +35,39 @@ interface JoinGameDialogProps {
 export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
   const [roomCode, setRoomCode] = useState("");
   const { joinRoom, isLoading } = useJoinRoom();
-  const { InsufficientFundsDialog } = useWalletBalanceCheck();
+  const { hasSufficientBalance } = useWalletBalanceCheck();
+
+  // Statut de la dialog "fonds insuffisants"
+  const [showInsufficientDialog, setShowInsufficientDialog] = useState(false);
+
+  const { wallet } = useWallet();
+  const navigate = useNavigate();
+
+  // Récupération de la room pour check montant si nécessaire
+  const getRoomEntryFee = async (code: string): Promise<number | null> => {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data: room } = await supabase
+      .from("game_sessions")
+      .select("entry_fee")
+      .eq("room_id", code)
+      .maybeSingle();
+    return room?.entry_fee ?? null;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Chercher entry_fee de la room
+    const entryFee = await getRoomEntryFee(roomCode.toUpperCase());
+    if (entryFee == null) {
+      // La validation de joinRoom s’occupera de l’erreur room introuvable
+      await joinRoom(roomCode);
+      return;
+    }
+    // Vérifie le solde.
+    if (!hasSufficientBalance(entryFee)) {
+      setShowInsufficientDialog(true);
+      return;
+    }
     await joinRoom(roomCode);
   };
 
@@ -50,7 +98,10 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit" disabled={isLoading || roomCode.length !== 6}>
+              <Button
+                type="submit"
+                disabled={isLoading || roomCode.length !== 6}
+              >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -64,7 +115,28 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
           </form>
         </DialogContent>
       </Dialog>
-      <InsufficientFundsDialog />
+      <AlertDialog open={showInsufficientDialog} onOpenChange={setShowInsufficientDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Solde insuffisant</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vous n&apos;avez pas assez d&apos;argent dans votre portefeuille pour rejoindre cette partie.<br />
+              Ajoutez des fonds pour continuer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowInsufficientDialog(false);
+                navigate("/wallet");
+              }}
+            >
+              Ajouter des fonds
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
