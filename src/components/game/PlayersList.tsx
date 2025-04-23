@@ -1,6 +1,6 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, CheckCircle2, XCircle } from "lucide-react";
+import { Users, CheckCircle2, XCircle, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface Player {
@@ -10,6 +10,7 @@ interface Player {
   current_score: number;
   is_connected?: boolean;
   is_ready?: boolean;
+  has_forfeited?: boolean; // Ajout
   users?: {
     username: string;
     avatar_url?: string;
@@ -24,7 +25,7 @@ interface PlayersListProps {
 
 const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) => {
   const connectedPlayers = players.filter(player => player.is_connected);
-  
+
   return (
     <div className="mb-6">
       <h3 className="text-sm font-medium mb-2 flex items-center gap-1">
@@ -52,30 +53,37 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
                   {(player.users?.username || player.display_name).charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className="overflow-hidden">
-                <span className="font-medium truncate block">
+              <div className="overflow-hidden flex items-center gap-1">
+                <span className={`font-medium truncate block ${player.has_forfeited ? "line-through text-destructive" : ""}`}>
                   {player.users?.username || player.display_name}
                 </span>
-                {player.current_score > 0 && (
-                  <span className="text-xs">{player.current_score} pts</span>
+                {player.has_forfeited && (
+                  <X className="w-4 h-4 text-destructive ml-1" aria-label="Forfait" />
                 )}
               </div>
+              {player.current_score > 0 && (
+                <span className="text-xs">{player.current_score} pts</span>
+              )}
             </div>
             <div className="flex items-center gap-1">
-              {player.is_ready && player.is_connected && (
+              {player.is_ready && player.is_connected && !player.has_forfeited && (
                 <Badge variant="default" className="flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" />
                 </Badge>
               )}
-              {!player.is_connected && (
+              {!player.is_connected && !player.has_forfeited && (
                 <Badge variant="destructive" className="flex items-center gap-1">
                   <XCircle className="h-3 w-3" />
+                </Badge>
+              )}
+              {player.has_forfeited && (
+                <Badge variant="destructive" className="flex items-center gap-1">
+                  <X className="h-3 w-3" /> Abandon
                 </Badge>
               )}
             </div>
           </div>
         ))}
-        
         {Array.from({ length: maxPlayers - players.length }).map((_, index) => (
           <div 
             key={`empty-${index}`}
