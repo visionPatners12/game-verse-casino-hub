@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,19 +44,8 @@ export const useActiveRoomGuard = () => {
       // Allow navigation to the games page if the user is trying to leave
       if (location.pathname === '/games' || location.pathname.startsWith('/games/')) {
         console.log("Navigation vers la page des jeux autorisée pour quitter la room");
-        // Ensure we clear the active room when going to games page
-        try {
-          const { error: updateError } = await supabase
-            .from('users')
-            .update({ active_room_id: null })
-            .eq('id', user.id);
-            
-          if (!updateError) {
-            console.log("Active room ID cleared when navigating to games page");
-          }
-        } catch (e) {
-          console.error("Failed to clear active room when navigating:", e);
-        }
+        // We won't clear the active room when going to games page - let the Leave Room button handle this
+        // Otherwise users could bypass the leave room confirmation by just navigating away
         return;
       }
       

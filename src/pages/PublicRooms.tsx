@@ -12,10 +12,10 @@ import { Layout } from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useWallet } from "@/hooks/useWallet";
-import { useActiveRoomGuard } from "@/hooks/useActiveRoomGuard"; // Ajout du hook
+import { useActiveRoomGuard } from "@/hooks/useActiveRoomGuard"; // Use the hook
 
 const PublicRooms = () => {
-  // Ajouter le hook de garde pour les rooms actives
+  // Use the active room guard to redirect if user has an active room elsewhere
   useActiveRoomGuard();
   
   const { gameType } = useParams<{ gameType: string }>();
