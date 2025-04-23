@@ -13,7 +13,7 @@ export function useJoinRoom() {
 
   const joinRoom = async (roomCode: string) => {
     if (roomCode.length !== 6) {
-      toast.error("Invalid room code. Please enter a 6-character code.");
+      toast.error("Code de salon invalide. Veuillez entrer un code à 6 caractères.");
       return;
     }
     
@@ -24,7 +24,7 @@ export function useJoinRoom() {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        toast.error("You must be logged in to join a room");
+        toast.error("Vous devez être connecté pour rejoindre un salon");
         navigate("/auth");
         return;
       }
@@ -41,24 +41,25 @@ export function useJoinRoom() {
       }
       
       if (!room) {
-        toast.error("Room not found. Please check the code and try again.");
+        toast.error("Salon introuvable. Veuillez vérifier le code et réessayer.");
         return;
       }
 
-      console.log("Found room:", room);
+      console.log("Salon trouvé:", room);
 
-      // Check wallet balance and try to deduct in the DB before proceeding
+      // Check if room is full
+      if (room.current_players >= room.max_players) {
+        toast.error("Ce salon est complet. Veuillez essayer un autre salon.");
+        return;
+      }
+
+      // Vérifier le solde du portefeuille et essayer de déduire en base de données avant de continuer
       const canProceed = await checkAndDeductBalance(room.entry_fee);
       if (!canProceed) {
+        console.log("Fonds insuffisants pour rejoindre ce salon");
         return;
       }
       
-      // Check if room is full
-      if (room.current_players >= room.max_players) {
-        toast.error("This room is full. Please try another room.");
-        return;
-      }
-
       // Check if user profile is complete
       const { data: userData, error: userError } = await supabase
         .from('users')
@@ -67,12 +68,12 @@ export function useJoinRoom() {
         .single();
         
       if (userError) {
-        console.error("Error fetching user data:", userError);
+        console.error("Erreur lors de la récupération des données de l'utilisateur:", userError);
         throw userError;
       }
       
       if (!userData || !userData.username) {
-        toast.error("Please set up your username in your profile.");
+        toast.error("Veuillez configurer votre nom d'utilisateur dans votre profil.");
         navigate("/profile");
         return;
       }
@@ -89,9 +90,9 @@ export function useJoinRoom() {
         futId = futPlayer?.fut_id;
         
         if (!futId) {
-          console.log("No FUT ID found for this user, will prompt for it later");
+          console.log("Aucun FUT ID trouvé pour cet utilisateur, demandera plus tard");
         } else {
-          console.log("Found FUT ID:", futId);
+          console.log("FUT ID trouvé:", futId);
         }
       }
       
@@ -108,7 +109,7 @@ export function useJoinRoom() {
       }
       
       if (existingPlayer) {
-        console.log("Player already exists in room, updating connection status and FUT ID if needed");
+        console.log("Le joueur existe déjà dans la salle, mise à jour du statut de connexion et du FUT ID si nécessaire");
         // Player already exists, update connection status and potentially FUT ID
         const updateData: any = { is_connected: true };
         
@@ -123,11 +124,11 @@ export function useJoinRoom() {
           .eq('id', existingPlayer.id);
           
         if (updateError) {
-          console.error("Error updating player connection:", updateError);
+          console.error("Erreur lors de la mise à jour de la connexion du joueur:", updateError);
           throw updateError;
         }
       } else {
-        console.log("Adding new player to room:", room.id);
+        console.log("Ajout d'un nouveau joueur à la salle:", room.id);
         // Add player to the room
         const newPlayerData: any = {
           session_id: room.id,
@@ -148,12 +149,12 @@ export function useJoinRoom() {
           .select();
           
         if (joinError) {
-          console.error("Error joining room:", joinError);
-          toast.error("Error joining room: " + joinError.message);
+          console.error("Erreur lors de l'ajout du joueur à la salle:", joinError);
+          toast.error("Erreur lors de l'ajout du joueur à la salle: " + joinError.message);
           throw joinError;
         }
         
-        console.log("Successfully added player to room:", newPlayer);
+        console.log("Joueur ajouté avec succès à la salle:", newPlayer);
       }
       
       // Find game type for navigation
@@ -162,18 +163,18 @@ export function useJoinRoom() {
         : String(room.game_type).toLowerCase();
         
       if (!isValidGameType(gameType)) {
-        toast.error("Invalid game type. Please contact support.");
+        toast.error("Type de jeu invalide. Veuillez contacter le support.");
         return;
       }
       
       // Navigate to game room
-      console.log(`Navigating to /games/${gameType}/room/${room.id}`);
+      console.log(`Navigation vers /games/${gameType}/room/${room.id}`);
       navigate(`/games/${gameType}/room/${room.id}`);
-      toast.success("Joined room successfully!");
+      toast.success("Vous avez rejoint le salon avec succès !");
       
     } catch (error: any) {
-      console.error("Error joining room:", error);
-      toast.error(error.message || "Failed to join room. Please try again.");
+      console.error("Erreur lors de la tentative de rejoindre le salon:", error);
+      toast.error(error.message || "Échec de l'accès au salon. Veuillez réessayer.");
     } finally {
       setIsLoading(false);
     }

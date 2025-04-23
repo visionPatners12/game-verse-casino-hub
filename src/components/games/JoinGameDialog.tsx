@@ -16,7 +16,7 @@ interface JoinGameDialogProps {
 export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
   const [roomCode, setRoomCode] = useState("");
   const { joinRoom, isLoading } = useJoinRoom();
-  const { checkAndDeductBalance, InsufficientFundsDialog } = useWalletBalanceCheck();
+  const { InsufficientFundsDialog } = useWalletBalanceCheck();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,19 +29,19 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
         <DialogContent className="sm:max-w-[425px]">
           <form onSubmit={handleSubmit}>
             <DialogHeader>
-              <DialogTitle>Join Game Room</DialogTitle>
+              <DialogTitle>Rejoindre un salon de jeu</DialogTitle>
               <DialogDescription>
-                Enter the 6-character room code to join the game.
+                Entrez le code de salon à 6 caractères pour rejoindre la partie.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="roomCode">Room Code</Label>
+                <Label htmlFor="roomCode">Code du salon</Label>
                 <Input
                   id="roomCode"
                   value={roomCode}
                   onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                  placeholder="Enter room code (e.g. ABC123)"
+                  placeholder="Entrez le code du salon (ex. ABC123)"
                   className="uppercase"
                   maxLength={6}
                   autoComplete="off"
@@ -54,10 +54,10 @@ export function JoinGameDialog({ open, onOpenChange }: JoinGameDialogProps) {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Joining...
+                    Connexion...
                   </>
                 ) : (
-                  "Join Room"
+                  "Rejoindre le salon"
                 )}
               </Button>
             </DialogFooter>

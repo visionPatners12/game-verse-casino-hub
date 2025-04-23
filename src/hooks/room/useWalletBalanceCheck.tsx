@@ -31,31 +31,37 @@ export function useWalletBalanceCheck() {
       return false;
     }
 
-    // Si déjà insuffisant côté front, affichage immédiat
+    // Si déjà insuffisant côté front, affichage immédiat du dialogue
     if (wallet.real_balance < amount) {
       setShowInsufficientFundsDialog(true);
       return false;
     }
 
-    // Appel safe à la fonction Supabase-Postgres pour déduire le montant
-    const { data, error } = await supabase.rpc('deduct_entry_fee', {
-      p_user_id: wallet.user_id,
-      p_amount: amount
-    });
+    try {
+      // Appel safe à la fonction Supabase-Postgres pour déduire le montant
+      const { data, error } = await supabase.rpc('deduct_entry_fee', {
+        p_user_id: wallet.user_id,
+        p_amount: amount
+      });
 
-    if (error) {
-      // S'il manque le solde, la fonction SQL échoue : info user
+      if (error) {
+        console.error("Erreur lors de la déduction des fonds:", error);
+        // S'il manque le solde, la fonction SQL échoue : info user
+        setShowInsufficientFundsDialog(true);
+        return false;
+      }
+
+      // Success : solde réellement déduit en DB
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la vérification du solde:", error);
       setShowInsufficientFundsDialog(true);
-      toast.error("Solde insuffisant.");
       return false;
     }
-
-    // Success : solde réellement déduit en DB
-    return true;
   };
 
   /**
-   * Modale affichée si solde insuffisant
+   * Composant de dialogue affiché si solde insuffisant
    */
   const InsufficientFundsDialog = () => (
     <AlertDialog 
@@ -85,6 +91,8 @@ export function useWalletBalanceCheck() {
 
   return {
     checkAndDeductBalance,
-    InsufficientFundsDialog
+    InsufficientFundsDialog,
+    showInsufficientFundsDialog,
+    setShowInsufficientFundsDialog
   };
 }
