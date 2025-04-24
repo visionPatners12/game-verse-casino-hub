@@ -25,8 +25,24 @@ serve(async (req) => {
 
     const data = await response.json();
 
+    // Transform the data to match the expected structure for duo bets
+    const formattedMatches = data.map(match => ({
+      id: match.id,
+      name: match.name,
+      starting_at: match.starting_at,
+      participants: match.participants.map(team => ({
+        name: team.name
+      })),
+      stage: {
+        name: match.stage?.name || 'Unknown Stage'
+      },
+      round: {
+        name: match.round?.name || 'Unknown Round'
+      }
+    }));
+
     return new Response(
-      JSON.stringify(data),
+      JSON.stringify(formattedMatches),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
@@ -41,3 +57,4 @@ serve(async (req) => {
     );
   }
 });
+
