@@ -31,17 +31,9 @@ const GameChat = () => {
     {
       id: "msg2",
       user: { id: "system", name: "System", avatar: "" },
-      text: `🎾 Tennis Live
-    ┌───────┐
-    │       │
-    │   O   │
-    │       │
-    └───┬───┘   
-        │     ${matchesString}
-        │     
-    ════╪════  
-        │     
-        │     `,
+      text: `Football Live
+      
+${matchesString}`,
       timestamp: "1 min ago",
       isSpecial: true,
     },
