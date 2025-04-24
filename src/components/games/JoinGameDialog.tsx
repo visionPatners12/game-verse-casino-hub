@@ -67,7 +67,7 @@ export function JoinGameDialog({ open, onOpenChange, slim = false }: JoinGameDia
         entry_fee: room.entry_fee,
         max_players: room.max_players,
         current_players: room.current_players,
-        winner_count: room.winner_count || 1, // Add default value if not present
+        winner_count: 1, // Default to 1 winner since the field might not exist
         commission_rate: room.commission_rate
       });
       
