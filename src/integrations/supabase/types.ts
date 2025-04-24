@@ -691,6 +691,7 @@ export type Database = {
           created_at: string | null
           id: string
           status: Database["public"]["Enums"]["ticket_status"]
+          subject: string
           updated_at: string | null
           user_id: string
         }
@@ -699,6 +700,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           status?: Database["public"]["Enums"]["ticket_status"]
+          subject: string
           updated_at?: string | null
           user_id: string
         }
@@ -707,6 +709,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           status?: Database["public"]["Enums"]["ticket_status"]
+          subject?: string
           updated_at?: string | null
           user_id?: string
         }

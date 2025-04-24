@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 interface Ticket {
   id: string;
-  subject: string;
+  subject: string; // Ensure subject is part of the Ticket interface
   category: 'Technical' | 'Billing' | 'Behavior' | 'Other';
   status: 'Open' | 'InProgress' | 'Resolved' | 'Closed';
   created_at: string;
@@ -52,12 +52,12 @@ export function useTickets() {
           throw new Error("Utilisateur non connecté");
         }
         
-        // Création du ticket dans support_tickets
+        // Création du ticket dans support_tickets avec le nouveau champ subject
         const { data: ticketData, error: ticketError } = await supabase
           .from('support_tickets')
           .insert([{ 
             category,
-            subject,
+            subject, // Add subject to the ticket creation
             user_id: user.id,
             status: 'Open'
           }])
