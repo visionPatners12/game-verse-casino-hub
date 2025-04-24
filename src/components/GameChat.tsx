@@ -6,7 +6,6 @@ import ChatInputForm from "./chat/ChatInputForm";
 import { Message } from "./chat/types";
 
 const GameChat = () => {
-  // Mock data - would come from a chat service in a real app
   const messages: Message[] = [
     {
       id: "msg1",
@@ -16,24 +15,28 @@ const GameChat = () => {
     },
     {
       id: "msg2",
-      user: { id: "user2", name: "GamerPro", avatar: "" },
-      text: "Thanks! You too!",
+      user: { id: "system", name: "System", avatar: "" },
+      text: `
+      🎾 Raquette de Tennis
+      ┌───────┐
+      │       │
+      │   O   │
+      │       │
+      └───┬───┘
+          │    
+          │    
+      ════╪════
+          │    
+          │    
+      `,
       timestamp: "1 min ago",
-    },
-    {
-      id: "msg3",
-      user: { id: "user1", name: "Player123", avatar: "" },
-      text: "I'm going to win this round!",
-      timestamp: "30 secs ago",
       isSpecial: true,
     },
   ];
   
-  // Mock current user - would come from auth context
   const currentUser = { id: "user1", name: "Player123" };
   
   const sendMessage = (message: string) => {
-    // Would normally send to a chat service
     console.log("Sending message:", message);
   };
   

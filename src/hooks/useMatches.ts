@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { addDays, format } from "date-fns";
@@ -59,13 +58,11 @@ export function useMatches() {
           throw new Error("Format de réponse invalide");
         }
         
-        // Utiliser les données de démonstration si aucun match n'est retourné
         if (data.length === 0) {
           console.log("No matches found, using demo data");
           return getMockMatches();
         }
         
-        // S'assurer que tous les matchs ont les champs requis
         const validMatches = data.map(match => ({
           id: match.id || Math.floor(Math.random() * 100000),
           name: match.name || "Match sans nom",
@@ -93,7 +90,6 @@ export function useMatches() {
       } catch (error) {
         console.error("Error in matches query:", error);
         
-        // Si erreur, retourner des données de démonstration
         console.log("Returning mock data due to error");
         return getMockMatches();
       }
@@ -101,6 +97,22 @@ export function useMatches() {
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000,
   });
+
+  const getRacketAsciiArt = () => {
+    return `
+    🎾 Raquette de Tennis
+    ┌───────┐
+    │       │
+    │   O   │
+    │       │
+    └───┬───┘
+        │    
+        │    
+    ════╪════
+        │    
+        │    
+    `;
+  };
 
   return {
     matches,
@@ -113,7 +125,6 @@ export function useMatches() {
   };
 }
 
-// Données de démonstration pour les cas où l'API échoue
 function getMockMatches(): Match[] {
   const now = new Date();
   const startTime1 = new Date(now);
