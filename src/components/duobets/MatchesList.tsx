@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { useMatches } from "@/hooks/useMatches";
 import { Loader2, Clock, Image as ImageIcon } from "lucide-react";
@@ -61,17 +62,26 @@ export function MatchesList() {
               className="overflow-hidden hover:bg-accent/50 transition-colors cursor-pointer group"
               onClick={() => {
                 console.log("Match selected:", match);
+                console.log("Image paths:", {
+                  team1: match.participants[0]?.image_path,
+                  team2: match.participants[1]?.image_path,
+                  league: match.stage?.image_path
+                });
               }}
             >
               <div className="p-4 space-y-4">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    {match.stage?.image_path && (
+                    {match.stage?.image_path ? (
                       <img
                         src={match.stage.image_path}
                         alt={match.stage.name}
-                        className="w-6 h-6 object-contain"
+                        className="w-8 h-8 object-contain"
                       />
+                    ) : (
+                      <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+                        <ImageIcon className="h-4 w-4 text-muted-foreground/50" />
+                      </div>
                     )}
                     <h3 className="font-semibold">{match.stage?.name}</h3>
                   </div>
@@ -87,12 +97,17 @@ export function MatchesList() {
 
                 <div className="flex items-center justify-between gap-4 mt-4">
                   <div className="flex flex-col items-center gap-2 flex-1">
-                    <div className="w-16 h-16 shrink-0">
+                    <div className="w-20 h-20 shrink-0 flex items-center justify-center">
                       {match.participants[0]?.image_path ? (
                         <img
                           src={match.participants[0].image_path}
                           alt={match.participants[0].name}
-                          className="w-full h-full object-contain"
+                          className="max-w-full max-h-full object-contain"
+                          onError={(e) => {
+                            console.error("Image failed to load:", match.participants[0].image_path);
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = "https://placehold.co/200x200?text=Team";
+                          }}
                         />
                       ) : (
                         <div className="w-full h-full bg-muted rounded-full flex items-center justify-center">
@@ -104,12 +119,17 @@ export function MatchesList() {
                   </div>
                   <span className="text-muted-foreground font-bold">vs</span>
                   <div className="flex flex-col items-center gap-2 flex-1">
-                    <div className="w-16 h-16 shrink-0">
+                    <div className="w-20 h-20 shrink-0 flex items-center justify-center">
                       {match.participants[1]?.image_path ? (
                         <img
                           src={match.participants[1].image_path}
                           alt={match.participants[1].name}
-                          className="w-full h-full object-contain"
+                          className="max-w-full max-h-full object-contain"
+                          onError={(e) => {
+                            console.error("Image failed to load:", match.participants[1].image_path);
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = "https://placehold.co/200x200?text=Team";
+                          }}
                         />
                       ) : (
                         <div className="w-full h-full bg-muted rounded-full flex items-center justify-center">
