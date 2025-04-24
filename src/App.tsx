@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +16,7 @@ import MyItems from "./pages/MyItems";
 import CreateRoom from "./pages/CreateRoom";
 import PublicRooms from "./pages/PublicRooms";
 import Auth from "./pages/Auth";
+import Support from "./pages/Support";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +39,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/my-items" element={<MyItems />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/support" element={<Support />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
