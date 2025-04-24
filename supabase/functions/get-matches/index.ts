@@ -16,9 +16,8 @@ serve(async (req) => {
     const today = new Date().toISOString().split('T')[0];
     console.log(`Fetching matches for date: ${today}`);
     
-    // Utilisation du bon endpoint pour les leagues et matches
     const response = await fetch(
-      `https://api.sportmonks.com/v3/football/leagues/date/${today}?api_token=${SPORTMONKS_API_KEY}&include=fixtures.participants;fixtures.stage;fixtures.round`,
+      `https://api.sportmonks.com/v3/football/fixtures/date/${today}?api_token=${SPORTMONKS_API_KEY}`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -41,36 +40,20 @@ serve(async (req) => {
       );
     }
 
-    // Extraction et transformation des matches depuis les leagues
-    const formattedMatches = [];
-    
-    // Parcourir toutes les leagues
-    for (const league of data.data) {
-      if (league.fixtures && Array.isArray(league.fixtures.data)) {
-        // Parcourir tous les matches de cette league
-        for (const match of league.fixtures.data) {
-          // Vérifier que le match a toutes les données nécessaires
-          if (match) {
-            formattedMatches.push({
-              id: match.id,
-              name: match.name || `Match ${match.id}`,
-              starting_at: match.starting_at,
-              participants: Array.isArray(match.participants?.data) 
-                ? match.participants.data.map(team => ({
-                    name: team.name
-                  }))
-                : [{ name: 'Équipe A' }, { name: 'Équipe B' }],
-              stage: {
-                name: match.stage?.data?.name || 'Ligue'
-              },
-              round: {
-                name: match.round?.data?.name || '1'
-              }
-            });
-          }
-        }
+    // Transformation des matches au format attendu
+    const formattedMatches = data.data.map(match => ({
+      id: match.id,
+      name: match.name,
+      starting_at: match.starting_at,
+      // Pour les paris duo, on a besoin d'une structure simplifiée
+      participants: match.name.split(' vs ').map(name => ({ name: name.trim() })),
+      stage: {
+        name: 'Ligue' // Valeur par défaut car pas dans la réponse
+      },
+      round: {
+        name: '1' // Valeur par défaut car pas dans la réponse
       }
-    }
+    }));
 
     console.log(`Returning ${formattedMatches.length} formatted matches`);
     
