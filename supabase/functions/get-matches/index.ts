@@ -14,8 +14,11 @@ serve(async (req) => {
 
   try {
     const today = new Date().toISOString().split('T')[0];
+    console.log(`Fetching matches for date: ${today}`);
+    
+    // Utilisation du bon endpoint pour les leagues et matches
     const response = await fetch(
-      `https://api.sportmonks.com/v3/football/fixtures/date/${today}?api_token=${SPORTMONKS_API_KEY}&include=participants;stage;round`,
+      `https://api.sportmonks.com/v3/football/leagues/date/${today}?api_token=${SPORTMONKS_API_KEY}&include=fixtures.participants;fixtures.stage;fixtures.round`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -25,14 +28,12 @@ serve(async (req) => {
 
     const data = await response.json();
     console.log("API Response:", JSON.stringify(data).substring(0, 200) + "...");
-
-    // Check if data.data exists (API might return data in a nested structure)
-    const fixtures = data.data || data;
     
-    if (!Array.isArray(fixtures)) {
-      console.log("Invalid data format received:", typeof fixtures);
+    // Vérifier si nous avons des données valides
+    if (!data || !data.data || !Array.isArray(data.data)) {
+      console.log("Invalid data format received:", data);
       return new Response(
-        JSON.stringify({ error: "Invalid data format received from API" }),
+        JSON.stringify({ error: "Format de données invalide reçu de l'API" }),
         {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -40,23 +41,36 @@ serve(async (req) => {
       );
     }
 
-    // Transform the data to match the expected structure for duo bets
-    const formattedMatches = fixtures.map(match => ({
-      id: match.id,
-      name: match.name || `${match.participants?.[0]?.name || 'Team A'} vs ${match.participants?.[1]?.name || 'Team B'}`,
-      starting_at: match.starting_at,
-      participants: Array.isArray(match.participants) ? 
-        match.participants.map(team => ({
-          name: team.name
-        })) : 
-        [{ name: 'Team A' }, { name: 'Team B' }],
-      stage: {
-        name: match.stage?.name || 'Ligue'
-      },
-      round: {
-        name: match.round?.name || '1'
+    // Extraction et transformation des matches depuis les leagues
+    const formattedMatches = [];
+    
+    // Parcourir toutes les leagues
+    for (const league of data.data) {
+      if (league.fixtures && Array.isArray(league.fixtures.data)) {
+        // Parcourir tous les matches de cette league
+        for (const match of league.fixtures.data) {
+          // Vérifier que le match a toutes les données nécessaires
+          if (match) {
+            formattedMatches.push({
+              id: match.id,
+              name: match.name || `Match ${match.id}`,
+              starting_at: match.starting_at,
+              participants: Array.isArray(match.participants?.data) 
+                ? match.participants.data.map(team => ({
+                    name: team.name
+                  }))
+                : [{ name: 'Équipe A' }, { name: 'Équipe B' }],
+              stage: {
+                name: match.stage?.data?.name || 'Ligue'
+              },
+              round: {
+                name: match.round?.data?.name || '1'
+              }
+            });
+          }
+        }
       }
-    }));
+    }
 
     console.log(`Returning ${formattedMatches.length} formatted matches`);
     

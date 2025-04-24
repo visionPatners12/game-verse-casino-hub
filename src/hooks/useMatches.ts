@@ -27,8 +27,16 @@ export function useMatches() {
         throw new Error("Format de réponse invalide");
       }
       
+      // Ajouter des logs pour diagnostiquer
+      console.log(`Received ${data.length} matches from API`);
+      if (data.length > 0) {
+        console.log("First match example:", JSON.stringify(data[0]));
+      }
+      
       return data;
     },
     retry: 1,
+    refetchOnMount: true,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
