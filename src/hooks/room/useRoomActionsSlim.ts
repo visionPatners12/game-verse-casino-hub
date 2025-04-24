@@ -55,7 +55,7 @@ export function useRoomActionsSlim(
     try {
       console.log(`Player ${currentUserId} is forfeiting game in room ${roomId}`);
       
-      // FIRST: Clear active_room_id
+      // Clear active_room_id FIRST
       console.log(`Clearing active room ID for user ${currentUserId}`);
       const { error: activeRoomError } = await supabase
         .from('users')
@@ -67,7 +67,6 @@ export function useRoomActionsSlim(
       }
       
       // Update the database - mark player as forfeited and disconnected
-      console.log("Updating game_players table to mark player as forfeited");
       const { error: playerError } = await supabase
         .from('game_players')
         .update({ 
@@ -86,7 +85,6 @@ export function useRoomActionsSlim(
       console.log("Game player marked as forfeited and disconnected successfully");
       
       // Clear storage AFTER database updates to prevent automatic reconnection
-      console.log("Clearing session storage");
       roomService.saveActiveRoomToStorage("", "", "");
       sessionStorage.removeItem('activeRoomId');
       sessionStorage.removeItem('activeUserId');
@@ -104,7 +102,6 @@ export function useRoomActionsSlim(
         console.log("Room disconnection successful");
       } catch (disconnectError) {
         console.error("Error during room disconnection:", disconnectError);
-        // Continue execution even if disconnection fails
       }
       
       // Update UI state

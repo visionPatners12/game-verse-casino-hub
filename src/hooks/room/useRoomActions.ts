@@ -80,7 +80,7 @@ export function useRoomActions({
         console.error("Failed to clear active room ID:", activeRoomError);
       }
 
-      // Rest of the existing forfeit game logic remains the same
+      // Update the database
       const { error } = await supabase
         .from('game_players')
         .update({ 
@@ -115,7 +115,6 @@ export function useRoomActions({
         console.log(`Successfully disconnected from room ${roomId} websocket`);
       } catch (disconnectError) {
         console.error("Error during room disconnection:", disconnectError);
-        // Continue with leaving the room even if disconnection has an error
       }
       
       // Set game status to ended in local state
@@ -131,12 +130,10 @@ export function useRoomActions({
     }
   }, [roomId, currentUserId, setGameStatus, navigate]);
 
-  // Update this function to use the public API instead of accessing private properties
   const updateRoomPot = async (shouldLog: boolean = false) => {
     if (!roomId) return;
     
     try {
-      // Make a direct database call instead of using private methods
       const { data: roomData, error } = await supabase
         .from('game_sessions')
         .select('id, entry_fee, max_players, commission_rate')
@@ -145,7 +142,6 @@ export function useRoomActions({
   
       if (error) throw error;
 
-      // Get players count
       const { data: players, error: playersError } = await supabase
         .from('game_players')
         .select('id')
@@ -154,11 +150,9 @@ export function useRoomActions({
       
       if (playersError) throw playersError;
       
-      // Calculate pot amount (similar logic to RoomPresenceService.calculatePot)
       const connectedPlayers = players?.length || 0;
       const potAmount = roomData.entry_fee * roomData.max_players * (1 - roomData.commission_rate/100);
 
-      // Update pot in database
       const { error: updateError } = await supabase
         .from('game_sessions')
         .update({ 
@@ -169,7 +163,6 @@ export function useRoomActions({
       
       if (updateError) throw updateError;
       
-      // Only log during initial room creation if shouldLog is true
       if (shouldLog) {
         console.log(`Pot calculated for room ${roomId}: ${potAmount}`);
         console.log(`Room ${roomId} updated: ${connectedPlayers} players, pot recalculated`);
