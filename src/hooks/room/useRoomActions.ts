@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { roomService } from "@/services/room";
 import { toast } from "sonner";
@@ -70,7 +69,18 @@ export function useRoomActions({
     try {
       console.log(`Player ${currentUserId} is forfeiting game in room ${roomId}`);
       
-      // First, mark player as forfeited and disconnected in the database
+      // FIRST: Clear active_room_id
+      console.log(`Clearing active room ID for user ${currentUserId}`);
+      const { error: activeRoomError } = await supabase
+        .from('users')
+        .update({ active_room_id: null })
+        .eq('id', currentUserId);
+      
+      if (activeRoomError) {
+        console.error("Failed to clear active room ID:", activeRoomError);
+      }
+
+      // Rest of the existing forfeit game logic remains the same
       const { error } = await supabase
         .from('game_players')
         .update({ 

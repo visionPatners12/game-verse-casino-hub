@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { roomService } from "@/services/room";
 import { toast } from "sonner";
@@ -56,7 +55,18 @@ export function useRoomActionsSlim(
     try {
       console.log(`Player ${currentUserId} is forfeiting game in room ${roomId}`);
       
-      // Update the database FIRST - mark player as forfeited and disconnected
+      // FIRST: Clear active_room_id
+      console.log(`Clearing active room ID for user ${currentUserId}`);
+      const { error: activeRoomError } = await supabase
+        .from('users')
+        .update({ active_room_id: null })
+        .eq('id', currentUserId);
+      
+      if (activeRoomError) {
+        console.error("Failed to clear active room ID:", activeRoomError);
+      }
+      
+      // Update the database - mark player as forfeited and disconnected
       console.log("Updating game_players table to mark player as forfeited");
       const { error: playerError } = await supabase
         .from('game_players')
@@ -74,20 +84,6 @@ export function useRoomActionsSlim(
       }
       
       console.log("Game player marked as forfeited and disconnected successfully");
-      
-      // Clear user's active_room_id explicitly
-      console.log("Clearing active_room_id in users table");
-      const { error: userError } = await supabase
-        .from('users')
-        .update({ active_room_id: null })
-        .eq('id', currentUserId);
-      
-      if (userError) {
-        console.error("Failed to clear active room ID:", userError);
-        // Continue even if this fails since other cleanup steps are more important
-      } else {
-        console.log("Active room ID cleared successfully in database");
-      }
       
       // Clear storage AFTER database updates to prevent automatic reconnection
       console.log("Clearing session storage");

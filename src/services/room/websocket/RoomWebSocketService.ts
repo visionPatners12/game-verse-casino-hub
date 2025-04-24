@@ -86,15 +86,27 @@ export class RoomWebSocketService extends WebSocketBase {
     
     console.log(`Disconnecting from room ${roomId} for user ${userId}`);
     
-    // Clear active room storage first
-    this.connectionStorage.save("", "", "");
-    this.connectionStorage.clear();
-    
     try {
-      // Mark player as disconnected with retries
+      // FIRST: Clear active room ID explicitly
+      console.log("Clearing active_room_id in users table as FIRST priority");
+      const { error: userError } = await supabase
+        .from('users')
+        .update({ active_room_id: null })
+        .eq('id', userId);
+      
+      if (userError) {
+        console.error("Failed to clear active room ID:", userError);
+        // Continue with other cleanup even if this fails
+      }
+      
+      // Clear active room storage first
+      this.connectionStorage.save("", "", "");
+      this.connectionStorage.clear();
+      
+      // Mark player as disconnected
       await this.presenceService.markPlayerDisconnected(roomId, userId);
       
-      // Clean up channel and presence data
+      // Additional cleanup steps
       await this.cleanupChannel(roomId);
       
       console.log(`Successfully disconnected from room ${roomId}`);
