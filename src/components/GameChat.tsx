@@ -30,16 +30,17 @@ const GameChat = () => {
     {
       id: "msg2",
       user: { id: "system", name: "System", avatar: "" },
-      text: `🎾 Matchs du jour:
-      ┌───────┐
-      │  🎯   │ ${formattedMatches[0]?.teams || ""}
-      │       │ ${formattedMatches[1]?.teams || ""}
-      └───┬───┘ ${formattedMatches[2]?.teams || ""}
-          │     ${formattedMatches[3]?.teams || ""}
-          │    
-      ════╪════
-          │    
-          │    `,
+      text: `🎾 Tennis Live
+    ┌───────┐
+    │       │
+    │   O   │
+    │       │
+    └───┬───┘   
+        │     ${formattedMatches[0]?.teams || ""}
+        │     ${formattedMatches[1]?.teams || ""}
+    ════╪════  ${formattedMatches[2]?.teams || ""}
+        │     ${formattedMatches[3]?.teams || ""}
+        │     `,
       timestamp: "1 min ago",
       isSpecial: true,
     },
