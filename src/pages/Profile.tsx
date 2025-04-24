@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
@@ -8,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SupportTickets } from "@/components/profile/SupportTickets";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -106,12 +109,23 @@ export default function Profile() {
             <p className="text-muted-foreground">@{profile.username}</p>
           </div>
           
-          <ProfileForm
-            profile={profile}
-            loading={loading}
-            onSubmit={updateProfile}
-            onChange={handleFieldChange}
-          />
+          <Tabs defaultValue="settings" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="settings">Paramètres</TabsTrigger>
+              <TabsTrigger value="support">Support</TabsTrigger>
+            </TabsList>
+            <TabsContent value="settings">
+              <ProfileForm
+                profile={profile}
+                loading={loading}
+                onSubmit={updateProfile}
+                onChange={handleFieldChange}
+              />
+            </TabsContent>
+            <TabsContent value="support">
+              <SupportTickets />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </Layout>
