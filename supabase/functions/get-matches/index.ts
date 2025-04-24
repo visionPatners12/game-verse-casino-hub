@@ -1,5 +1,5 @@
 
-import { serve } from "https://deno.fresh.dev/std@v1.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 const SPORTMONKS_API_KEY = Deno.env.get('SPORTMONKS_API_KEY');
 const corsHeaders = {
