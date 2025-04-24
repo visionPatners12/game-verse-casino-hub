@@ -80,14 +80,18 @@ export function MatchesList() {
 }
 
 function MatchCard({ match }: { match: Match }) {
+  const homeTeam = match.participants.find(p => p.meta.location === "home");
+  const awayTeam = match.participants.find(p => p.meta.location === "away");
+  const homeScore = match.scores.find(s => s.participant_id === homeTeam?.id && s.description === "CURRENT")?.score.goals || 0;
+  const awayScore = match.scores.find(s => s.participant_id === awayTeam?.id && s.description === "CURRENT")?.score.goals || 0;
+
   return (
     <Card 
       className="overflow-hidden hover:bg-accent/50 transition-colors cursor-pointer group border-2"
       onClick={() => {
-        console.log("Match selected:", match);
         toast({
           title: "Match sélectionné",
-          description: `${match.name}`
+          description: `${match.name} (${homeScore} - ${awayScore})`
         });
       }}
     >
@@ -96,7 +100,7 @@ function MatchCard({ match }: { match: Match }) {
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <LeagueAvatar 
-              image={match.stage?.image_path} 
+              image={match.stage?.image_path || null} 
               name={match.stage?.name} 
             />
             <h3 className="font-semibold">{match.stage?.name}</h3>
@@ -109,14 +113,16 @@ function MatchCard({ match }: { match: Match }) {
 
         {/* Round */}
         <div className="text-sm text-muted-foreground">
-          {match.round?.name || "1ère journée"}
+          {match.round?.name}
         </div>
 
-        {/* Teams */}
+        {/* Teams with Scores */}
         <div className="flex items-center justify-between mt-6">
-          <TeamDisplay team={match.participants?.[0]} index={0} />
-          <div className="font-bold text-muted-foreground text-lg px-2">VS</div>
-          <TeamDisplay team={match.participants?.[1]} index={1} />
+          <TeamDisplay team={homeTeam} index={0} />
+          <div className="font-bold text-muted-foreground text-lg px-2">
+            {homeScore} - {awayScore}
+          </div>
+          <TeamDisplay team={awayTeam} index={1} />
         </div>
       </div>
     </Card>

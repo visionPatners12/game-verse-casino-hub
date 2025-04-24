@@ -2,9 +2,27 @@
 import { useState } from "react";
 import { addDays, format } from "date-fns";
 
+export interface Score {
+  id: number;
+  fixture_id: number;
+  type_id: number;
+  participant_id: number;
+  score: {
+    goals: number;
+    participant: "home" | "away";
+  };
+  description: string;
+}
+
 export interface MatchParticipant {
+  id: number;
   name: string;
-  image_path: string | null;
+  image_path: string;
+  meta: {
+    location: "home" | "away";
+    winner: boolean;
+    position: number;
+  };
 }
 
 export interface Match {
@@ -12,9 +30,10 @@ export interface Match {
   name: string;
   starting_at: string;
   participants: MatchParticipant[];
+  scores: Score[];
   stage: {
     name: string;
-    image_path: string | null;
+    image_path?: string | null;
   };
   round: {
     name: string;
@@ -28,43 +47,68 @@ export function useMatches() {
     addDays(new Date(), i)
   );
 
-  // Exemple de données statiques
+  // Exemple de données avec la nouvelle structure
   const staticMatches: Match[] = [
     {
-      id: 1,
-      name: "PSG vs Marseille",
-      starting_at: new Date().toISOString(),
+      id: 19135621,
+      name: "Leganés vs Girona",
+      starting_at: "2025-04-24 17:00:00",
       participants: [
-        { name: "PSG", image_path: null },
-        { name: "Marseille", image_path: null }
+        {
+          id: 844,
+          name: "Leganés",
+          image_path: "https://cdn.sportmonks.com/images/soccer/teams/12/844.png",
+          meta: {
+            location: "home",
+            winner: false,
+            position: 19
+          }
+        },
+        {
+          id: 231,
+          name: "Girona",
+          image_path: "https://cdn.sportmonks.com/images/soccer/teams/7/231.png",
+          meta: {
+            location: "away",
+            winner: false,
+            position: 17
+          }
+        }
+      ],
+      scores: [
+        {
+          id: 16298337,
+          fixture_id: 19135621,
+          type_id: 1525,
+          participant_id: 844,
+          score: {
+            goals: 1,
+            participant: "home"
+          },
+          description: "CURRENT"
+        },
+        {
+          id: 16298336,
+          fixture_id: 19135621,
+          type_id: 1525,
+          participant_id: 231,
+          score: {
+            goals: 1,
+            participant: "away"
+          },
+          description: "CURRENT"
+        }
       ],
       stage: {
-        name: "Ligue 1",
-        image_path: null
+        name: "La Liga",
+        image_path: "https://cdn.sportmonks.com/images/soccer/leagues/20/564.png"
       },
       round: {
-        name: "Journée 1"
-      }
-    },
-    {
-      id: 2,
-      name: "Lyon vs Monaco",
-      starting_at: new Date().toISOString(),
-      participants: [
-        { name: "Lyon", image_path: null },
-        { name: "Monaco", image_path: null }
-      ],
-      stage: {
-        name: "Ligue 1",
-        image_path: null
-      },
-      round: {
-        name: "Journée 1"
+        name: "Journée 33"
       }
     }
   ];
 
-  // Adding a mock refetch function to satisfy the component's expectations
   const refetch = () => {
     console.log("Mock refetch called");
     return Promise.resolve();
@@ -77,6 +121,6 @@ export function useMatches() {
     selectedDate,
     setSelectedDate,
     nextFiveDays,
-    refetch // Add this to fix the error
+    refetch
   };
 }

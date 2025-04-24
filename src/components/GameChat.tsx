@@ -11,11 +11,18 @@ import { fr } from "date-fns/locale";
 const GameChat = () => {
   const { matches, selectedDate, isLoading, error, nextFiveDays, setSelectedDate } = useMatches();
   
-  const formattedMatches = matches?.map(match => ({
-    teams: `${match.participants[0].name} vs ${match.participants[1].name}`,
-    time: format(new Date(match.starting_at), "HH:mm", { locale: fr }),
-    league: match.stage.name
-  })) || [];
+  const formattedMatches = matches?.map(match => {
+    const homeTeam = match.participants.find(p => p.meta.location === "home");
+    const awayTeam = match.participants.find(p => p.meta.location === "away");
+    const homeScore = match.scores.find(s => s.participant_id === homeTeam?.id && s.description === "CURRENT")?.score.goals || 0;
+    const awayScore = match.scores.find(s => s.participant_id === awayTeam?.id && s.description === "CURRENT")?.score.goals || 0;
+    
+    return {
+      teams: `${homeTeam?.name} ${homeScore} - ${awayScore} ${awayTeam?.name}`,
+      time: format(new Date(match.starting_at), "HH:mm", { locale: fr }),
+      league: match.stage.name
+    };
+  }) || [];
   
   const formattedDate = format(selectedDate, "d MMMM yyyy", { locale: fr });
   
@@ -38,7 +45,7 @@ const GameChat = () => {
     {
       id: "msg1",
       user: { id: "user1", name: "Player123", avatar: "" },
-      text: "Good luck everyone!",
+      text: "Bonne chance à tous !",
       timestamp: "2 mins ago",
     },
     {
