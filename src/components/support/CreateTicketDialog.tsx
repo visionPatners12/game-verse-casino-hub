@@ -51,7 +51,11 @@ export function CreateTicketDialog() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await createTicket.mutateAsync(values);
+    await createTicket.mutateAsync({
+      category: values.category,
+      subject: values.subject,
+      content: values.content
+    });
     form.reset();
     setOpen(false);
   }

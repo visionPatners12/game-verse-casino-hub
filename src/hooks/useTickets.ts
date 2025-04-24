@@ -1,6 +1,5 @@
 
-import { useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -11,6 +10,7 @@ interface Ticket {
   status: 'Open' | 'InProgress' | 'Resolved' | 'Closed';
   created_at: string;
   updated_at: string;
+  user_id?: string;
 }
 
 interface Message {
@@ -88,6 +88,8 @@ export function useTickets() {
 }
 
 export function useTicketMessages(ticketId: string) {
+  const queryClient = useQueryClient();
+
   const { data: messages, isLoading } = useQuery({
     queryKey: ['ticket-messages', ticketId],
     queryFn: async () => {
