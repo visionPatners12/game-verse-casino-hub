@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 const SPORTMONKS_API_KEY = Deno.env.get('SPORTMONKS_API_KEY');
@@ -37,7 +36,7 @@ serve(async (req) => {
     
     if (!SPORTMONKS_API_KEY) {
       console.error("SPORTMONKS_API_KEY not configured");
-      throw new Error("API key not configured. Returning mock data.");
+      throw new Error("API key not configured.");
     }
     
     const apiUrl = `https://api.sportmonks.com/v3/football/fixtures/date/${date}?api_token=${SPORTMONKS_API_KEY}&include=participants;venue;league;stage;round`;
@@ -57,7 +56,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log(`API Response status: ${response.status}`);
+    console.log("Raw SportMonks response:", JSON.stringify(data, null, 2));
     
     const formattedMatches: MatchOutput[] = [];
     
@@ -164,14 +163,7 @@ serve(async (req) => {
     }
   } catch (error) {
     console.error(`Error processing request: ${error.message}`);
-    
-    // Return mock data in case of error
-    return new Response(
-      JSON.stringify(generateMockMatches()),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    throw error;
   }
 });
 
