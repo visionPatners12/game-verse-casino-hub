@@ -36,29 +36,39 @@ export function MatchesList() {
 
   return (
     <div className="grid gap-4">
-      {matches.map((match) => (
-        <Card key={match.id} className="p-4 hover:bg-accent/50 transition-colors cursor-pointer">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <h3 className="font-semibold">{match.name}</h3>
-              <span className="text-sm text-muted-foreground flex items-center gap-1">
-                <CalendarIcon className="h-3 w-3" />
-                {format(new Date(match.starting_at), "d MMMM", { locale: fr })}
-                <Clock className="h-3 w-3 ml-1" />
-                {format(new Date(match.starting_at), "HH:mm", { locale: fr })}
-              </span>
+      {matches.map((match) => {
+        // S'assurer que starting_at est une date valide
+        const startDate = new Date(match.starting_at);
+        const isValidDate = !isNaN(startDate.getTime());
+        
+        return (
+          <Card key={match.id} className="p-4 hover:bg-accent/50 transition-colors cursor-pointer">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <h3 className="font-semibold">{match.name}</h3>
+                <span className="text-sm text-muted-foreground flex items-center gap-1">
+                  <CalendarIcon className="h-3 w-3" />
+                  {isValidDate 
+                    ? format(startDate, "d MMMM", { locale: fr })
+                    : "Date inconnue"}
+                  <Clock className="h-3 w-3 ml-1" />
+                  {isValidDate 
+                    ? format(startDate, "HH:mm", { locale: fr })
+                    : "--:--"}
+                </span>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {match.stage.name} - {match.round.name}
+              </div>
+              <div className="mt-2 text-sm flex justify-between">
+                <span className="font-medium">{match.participants[0]?.name || 'Équipe A'}</span>
+                <span className="text-muted-foreground">vs</span>
+                <span className="font-medium">{match.participants[1]?.name || 'Équipe B'}</span>
+              </div>
             </div>
-            <div className="text-sm text-muted-foreground">
-              {match.stage.name} - {match.round.name}ème journée
-            </div>
-            <div className="mt-2 text-sm flex justify-between">
-              <span className="font-medium">{match.participants[0]?.name || 'Équipe A'}</span>
-              <span className="text-muted-foreground">vs</span>
-              <span className="font-medium">{match.participants[1]?.name || 'Équipe B'}</span>
-            </div>
-          </div>
-        </Card>
-      ))}
+          </Card>
+        );
+      })}
     </div>
   );
 }
