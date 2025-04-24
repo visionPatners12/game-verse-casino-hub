@@ -56,7 +56,27 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log("Raw API response:", JSON.stringify(data, null, 2));
+    
+    // Log more details about the data structure to help debug
+    console.log("API Response structure:", {
+      hasData: !!data,
+      dataIsArray: Array.isArray(data?.data),
+      leaguesCount: data?.data?.length || 0,
+    });
+    
+    // Check for specific leagues with matches
+    if (data?.data && Array.isArray(data.data)) {
+      data.data.forEach(league => {
+        const matchCount = league.today?.data?.length || 0;
+        console.log(`League ${league.id} (${league.name}): ${matchCount} matches found`);
+        
+        // Log first match details if available
+        if (matchCount > 0) {
+          const firstMatch = league.today.data[0];
+          console.log(`Sample match from ${league.name}: ${firstMatch.name}, starts at ${firstMatch.starting_at}`);
+        }
+      });
+    }
 
     // Process the leagues data structure
     if (!data || !data.data || !Array.isArray(data.data)) {

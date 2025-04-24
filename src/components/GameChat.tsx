@@ -9,7 +9,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
 const GameChat = () => {
-  const { matches, selectedDate } = useMatches();
+  const { matches, selectedDate, isLoading, error } = useMatches();
   
   const formattedMatches = matches?.map(match => ({
     teams: `${match.participants[0].name} vs ${match.participants[1].name}`,
@@ -19,9 +19,17 @@ const GameChat = () => {
   
   const formattedDate = format(selectedDate, "d MMMM yyyy", { locale: fr });
   
-  const matchesString = formattedMatches.length > 0 
-    ? formattedMatches.map(m => `${m.time} - ${m.teams} (${m.league})`).join("\n")
-    : `Aucun match disponible pour le ${formattedDate}.\nSélectionnez une autre date pour voir les matchs.`;
+  let matchesString = "";
+  
+  if (isLoading) {
+    matchesString = `Chargement des matchs pour le ${formattedDate}...`;
+  } else if (error) {
+    matchesString = `Erreur lors du chargement des matchs: ${error.message}`;
+  } else if (formattedMatches.length > 0) {
+    matchesString = formattedMatches.map(m => `${m.time} - ${m.teams} (${m.league})`).join("\n");
+  } else {
+    matchesString = `Aucun match disponible pour le ${formattedDate}.\nSélectionnez une autre date pour voir les matchs.`;
+  }
   
   const messages: Message[] = [
     {
