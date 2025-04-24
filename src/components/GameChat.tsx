@@ -4,70 +4,37 @@ import { MessageSquare } from "lucide-react";
 import ChatMessageList from "./chat/ChatMessageList";
 import ChatInputForm from "./chat/ChatInputForm";
 import { Message } from "./chat/types";
-import { useMatches } from "@/hooks/useMatches";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 
 const GameChat = () => {
-  const { matches, selectedDate, isLoading, error, nextFiveDays, setSelectedDate } = useMatches();
-  
-  const formattedMatches = matches?.map(match => {
-    const homeTeam = match.participants.find(p => p.meta.location === "home");
-    const awayTeam = match.participants.find(p => p.meta.location === "away");
-    const homeScore = match.scores.find(s => s.participant_id === homeTeam?.id && s.description === "CURRENT")?.score.goals || 0;
-    const awayScore = match.scores.find(s => s.participant_id === awayTeam?.id && s.description === "CURRENT")?.score.goals || 0;
-    
-    return {
-      teams: `${homeTeam?.name} ${homeScore} - ${awayScore} ${awayTeam?.name}`,
-      time: format(new Date(match.starting_at), "HH:mm", { locale: fr }),
-      league: match.stage.name
-    };
-  }) || [];
-  
-  const formattedDate = format(selectedDate, "d MMMM yyyy", { locale: fr });
-  
-  let matchesString = "";
-  
-  if (isLoading) {
-    matchesString = `Chargement des matchs pour le ${formattedDate}...`;
-  } else if (error) {
-    matchesString = `Erreur lors du chargement des matchs: ${error.message}`;
-  } else if (formattedMatches.length > 0) {
-    matchesString = formattedMatches.map(m => `${m.time} - ${m.teams} (${m.league})`).join("\n");
-  } else {
-    matchesString = `Aucun match disponible pour le ${formattedDate}.\nSélectionnez une autre date pour voir les matchs.\n\nDates disponibles:`;
-    nextFiveDays.forEach((day, index) => {
-      matchesString += `\n - ${format(day, "EEE d MMM", { locale: fr })}`;
-    });
-  }
-  
+  // Mock data - would come from a chat service in a real app
   const messages: Message[] = [
     {
       id: "msg1",
       user: { id: "user1", name: "Player123", avatar: "" },
-      text: "Bonne chance à tous !",
+      text: "Good luck everyone!",
       timestamp: "2 mins ago",
     },
     {
       id: "msg2",
-      user: { id: "system", name: "System", avatar: "" },
-      text: `Football Live
-      
-${matchesString}`,
+      user: { id: "user2", name: "GamerPro", avatar: "" },
+      text: "Thanks! You too!",
       timestamp: "1 min ago",
+    },
+    {
+      id: "msg3",
+      user: { id: "user1", name: "Player123", avatar: "" },
+      text: "I'm going to win this round!",
+      timestamp: "30 secs ago",
       isSpecial: true,
     },
   ];
   
+  // Mock current user - would come from auth context
   const currentUser = { id: "user1", name: "Player123" };
   
   const sendMessage = (message: string) => {
+    // Would normally send to a chat service
     console.log("Sending message:", message);
-  };
-  
-  const handleDateSelection = (date: Date) => {
-    console.log(`Selecting date: ${format(date, "yyyy-MM-dd")}`);
-    setSelectedDate(date);
   };
   
   return (
@@ -79,21 +46,6 @@ ${matchesString}`,
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 px-3">
-        <div className="mb-4 flex gap-2 overflow-x-auto pb-2">
-          {nextFiveDays.map((date, index) => (
-            <button 
-              key={index}
-              className={`px-2 py-1 text-xs rounded whitespace-nowrap ${
-                date.getDate() === selectedDate.getDate() ? 
-                'bg-primary text-primary-foreground' : 
-                'bg-secondary text-secondary-foreground'
-              }`}
-              onClick={() => handleDateSelection(date)}
-            >
-              {format(date, "EEE d MMM", { locale: fr })}
-            </button>
-          ))}
-        </div>
         <ChatMessageList messages={messages} currentUser={currentUser} />
       </CardContent>
       <CardFooter className="pt-3">
