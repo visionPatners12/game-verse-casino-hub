@@ -11,7 +11,6 @@ interface Match {
   participants: { name: string; image_path?: string }[];
   stage: { name: string; image_path?: string };
   round: { name: string };
-  image?: string;
 }
 
 export function useMatches() {
@@ -34,36 +33,26 @@ export function useMatches() {
         
         if (error) {
           console.error("Error fetching matches:", error);
-          throw error;
+          throw new Error(`Failed to fetch matches: ${error.message}`);
         }
         
         if (!data || !Array.isArray(data)) {
           console.error("Invalid response format:", data);
-          throw new Error("Format de réponse invalide");
+          throw new Error("Invalid response format from API");
         }
         
-        console.log(`Received ${data.length} matches from API`);
-        
-        // Log first match to debug image paths
+        console.log(`Received ${data.length} matches`);
         if (data.length > 0) {
-          const firstMatch = data[0];
-          console.log("First match example:", JSON.stringify(firstMatch));
-          console.log("First match images:", {
-            team1: firstMatch.participants?.[0]?.image_path,
-            team2: firstMatch.participants?.[1]?.image_path,
-            league: firstMatch.stage?.image_path
-          });
+          console.log("Sample match data:", data[0]);
         }
         
         return data;
       } catch (error) {
-        console.error("Failed to fetch matches:", error);
+        console.error("Error in matches query:", error);
         throw error;
       }
     },
-    retry: 1,
     refetchOnWindowFocus: false,
-    refetchOnMount: true,
     staleTime: 5 * 60 * 1000,
   });
 
