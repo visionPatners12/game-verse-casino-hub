@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -33,6 +34,7 @@ import { Loader2, TicketPlus } from "lucide-react";
 
 const formSchema = z.object({
   category: z.enum(["Technical", "Billing", "Behavior", "Other"]),
+  subject: z.string().min(3, "Le sujet doit contenir au moins 3 caractères"),
   content: z.string().min(10, "Le message doit contenir au moins 10 caractères"),
 });
 
@@ -43,17 +45,13 @@ export function CreateTicketDialog() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       category: "Technical",
+      subject: "",
       content: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // Ensure values are not optional
-    const { category, content } = values;
-    await createTicket.mutateAsync({ 
-      category, 
-      content 
-    });
+    await createTicket.mutateAsync(values);
     form.reset();
     setOpen(false);
   }
@@ -94,6 +92,19 @@ export function CreateTicketDialog() {
                       <SelectItem value="Other">Autre</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="subject"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Sujet</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Sujet de votre demande" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

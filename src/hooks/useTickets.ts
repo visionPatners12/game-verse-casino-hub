@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 interface Ticket {
   id: string;
+  subject: string;
   category: 'Technical' | 'Billing' | 'Behavior' | 'Other';
   status: 'Open' | 'InProgress' | 'Resolved' | 'Closed';
   created_at: string;
@@ -41,17 +42,16 @@ export function useTickets() {
   });
 
   const createTicket = useMutation({
-    mutationFn: async ({ category, content }: { category: Ticket['category']; content: string }) => {
-      // Get the user's ID from the current session
+    mutationFn: async ({ category, subject, content }: { category: Ticket['category']; subject: string; content: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) throw new Error("Utilisateur non connecté");
       
-      // Insert ticket with user_id included
       const { data: ticketData, error: ticketError } = await supabase
         .from('support_tickets')
         .insert([{ 
-          category, 
+          category,
+          subject,
           user_id: user.id
         }])
         .select()
@@ -63,7 +63,8 @@ export function useTickets() {
         .from('support_messages')
         .insert([{ 
           ticket_id: ticketData.id,
-          content
+          content,
+          sender_id: user.id
         }]);
 
       if (messageError) throw messageError;
@@ -83,5 +84,56 @@ export function useTickets() {
     tickets,
     isLoading,
     createTicket
+  };
+}
+
+export function useTicketMessages(ticketId: string) {
+  const { data: messages, isLoading } = useQuery({
+    queryKey: ['ticket-messages', ticketId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('support_messages')
+        .select('*')
+        .eq('ticket_id', ticketId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        toast.error("Impossible de charger les messages");
+        throw error;
+      }
+
+      return data as Message[];
+    },
+    enabled: !!ticketId
+  });
+
+  const addMessage = useMutation({
+    mutationFn: async ({ content }: { content: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) throw new Error("Utilisateur non connecté");
+
+      const { error } = await supabase
+        .from('support_messages')
+        .insert([{
+          ticket_id: ticketId,
+          content,
+          sender_id: user.id
+        }]);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ticket-messages', ticketId] });
+    },
+    onError: () => {
+      toast.error("Erreur lors de l'envoi du message");
+    }
+  });
+
+  return {
+    messages,
+    isLoading,
+    addMessage
   };
 }

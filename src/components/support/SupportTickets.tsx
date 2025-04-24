@@ -9,6 +9,17 @@ import {
 import { CreateTicketDialog } from "./CreateTicketDialog";
 import { useTickets } from "@/hooks/useTickets";
 import { Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { TicketMessages } from "./TicketMessages";
+import { Badge } from "@/components/ui/badge";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
 
 export const SupportTickets = () => {
   const { tickets, isLoading } = useTickets();
@@ -32,6 +43,16 @@ export const SupportTickets = () => {
     );
   }
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Open': return 'bg-blue-500';
+      case 'InProgress': return 'bg-yellow-500';
+      case 'Resolved': return 'bg-green-500';
+      case 'Closed': return 'bg-gray-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -53,21 +74,35 @@ export const SupportTickets = () => {
         ) : (
           <div className="space-y-4">
             {tickets?.map((ticket) => (
-              <Card key={ticket.id}>
-                <CardHeader className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-semibold">{ticket.category}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(ticket.created_at).toLocaleDateString()}
-                      </p>
+              <Dialog key={ticket.id}>
+                <DialogTrigger asChild>
+                  <Card className="p-4 cursor-pointer hover:bg-accent/50 transition-colors">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-semibold mb-1">{ticket.subject}</h3>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {ticket.category}
+                        </p>
+                        <time className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(ticket.created_at), {
+                            addSuffix: true,
+                            locale: fr,
+                          })}
+                        </time>
+                      </div>
+                      <Badge className={getStatusColor(ticket.status)}>
+                        {ticket.status}
+                      </Badge>
                     </div>
-                    <div className="text-sm">
-                      Status: <span className="font-medium">{ticket.status}</span>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
+                  </Card>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px]">
+                  <DialogHeader>
+                    <DialogTitle>{ticket.subject}</DialogTitle>
+                  </DialogHeader>
+                  <TicketMessages ticketId={ticket.id} />
+                </DialogContent>
+              </Dialog>
             ))}
           </div>
         )}
