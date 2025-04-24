@@ -4,13 +4,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { addDays, format } from "date-fns";
 import { useState } from "react";
 
-interface Match {
+export interface MatchParticipant {
+  name: string;
+  image_path: string | null;
+}
+
+export interface Match {
   id: number;
   name: string;
   starting_at: string;
-  participants: { name: string; image_path?: string }[];
-  stage: { name: string; image_path?: string };
-  round: { name: string };
+  participants: MatchParticipant[];
+  stage: {
+    name: string;
+    image_path: string | null;
+  };
+  round: {
+    name: string;
+  };
 }
 
 export function useMatches() {
@@ -20,7 +30,7 @@ export function useMatches() {
     addDays(new Date(), i)
   );
 
-  const { data: matches, isLoading, error } = useQuery<Match[], Error>({
+  const { data: matches, isLoading, error, refetch } = useQuery<Match[], Error>({
     queryKey: ['matches', format(selectedDate, 'yyyy-MM-dd')],
     queryFn: async () => {
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
@@ -46,7 +56,30 @@ export function useMatches() {
           console.log("Sample match data:", data[0]);
         }
         
-        return data;
+        // Normalize data to ensure all required fields exist
+        const normalizedData = data.map(match => ({
+          id: match.id,
+          name: match.name || "Match sans nom",
+          starting_at: match.starting_at,
+          participants: Array.isArray(match.participants) 
+            ? match.participants.map(p => ({
+                name: p.name || "Équipe inconnue",
+                image_path: p.image_path || null
+              }))
+            : [
+                { name: "Équipe A", image_path: null },
+                { name: "Équipe B", image_path: null }
+              ],
+          stage: {
+            name: match.stage?.name || "Ligue",
+            image_path: match.stage?.image_path || null
+          },
+          round: {
+            name: match.round?.name || "1"
+          }
+        }));
+        
+        return normalizedData;
       } catch (error) {
         console.error("Error in matches query:", error);
         throw error;
@@ -60,6 +93,7 @@ export function useMatches() {
     matches,
     isLoading,
     error,
+    refetch,
     selectedDate,
     setSelectedDate,
     nextFiveDays

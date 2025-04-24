@@ -1,35 +1,48 @@
 
 import { Card } from "@/components/ui/card";
-import { useMatches } from "@/hooks/useMatches";
-import { Loader2, Clock, ImageIcon } from "lucide-react";
+import { useMatches, type Match } from "@/hooks/useMatches";
+import { Loader2, Clock, ImageIcon, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { useState } from "react";
 
 export function MatchesList() {
   const { 
     matches, 
     isLoading, 
     error, 
+    refetch,
     selectedDate, 
     setSelectedDate, 
     nextFiveDays 
   } = useMatches();
+  const [retryCount, setRetryCount] = useState(0);
+
+  // Fonction pour retenter le chargement en cas d'erreur
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+    refetch();
+  };
 
   if (error) {
     return (
-      <div className="text-center py-8 text-red-500">
-        <p>Erreur lors du chargement des matchs</p>
-        <p className="text-sm">{error.message}</p>
+      <div className="text-center py-8">
+        <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <p className="text-lg font-semibold text-red-500 mb-2">Erreur lors du chargement des matchs</p>
+        <p className="text-sm text-muted-foreground mb-4">{error.message}</p>
+        <Button onClick={handleRetry} variant="outline">
+          Réessayer
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-2 overflow-x-auto py-2 px-1">
+      <div className="flex gap-2 overflow-x-auto py-2 px-1 no-scrollbar">
         {nextFiveDays.map((date) => (
           <Button
             key={date.toISOString()}
@@ -60,10 +73,10 @@ export function MatchesList() {
   );
 }
 
-function MatchCard({ match }) {
+function MatchCard({ match }: { match: Match }) {
   return (
     <Card 
-      className="overflow-hidden hover:bg-accent/50 transition-colors cursor-pointer group"
+      className="overflow-hidden hover:bg-accent/50 transition-colors cursor-pointer group border-2"
       onClick={() => {
         console.log("Match selected:", match);
       }}
@@ -83,77 +96,89 @@ function MatchCard({ match }) {
 
         {/* Round */}
         <div className="text-sm text-muted-foreground">
-          {match.round?.name}
+          {match.round?.name || "1ère journée"}
         </div>
 
         {/* Teams */}
         <div className="flex items-center justify-between mt-6">
-          <TeamDisplay team={match.participants[0]} />
+          <TeamDisplay team={match.participants?.[0]} index={0} />
           <div className="font-bold text-muted-foreground text-lg px-2">VS</div>
-          <TeamDisplay team={match.participants[1]} />
+          <TeamDisplay team={match.participants?.[1]} index={1} />
         </div>
       </div>
     </Card>
   );
 }
 
-function LeagueAvatar({ image, name }) {
+function LeagueAvatar({ image, name }: { image: string | null, name: string }) {
+  const [imageError, setImageError] = useState(false);
+  
   return (
-    <Avatar className="h-8 w-8">
-      {image ? (
+    <Avatar className="h-10 w-10 border">
+      {image && !imageError ? (
         <AvatarImage 
           src={image} 
           alt={name || "League"}
-          onError={(e) => {
+          className="object-contain p-1"
+          onError={() => {
             console.error("League image failed to load:", image);
-            e.currentTarget.onerror = null;
-            e.currentTarget.src = "https://placehold.co/80x80?text=L";
+            setImageError(true);
           }}
         />
       ) : null}
-      <AvatarFallback>
-        <ImageIcon className="h-4 w-4" />
+      <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+        {name?.substring(0, 2).toUpperCase() || <ImageIcon className="h-4 w-4" />}
       </AvatarFallback>
     </Avatar>
   );
 }
 
-function TeamDisplay({ team }) {
-  if (!team) return <TeamPlaceholder />;
+function TeamDisplay({ team, index }: { team?: { name: string; image_path: string | null }, index: number }) {
+  const [imageError, setImageError] = useState(false);
+  
+  if (!team) {
+    return <TeamPlaceholder index={index} />;
+  }
+  
+  // Debug the team data
+  console.log(`Team ${index} data:`, team);
   
   return (
     <div className="flex flex-col items-center gap-2 flex-1">
-      <div className="w-20 h-20 flex items-center justify-center">
-        <Avatar className="w-16 h-16">
-          <AvatarImage 
-            src={team.image_path || ""} 
-            alt={team.name}
-            className="object-contain"
-            onError={(e) => {
-              console.error("Team image failed to load:", team.image_path);
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = "https://placehold.co/200x200?text=Team";
-            }}
-          />
-          <AvatarFallback className="text-xs">
-            {team.name?.substring(0, 2).toUpperCase() || <ImageIcon className="h-6 w-6" />}
+      <div className="w-24 h-24 flex items-center justify-center">
+        <Avatar className="w-20 h-20 border-2">
+          {team.image_path && !imageError ? (
+            <AvatarImage 
+              src={team.image_path} 
+              alt={team.name}
+              className="object-contain p-1"
+              onError={() => {
+                console.error(`Team ${index} image failed to load:`, team.image_path);
+                setImageError(true);
+              }}
+            />
+          ) : null}
+          <AvatarFallback className="bg-accent/10 text-lg font-bold">
+            {team.name?.substring(0, 2).toUpperCase() || `T${index + 1}`}
           </AvatarFallback>
         </Avatar>
       </div>
-      <span className="font-medium text-center text-sm line-clamp-2">
-        {team.name}
+      <span className="font-medium text-center text-sm line-clamp-2 max-w-full">
+        {team.name || `Équipe ${index + 1}`}
       </span>
     </div>
   );
 }
 
-function TeamPlaceholder() {
+function TeamPlaceholder({ index }: { index: number }) {
   return (
     <div className="flex flex-col items-center gap-2 flex-1">
-      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
-        <ImageIcon className="h-6 w-6 text-muted-foreground/50" />
+      <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center">
+        <span className="text-muted-foreground/70 text-lg font-bold">T{index + 1}</span>
       </div>
-      <span className="font-medium text-center text-muted-foreground">--</span>
+      <span className="font-medium text-center text-muted-foreground">
+        Équipe {index + 1}
+      </span>
     </div>
   );
 }
@@ -165,7 +190,7 @@ function MatchesListSkeleton() {
         <Card key={i} className="overflow-hidden p-4 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Skeleton className="w-8 h-8 rounded-full" />
+              <Skeleton className="w-10 h-10 rounded-full" />
               <Skeleton className="h-4 w-24" />
             </div>
             <Skeleton className="h-4 w-12" />
@@ -175,14 +200,14 @@ function MatchesListSkeleton() {
           
           <div className="flex items-center justify-between mt-6">
             <div className="flex flex-col items-center gap-2 flex-1">
-              <Skeleton className="w-16 h-16 rounded-full" />
+              <Skeleton className="w-20 h-20 rounded-full" />
               <Skeleton className="h-4 w-16" />
             </div>
             
             <Skeleton className="h-4 w-4 mx-2" />
             
             <div className="flex flex-col items-center gap-2 flex-1">
-              <Skeleton className="w-16 h-16 rounded-full" />
+              <Skeleton className="w-20 h-20 rounded-full" />
               <Skeleton className="h-4 w-16" />
             </div>
           </div>

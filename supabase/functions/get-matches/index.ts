@@ -7,7 +7,26 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Interface pour la structure des données de sortie
+interface MatchOutput {
+  id: number;
+  name: string;
+  starting_at: string;
+  participants: {
+    name: string;
+    image_path: string | null;
+  }[];
+  stage: {
+    name: string;
+    image_path: string | null;
+  };
+  round: {
+    name: string;
+  };
+}
+
 serve(async (req) => {
+  // Gestion de la requête OPTIONS pour CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -35,7 +54,7 @@ serve(async (req) => {
     const data = await response.json();
     console.log(`API Response status: ${response.status}`);
     
-    const formattedMatches = [];
+    const formattedMatches: MatchOutput[] = [];
     
     if (data && data.data && Array.isArray(data.data)) {
       if (data.data.length === 0) {
@@ -46,58 +65,77 @@ serve(async (req) => {
         );
       }
       
-      // Process real data
+      // Traiter les données réelles
       console.log(`Processing ${data.data.length} real matches from API`);
       
       for (const match of data.data) {
         console.log(`Processing match ID: ${match.id} - ${match.name}`);
         
-        // Extract participants with proper checks
+        // Extraction des participants avec vérification
         const participants = [];
-        if (match.participants && match.participants.data) {
+        if (match.participants && Array.isArray(match.participants.data)) {
+          console.log(`Match ${match.id} has ${match.participants.data.length} participants`);
+          
           for (const participant of match.participants.data) {
-            participants.push({
+            // Log des données du participant pour le débogage
+            console.log(`Participant data for match ${match.id}:`, JSON.stringify({
               name: participant.name,
               image_path: participant.image_path
+            }));
+            
+            participants.push({
+              name: participant.name || `Team ${participants.length + 1}`,
+              image_path: participant.image_path || null
             });
-            console.log(`  Participant: ${participant.name}, Image: ${participant.image_path}`);
           }
+        } else {
+          console.log(`Match ${match.id} has no valid participants data`);
         }
         
-        // If we don't have 2 participants, add placeholder
+        // Si nous n'avons pas 2 participants, ajouter des placeholders
         while (participants.length < 2) {
           participants.push({
-            name: "Team " + (participants.length + 1),
+            name: `Team ${participants.length + 1}`,
             image_path: null
           });
         }
         
-        // Extract league/stage image
-        let stageData = { name: 'Ligue' };
+        // Extraction des informations sur la ligue/stage
+        let stageName = "Ligue";
         let leagueImage = null;
         
         if (match.stage && match.stage.data) {
-          stageData = {
-            name: match.stage.data.name || 'Ligue'
-          };
+          stageName = match.stage.data.name || "Ligue";
+          console.log(`Match ${match.id} stage: ${stageName}`);
         }
         
         if (match.league && match.league.data) {
           leagueImage = match.league.data.image_path;
-          console.log(`  League: ${match.league.data.name}, Image: ${leagueImage}`);
+          console.log(`Match ${match.id} league: ${match.league.data.name}, Image: ${leagueImage || 'None'}`);
         }
         
-        formattedMatches.push({
+        // Construction de l'objet match formaté
+        const formattedMatch: MatchOutput = {
           id: match.id,
-          name: match.name,
+          name: match.name || `${participants[0].name} vs ${participants[1].name}`,
           starting_at: match.starting_at,
           participants: participants,
           stage: { 
-            name: stageData.name,
+            name: stageName,
             image_path: leagueImage
           },
-          round: { name: match.round?.data?.name || '1' }
-        });
+          round: { name: match.round?.data?.name || "1" }
+        };
+        
+        // Log de l'objet match formaté pour le débogage
+        console.log(`Formatted match ${match.id}:`, JSON.stringify({
+          id: formattedMatch.id,
+          name: formattedMatch.name,
+          participants: formattedMatch.participants.map(p => p.name),
+          has_images: formattedMatch.participants.map(p => !!p.image_path)
+        }));
+        
+        formattedMatches.push(formattedMatch);
       }
       
       console.log(`Returning ${formattedMatches.length} formatted matches`);
@@ -128,7 +166,8 @@ serve(async (req) => {
   }
 });
 
-function generateMockMatches() {
+// Fonction pour générer des données de test de haute qualité avec des images fonctionnelles
+function generateMockMatches(): MatchOutput[] {
   const now = new Date();
   const startTime1 = new Date(now);
   startTime1.setHours(now.getHours() + 2);
