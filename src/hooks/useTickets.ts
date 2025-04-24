@@ -1,11 +1,10 @@
-
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface Ticket {
   id: string;
-  subject: string; // Ensure subject is part of the Ticket interface
+  subject: string;
   category: 'Technical' | 'Billing' | 'Behavior' | 'Other';
   status: 'Open' | 'InProgress' | 'Resolved' | 'Closed';
   created_at: string;
@@ -52,12 +51,11 @@ export function useTickets() {
           throw new Error("Utilisateur non connecté");
         }
         
-        // Création du ticket dans support_tickets avec le nouveau champ subject
         const { data: ticketData, error: ticketError } = await supabase
           .from('support_tickets')
           .insert([{ 
             category,
-            subject, // Add subject to the ticket creation
+            subject,
             user_id: user.id,
             status: 'Open'
           }])
@@ -70,7 +68,6 @@ export function useTickets() {
           throw ticketError;
         }
 
-        // Création du premier message dans support_messages
         const { error: messageError } = await supabase
           .from('support_messages')
           .insert([{ 
@@ -102,10 +99,40 @@ export function useTickets() {
     }
   });
 
+  const updateTicketStatus = useMutation({
+    mutationFn: async ({ ticketId, status }: { ticketId: string; status: Ticket['status'] }) => {
+      try {
+        console.log('Updating ticket status:', { ticketId, status });
+        const { error } = await supabase
+          .from('support_tickets')
+          .update({ status })
+          .eq('id', ticketId);
+
+        if (error) {
+          console.error('Update ticket error:', error);
+          toast.error("Erreur lors de la mise à jour du ticket");
+          throw error;
+        }
+      } catch (error) {
+        console.error('Update ticket error:', error);
+        toast.error("Erreur lors de la mise à jour du ticket");
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
+      toast.success("Ticket mis à jour avec succès");
+    },
+    onError: () => {
+      toast.error("Erreur lors de la mise à jour du ticket");
+    }
+  });
+
   return {
     tickets,
     isLoading,
-    createTicket
+    createTicket,
+    updateTicketStatus
   };
 }
 
