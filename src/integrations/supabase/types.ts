@@ -291,6 +291,66 @@ export type Database = {
           },
         ]
       }
+      duo_bets: {
+        Row: {
+          amount: number
+          commission_rate: number | null
+          completed_at: string | null
+          created_at: string | null
+          creator_id: string
+          creator_prediction: Database["public"]["Enums"]["duo_bet_result"]
+          expires_at: string
+          id: string
+          match_description: string
+          opponent_id: string | null
+          opponent_prediction:
+            | Database["public"]["Enums"]["duo_bet_result"]
+            | null
+          result: Database["public"]["Enums"]["duo_bet_result"] | null
+          status: Database["public"]["Enums"]["duo_bet_status"] | null
+          team_a: string
+          team_b: string
+        }
+        Insert: {
+          amount: number
+          commission_rate?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          creator_id: string
+          creator_prediction: Database["public"]["Enums"]["duo_bet_result"]
+          expires_at: string
+          id?: string
+          match_description: string
+          opponent_id?: string | null
+          opponent_prediction?:
+            | Database["public"]["Enums"]["duo_bet_result"]
+            | null
+          result?: Database["public"]["Enums"]["duo_bet_result"] | null
+          status?: Database["public"]["Enums"]["duo_bet_status"] | null
+          team_a: string
+          team_b: string
+        }
+        Update: {
+          amount?: number
+          commission_rate?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          creator_id?: string
+          creator_prediction?: Database["public"]["Enums"]["duo_bet_result"]
+          expires_at?: string
+          id?: string
+          match_description?: string
+          opponent_id?: string | null
+          opponent_prediction?:
+            | Database["public"]["Enums"]["duo_bet_result"]
+            | null
+          result?: Database["public"]["Enums"]["duo_bet_result"] | null
+          status?: Database["public"]["Enums"]["duo_bet_status"] | null
+          team_a?: string
+          team_b?: string
+        }
+        Relationships: []
+      }
       fut_players: {
         Row: {
           created_at: string | null
@@ -982,6 +1042,8 @@ export type Database = {
     Enums: {
       balance_source: "real" | "bonus"
       document_type: "ID" | "ProofOfAddress" | "Passport"
+      duo_bet_result: "TeamA" | "TeamB" | "Draw"
+      duo_bet_status: "Pending" | "Active" | "Completed" | "Cancelled"
       game_code:
         | "ludo"
         | "tictactoe"
@@ -1123,6 +1185,8 @@ export const Constants = {
     Enums: {
       balance_source: ["real", "bonus"],
       document_type: ["ID", "ProofOfAddress", "Passport"],
+      duo_bet_result: ["TeamA", "TeamB", "Draw"],
+      duo_bet_status: ["Pending", "Active", "Completed", "Cancelled"],
       game_code: [
         "ludo",
         "tictactoe",

@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { GamepadIcon, Store, BarChart3, Wallet, Package2 } from "lucide-react";
+import { GamepadIcon, Store, BarChart3, Wallet, Package2, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { NavigationDesktop } from "./navigation/NavigationDesktop";
 import { NavigationMobile } from "./navigation/NavigationMobile";
@@ -27,7 +26,6 @@ const Navigation = ({ disableNavigation = false }: NavigationProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      // Use the 'public.users' table instead of trying to access auth.users directly
       const { data: userData, error } = await supabase
         .from('users')
         .select('username, first_name, last_name, avatar_url')
@@ -43,7 +41,6 @@ const Navigation = ({ disableNavigation = false }: NavigationProps) => {
     },
   });
   
-  // User data with avatar
   const user = {
     name: userProfile?.username || "Player",
     avatar: userProfile?.avatar_url || "",
@@ -59,6 +56,7 @@ const Navigation = ({ disableNavigation = false }: NavigationProps) => {
     { label: "Dashboard", href: "/dashboard", icon: <BarChart3 className="h-5 w-5" /> },
     { label: "Wallet", href: "/wallet", icon: <Wallet className="h-5 w-5" /> },
     { label: "My Items", href: "/my-items", icon: <Package2 className="h-5 w-5" /> },
+    { label: "Paris Duo", href: "/duo-bets", icon: <Users className="h-5 w-5" /> },
   ];
   
   const handleLogout = async () => {

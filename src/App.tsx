@@ -17,6 +17,7 @@ import CreateRoom from "./pages/CreateRoom";
 import PublicRooms from "./pages/PublicRooms";
 import Auth from "./pages/Auth";
 import Support from "./pages/Support";
+import DuoBets from "./pages/DuoBets";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/my-items" element={<MyItems />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/support" element={<Support />} />
+            <Route path="/duo-bets" element={<DuoBets />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
