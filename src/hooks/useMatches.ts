@@ -27,28 +27,42 @@ export function useMatches() {
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
       console.log(`Fetching matches for date: ${formattedDate}`);
       
-      const { data, error } = await supabase.functions.invoke('get-matches', {
-        body: { date: formattedDate }
-      });
-      
-      if (error) {
-        console.error("Error fetching matches:", error);
+      try {
+        const { data, error } = await supabase.functions.invoke('get-matches', {
+          body: { date: formattedDate }
+        });
+        
+        if (error) {
+          console.error("Error fetching matches:", error);
+          throw error;
+        }
+        
+        if (!data || !Array.isArray(data)) {
+          console.error("Invalid response format:", data);
+          throw new Error("Format de réponse invalide");
+        }
+        
+        console.log(`Received ${data.length} matches from API`);
+        
+        // Log first match to debug image paths
+        if (data.length > 0) {
+          const firstMatch = data[0];
+          console.log("First match example:", JSON.stringify(firstMatch));
+          console.log("First match images:", {
+            team1: firstMatch.participants?.[0]?.image_path,
+            team2: firstMatch.participants?.[1]?.image_path,
+            league: firstMatch.stage?.image_path
+          });
+        }
+        
+        return data;
+      } catch (error) {
+        console.error("Failed to fetch matches:", error);
         throw error;
       }
-      
-      if (!data || !Array.isArray(data)) {
-        console.error("Invalid response format:", data);
-        throw new Error("Format de réponse invalide");
-      }
-      
-      console.log(`Received ${data.length} matches from API`);
-      if (data.length > 0) {
-        console.log("First match example:", JSON.stringify(data[0]));
-      }
-      
-      return data;
     },
     retry: 1,
+    refetchOnWindowFocus: false,
     refetchOnMount: true,
     staleTime: 5 * 60 * 1000,
   });

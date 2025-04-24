@@ -16,37 +16,63 @@ serve(async (req) => {
     const { date } = await req.json();
     console.log(`Fetching matches for date: ${date}`);
     
-    const response = await fetch(
-      `https://api.sportmonks.com/v3/football/fixtures/date/${date}?api_token=${SPORTMONKS_API_KEY}&include=participants;venue;league;stage;round`,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const apiUrl = `https://api.sportmonks.com/v3/football/fixtures/date/${date}?api_token=${SPORTMONKS_API_KEY}&include=participants;venue;league;stage;round`;
+    console.log(`API URL: ${apiUrl}`);
+    
+    const response = await fetch(apiUrl, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      console.error(`API Error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`Error body: ${errorText}`);
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    }
 
     const data = await response.json();
-    console.log("API Response:", JSON.stringify(data).substring(0, 200) + "...");
+    console.log("API Response status:", response.status);
+    console.log("API Response preview:", JSON.stringify(data).substring(0, 200) + "...");
     
     let formattedMatches = [];
     
     if (data && data.data && Array.isArray(data.data) && data.data.length > 0) {
-      formattedMatches = data.data.map(match => ({
-        id: match.id,
-        name: match.name,
-        starting_at: match.starting_at,
-        participants: match.participants?.data?.map(p => ({
+      formattedMatches = data.data.map(match => {
+        // Log individual match details to debug
+        console.log(`Processing match: ${match.id} - ${match.name}`);
+        console.log(`Match participants:`, JSON.stringify(match.participants?.data || []));
+        
+        // Extract participant images with checks
+        const participants = match.participants?.data?.map(p => ({
           name: p.name,
-          image_path: p.image_path
-        })) || [],
-        stage: { 
-          name: match.stage?.data?.name || 'Ligue',
-          image_path: match.league?.data?.image_path
-        },
-        round: { name: match.round?.data?.name || '1' }
-      }));
+          image_path: p.image_path || null
+        })) || [];
+        
+        // Extract league/stage image with checks
+        const stageData = match.stage?.data || {};
+        const leagueData = match.league?.data || {};
+        const leagueImage = leagueData.image_path || null;
+        
+        return {
+          id: match.id,
+          name: match.name,
+          starting_at: match.starting_at,
+          participants: participants,
+          stage: { 
+            name: stageData.name || 'Ligue',
+            image_path: leagueImage
+          },
+          round: { name: match.round?.data?.name || '1' }
+        };
+      });
       
       console.log(`Returning ${formattedMatches.length} real matches`);
+      // Log the first formatted match for verification
+      if (formattedMatches.length > 0) {
+        console.log("First formatted match:", JSON.stringify(formattedMatches[0]));
+      }
     } else {
       console.log("No matches found or API error. Generating mock matches...");
       
@@ -122,6 +148,7 @@ serve(async (req) => {
       ];
       
       console.log(`Returning ${formattedMatches.length} mock matches`);
+      console.log("First mock match:", JSON.stringify(formattedMatches[0]));
     }
     
     return new Response(

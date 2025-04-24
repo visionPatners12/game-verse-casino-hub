@@ -5,7 +5,7 @@ import { Loader2, Clock, Image as ImageIcon } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Button } from "../ui/button";
-import { AspectRatio } from "../ui/aspect-ratio";
+import { Skeleton } from "../ui/skeleton";
 
 export function MatchesList() {
   const { 
@@ -18,11 +18,7 @@ export function MatchesList() {
   } = useMatches();
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <MatchesListSkeleton />;
   }
 
   if (error) {
@@ -77,6 +73,11 @@ export function MatchesList() {
                         src={match.stage.image_path}
                         alt={match.stage.name}
                         className="w-8 h-8 object-contain"
+                        onError={(e) => {
+                          console.error("League image failed to load:", match.stage.image_path);
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = "https://placehold.co/80x80?text=League";
+                        }}
                       />
                     ) : (
                       <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
@@ -96,54 +97,86 @@ export function MatchesList() {
                 </div>
 
                 <div className="flex items-center justify-between gap-4 mt-4">
-                  <div className="flex flex-col items-center gap-2 flex-1">
-                    <div className="w-20 h-20 shrink-0 flex items-center justify-center">
-                      {match.participants[0]?.image_path ? (
-                        <img
-                          src={match.participants[0].image_path}
-                          alt={match.participants[0].name}
-                          className="max-w-full max-h-full object-contain"
-                          onError={(e) => {
-                            console.error("Image failed to load:", match.participants[0].image_path);
-                            e.currentTarget.onerror = null;
-                            e.currentTarget.src = "https://placehold.co/200x200?text=Team";
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-muted rounded-full flex items-center justify-center">
-                          <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
-                        </div>
-                      )}
-                    </div>
-                    <span className="font-medium text-center">{match.participants[0]?.name}</span>
-                  </div>
+                  <TeamDisplay team={match.participants[0]} />
                   <span className="text-muted-foreground font-bold">vs</span>
-                  <div className="flex flex-col items-center gap-2 flex-1">
-                    <div className="w-20 h-20 shrink-0 flex items-center justify-center">
-                      {match.participants[1]?.image_path ? (
-                        <img
-                          src={match.participants[1].image_path}
-                          alt={match.participants[1].name}
-                          className="max-w-full max-h-full object-contain"
-                          onError={(e) => {
-                            console.error("Image failed to load:", match.participants[1].image_path);
-                            e.currentTarget.onerror = null;
-                            e.currentTarget.src = "https://placehold.co/200x200?text=Team";
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-muted rounded-full flex items-center justify-center">
-                          <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
-                        </div>
-                      )}
-                    </div>
-                    <span className="font-medium text-center">{match.participants[1]?.name}</span>
-                  </div>
+                  <TeamDisplay team={match.participants[1]} />
                 </div>
               </div>
             </Card>
           ))
         )}
+      </div>
+    </div>
+  );
+}
+
+function TeamDisplay({ team }) {
+  if (!team) return null;
+  
+  return (
+    <div className="flex flex-col items-center gap-2 flex-1">
+      <div className="w-24 h-24 flex items-center justify-center">
+        {team.image_path ? (
+          <img
+            src={team.image_path}
+            alt={team.name}
+            className="max-w-full max-h-full object-contain"
+            onError={(e) => {
+              console.error("Team image failed to load:", team.image_path);
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "https://placehold.co/200x200?text=Team";
+            }}
+          />
+        ) : (
+          <div className="w-full h-full bg-muted rounded-full flex items-center justify-center">
+            <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+          </div>
+        )}
+      </div>
+      <span className="font-medium text-center">{team.name}</span>
+    </div>
+  );
+}
+
+function MatchesListSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex gap-2 overflow-x-auto py-2 px-1">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 w-28" />
+        ))}
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Card key={i} className="overflow-hidden">
+            <div className="p-4 space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="w-8 h-8 rounded-full" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+                <Skeleton className="h-4 w-12" />
+              </div>
+              
+              <Skeleton className="h-4 w-20" />
+              
+              <div className="flex items-center justify-between gap-4 mt-4">
+                <div className="flex flex-col items-center gap-2 flex-1">
+                  <Skeleton className="w-24 h-24 rounded" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+                
+                <Skeleton className="h-4 w-4" />
+                
+                <div className="flex flex-col items-center gap-2 flex-1">
+                  <Skeleton className="w-24 h-24 rounded" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+              </div>
+            </div>
+          </Card>
+        ))}
       </div>
     </div>
   );
