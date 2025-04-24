@@ -64,12 +64,19 @@ export function useMatches() {
     }
   ];
 
+  // Adding a mock refetch function to satisfy the component's expectations
+  const refetch = () => {
+    console.log("Mock refetch called");
+    return Promise.resolve();
+  };
+
   return {
     matches: staticMatches,
     isLoading: false,
     error: null,
     selectedDate,
     setSelectedDate,
-    nextFiveDays
+    nextFiveDays,
+    refetch // Add this to fix the error
   };
 }
