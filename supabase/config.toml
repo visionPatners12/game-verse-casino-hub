@@ -1,4 +1,5 @@
 
-[functions.get-matches]
-verify_jwt = false
+project_id = "ipmhknkldybzfmnwcgav"
 
+[functions.sportmonks]
+verify_jwt = false
