@@ -43,39 +43,61 @@ export function useTickets() {
 
   const createTicket = useMutation({
     mutationFn: async ({ category, subject, content }: { category: Ticket['category']; subject: string; content: string }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) throw new Error("Utilisateur non connecté");
-      
-      const { data: ticketData, error: ticketError } = await supabase
-        .from('support_tickets')
-        .insert([{ 
-          category,
-          subject,
-          user_id: user.id
-        }])
-        .select()
-        .single();
+      try {
+        console.log('Creating ticket with:', { category, subject, content });
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          toast.error("Utilisateur non connecté");
+          throw new Error("Utilisateur non connecté");
+        }
+        
+        // Création du ticket dans support_tickets
+        const { data: ticketData, error: ticketError } = await supabase
+          .from('support_tickets')
+          .insert([{ 
+            category,
+            subject,
+            user_id: user.id,
+            status: 'Open'
+          }])
+          .select()
+          .single();
 
-      if (ticketError) throw ticketError;
+        if (ticketError) {
+          console.error('Ticket creation error:', ticketError);
+          toast.error("Erreur lors de la création du ticket");
+          throw ticketError;
+        }
 
-      const { error: messageError } = await supabase
-        .from('support_messages')
-        .insert([{ 
-          ticket_id: ticketData.id,
-          content,
-          sender_id: user.id
-        }]);
+        // Création du premier message dans support_messages
+        const { error: messageError } = await supabase
+          .from('support_messages')
+          .insert([{ 
+            ticket_id: ticketData.id,
+            content,
+            sender_id: user.id
+          }]);
 
-      if (messageError) throw messageError;
+        if (messageError) {
+          console.error('Message creation error:', messageError);
+          toast.error("Erreur lors de la création du message");
+          throw messageError;
+        }
 
-      return ticketData;
+        return ticketData;
+      } catch (error) {
+        console.error('Create ticket error:', error);
+        toast.error("Erreur lors de la création du ticket");
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
       toast.success("Ticket créé avec succès");
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Error in createTicket mutation:', error);
       toast.error("Erreur lors de la création du ticket");
     }
   });
@@ -111,19 +133,32 @@ export function useTicketMessages(ticketId: string) {
 
   const addMessage = useMutation({
     mutationFn: async ({ content }: { content: string }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) throw new Error("Utilisateur non connecté");
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          toast.error("Utilisateur non connecté");
+          throw new Error("Utilisateur non connecté");
+        }
 
-      const { error } = await supabase
-        .from('support_messages')
-        .insert([{
-          ticket_id: ticketId,
-          content,
-          sender_id: user.id
-        }]);
+        const { error } = await supabase
+          .from('support_messages')
+          .insert([{
+            ticket_id: ticketId,
+            content,
+            sender_id: user.id
+          }]);
 
-      if (error) throw error;
+        if (error) {
+          console.error('Message creation error:', error);
+          toast.error("Erreur lors de l'envoi du message");
+          throw error;
+        }
+      } catch (error) {
+        console.error('Add message error:', error);
+        toast.error("Erreur lors de l'envoi du message");
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ticket-messages', ticketId] });

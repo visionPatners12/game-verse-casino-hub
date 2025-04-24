@@ -51,13 +51,19 @@ export function CreateTicketDialog() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await createTicket.mutateAsync({
-      category: values.category,
-      subject: values.subject,
-      content: values.content
-    });
-    form.reset();
-    setOpen(false);
+    try {
+      console.log('Form values:', values);
+      await createTicket.mutateAsync({
+        category: values.category,
+        subject: values.subject,
+        content: values.content
+      });
+      form.reset();
+      setOpen(false);
+    } catch (error) {
+      console.error('Form submission error:', error);
+      // L'erreur sera gérée par la mutation
+    }
   }
 
   return (
