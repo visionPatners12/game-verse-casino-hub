@@ -13,12 +13,13 @@ const GameChat = () => {
   
   const formattedMatches = matches?.map(match => ({
     teams: `${match.participants[0].name} vs ${match.participants[1].name}`,
-    time: format(new Date(match.starting_at), "HH:mm", { locale: fr })
+    time: format(new Date(match.starting_at), "HH:mm", { locale: fr }),
+    league: match.stage.name
   })) || [];
   
-  const matchesString = formattedMatches.map(m => 
-    `${m.time} - ${m.teams}`
-  ).join("\n");
+  const matchesString = formattedMatches.length > 0 
+    ? formattedMatches.map(m => `${m.time} - ${m.teams} (${m.league})`).join("\n")
+    : "Aucun match disponible pour aujourd'hui";
   
   const messages: Message[] = [
     {
@@ -36,10 +37,10 @@ const GameChat = () => {
     │   O   │
     │       │
     └───┬───┘   
-        │     ${formattedMatches[0]?.teams || ""}
-        │     ${formattedMatches[1]?.teams || ""}
-    ════╪════  ${formattedMatches[2]?.teams || ""}
-        │     ${formattedMatches[3]?.teams || ""}
+        │     ${matchesString}
+        │     
+    ════╪════  
+        │     
         │     `,
       timestamp: "1 min ago",
       isSpecial: true,
