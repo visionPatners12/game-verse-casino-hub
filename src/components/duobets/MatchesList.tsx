@@ -1,13 +1,14 @@
 
 import { Card } from "@/components/ui/card";
 import { useMatches, type Match } from "@/hooks/useMatches";
-import { Loader2, Clock, ImageIcon, AlertTriangle } from "lucide-react";
+import { Loader2, Clock, ImageIcon, AlertTriangle, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useState } from "react";
+import { toast } from "@/hooks/use-toast";
 
 export function MatchesList() {
   const { 
@@ -24,6 +25,10 @@ export function MatchesList() {
   // Fonction pour retenter le chargement en cas d'erreur
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
+    toast({
+      title: "Rechargement",
+      description: "Tentative de rechargement des matchs..."
+    });
     refetch();
   };
 
@@ -34,6 +39,7 @@ export function MatchesList() {
         <p className="text-lg font-semibold text-red-500 mb-2">Erreur lors du chargement des matchs</p>
         <p className="text-sm text-muted-foreground mb-4">{error.message}</p>
         <Button onClick={handleRetry} variant="outline">
+          <RefreshCw className="mr-2 h-4 w-4" />
           Réessayer
         </Button>
       </div>
@@ -79,13 +85,20 @@ function MatchCard({ match }: { match: Match }) {
       className="overflow-hidden hover:bg-accent/50 transition-colors cursor-pointer group border-2"
       onClick={() => {
         console.log("Match selected:", match);
+        toast({
+          title: "Match sélectionné",
+          description: `${match.name}`
+        });
       }}
     >
       <div className="p-4 space-y-4">
         {/* League & Time */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <LeagueAvatar image={match.stage?.image_path} name={match.stage?.name} />
+            <LeagueAvatar 
+              image={match.stage?.image_path} 
+              name={match.stage?.name} 
+            />
             <h3 className="font-semibold">{match.stage?.name}</h3>
           </div>
           <span className="text-sm text-muted-foreground flex items-center gap-1">
@@ -139,9 +152,6 @@ function TeamDisplay({ team, index }: { team?: { name: string; image_path: strin
   if (!team) {
     return <TeamPlaceholder index={index} />;
   }
-  
-  // Debug the team data
-  console.log(`Team ${index} data:`, team);
   
   return (
     <div className="flex flex-col items-center gap-2 flex-1">

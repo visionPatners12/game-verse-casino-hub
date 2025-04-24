@@ -35,6 +35,11 @@ serve(async (req) => {
     const { date } = await req.json();
     console.log(`Fetching matches for date: ${date}`);
     
+    if (!SPORTMONKS_API_KEY) {
+      console.error("SPORTMONKS_API_KEY not configured");
+      throw new Error("API key not configured. Returning mock data.");
+    }
+    
     const apiUrl = `https://api.sportmonks.com/v3/football/fixtures/date/${date}?api_token=${SPORTMONKS_API_KEY}&include=participants;venue;league;stage;round`;
     console.log(`API URL: ${apiUrl}`);
     
@@ -73,7 +78,7 @@ serve(async (req) => {
         
         // Extraction des participants avec vérification
         const participants = [];
-        if (match.participants && Array.isArray(match.participants.data)) {
+        if (match.participants && match.participants.data && Array.isArray(match.participants.data)) {
           console.log(`Match ${match.id} has ${match.participants.data.length} participants`);
           
           for (const participant of match.participants.data) {
@@ -90,6 +95,10 @@ serve(async (req) => {
           }
         } else {
           console.log(`Match ${match.id} has no valid participants data`);
+          // Utiliser des équipes par défaut si les données sont manquantes
+          const teamNames = match.name?.split(" vs ") || [`Team 1`, `Team 2`];
+          participants.push({ name: teamNames[0], image_path: null });
+          participants.push({ name: teamNames[1] || "Team 2", image_path: null });
         }
         
         // Si nous n'avons pas 2 participants, ajouter des placeholders
@@ -139,6 +148,13 @@ serve(async (req) => {
       }
       
       console.log(`Returning ${formattedMatches.length} formatted matches`);
+      
+      return new Response(
+        JSON.stringify(formattedMatches),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     } else {
       console.log("Invalid API response format. Using mock data.");
       return new Response(
@@ -146,13 +162,6 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    
-    return new Response(
-      JSON.stringify(formattedMatches),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
   } catch (error) {
     console.error(`Error processing request: ${error.message}`);
     
