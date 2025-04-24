@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,7 +42,7 @@ const formSchema = z.object({
 export function CreateDuoBetDialog() {
   const [open, setOpen] = useState(false);
   const { createBet } = useDuoBets();
-  const { data: matches, isLoading: matchesLoading } = useMatches();
+  const { matches, isLoading: matchesLoading } = useMatches();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
