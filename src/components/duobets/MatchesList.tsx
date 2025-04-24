@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { useMatches } from "@/hooks/useMatches";
 import { Loader2, Clock, Image as ImageIcon } from "lucide-react";
@@ -64,33 +63,31 @@ export function MatchesList() {
                 console.log("Match selected:", match);
               }}
             >
-              <AspectRatio ratio={16 / 9} className="bg-muted">
-                {match.stage?.image_path ? (
-                  <img
-                    src={match.stage.image_path}
-                    alt={match.stage.name}
-                    className="object-contain w-full h-full p-4 group-hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center w-full h-full">
-                    <ImageIcon className="h-16 w-16 text-muted-foreground/50" />
+              <div className="p-4 space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    {match.stage?.image_path && (
+                      <img
+                        src={match.stage.image_path}
+                        alt={match.stage.name}
+                        className="w-6 h-6 object-contain"
+                      />
+                    )}
+                    <h3 className="font-semibold">{match.stage?.name}</h3>
                   </div>
-                )}
-              </AspectRatio>
-              <div className="p-4 space-y-2">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-semibold">{match.name}</h3>
                   <span className="text-sm text-muted-foreground flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     {format(new Date(match.starting_at), "HH:mm", { locale: fr })}
                   </span>
                 </div>
+
                 <div className="text-sm text-muted-foreground">
-                  {match.stage.name} - {match.round.name}
+                  {match.round?.name}
                 </div>
-                <div className="mt-4 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2 flex-1">
-                    <div className="w-8 h-8 shrink-0">
+
+                <div className="flex items-center justify-between gap-4 mt-4">
+                  <div className="flex flex-col items-center gap-2 flex-1">
+                    <div className="w-16 h-16 shrink-0">
                       {match.participants[0]?.image_path ? (
                         <img
                           src={match.participants[0].image_path}
@@ -99,16 +96,15 @@ export function MatchesList() {
                         />
                       ) : (
                         <div className="w-full h-full bg-muted rounded-full flex items-center justify-center">
-                          <ImageIcon className="h-4 w-4 text-muted-foreground/50" />
+                          <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
                         </div>
                       )}
                     </div>
-                    <span className="font-medium truncate">{match.participants[0]?.name}</span>
+                    <span className="font-medium text-center">{match.participants[0]?.name}</span>
                   </div>
                   <span className="text-muted-foreground font-bold">vs</span>
-                  <div className="flex items-center gap-2 flex-1 justify-end">
-                    <span className="font-medium truncate">{match.participants[1]?.name}</span>
-                    <div className="w-8 h-8 shrink-0">
+                  <div className="flex flex-col items-center gap-2 flex-1">
+                    <div className="w-16 h-16 shrink-0">
                       {match.participants[1]?.image_path ? (
                         <img
                           src={match.participants[1].image_path}
@@ -117,10 +113,11 @@ export function MatchesList() {
                         />
                       ) : (
                         <div className="w-full h-full bg-muted rounded-full flex items-center justify-center">
-                          <ImageIcon className="h-4 w-4 text-muted-foreground/50" />
+                          <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
                         </div>
                       )}
                     </div>
+                    <span className="font-medium text-center">{match.participants[1]?.name}</span>
                   </div>
                 </div>
               </div>
