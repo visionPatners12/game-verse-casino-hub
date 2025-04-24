@@ -4,12 +4,12 @@ import { Clock } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
-import { Match } from "@/hooks/useMatches";
+import { SportMonksMatch } from "@/types/sportmonks";
 import { LeagueAvatar } from "./LeagueAvatar";
 import { TeamDisplay } from "./TeamDisplay";
 
 interface MatchCardProps {
-  match: Match;
+  match: SportMonksMatch;
 }
 
 export function MatchCard({ match }: MatchCardProps) {

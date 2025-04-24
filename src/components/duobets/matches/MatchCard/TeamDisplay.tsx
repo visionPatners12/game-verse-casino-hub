@@ -1,12 +1,9 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
+import { SportMonksParticipant } from "@/types/sportmonks";
 
 interface TeamDisplayProps {
-  team?: { 
-    name: string; 
-    image_path: string | null;
-  };
+  team?: SportMonksParticipant;
   index: number;
 }
 
@@ -37,8 +34,8 @@ export function TeamDisplay({ team, index }: TeamDisplayProps) {
           {team.image_path && !imageError ? (
             <AvatarImage 
               src={team.image_path} 
-              alt={team.name}
               className="object-contain p-1"
+              alt={team.name}
               onError={() => {
                 console.error(`Team ${index} image failed to load:`, team.image_path);
                 setImageError(true);
