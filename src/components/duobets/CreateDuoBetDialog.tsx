@@ -47,7 +47,7 @@ export function CreateDuoBetDialog() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      amount: 0,
+      amount: 10, // Set a default non-zero value
       team_a: "",
       team_b: "",
       match_description: "",
@@ -58,7 +58,17 @@ export function CreateDuoBetDialog() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      await createBet.mutateAsync(values);
+      // Ensure all required fields are present and properly typed
+      const betData = {
+        amount: values.amount,
+        team_a: values.team_a,
+        team_b: values.team_b,
+        match_description: values.match_description,
+        creator_prediction: values.creator_prediction,
+        expires_at: values.expires_at,
+      };
+      
+      await createBet.mutateAsync(betData);
       form.reset();
       setOpen(false);
     } catch (error) {

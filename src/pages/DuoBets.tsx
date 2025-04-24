@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import Layout from "@/components/Layout";
+import { Layout } from "@/components/Layout";
 
 export default function DuoBets() {
   const { bets, isLoading } = useDuoBets();

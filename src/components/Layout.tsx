@@ -10,6 +10,7 @@ interface LayoutProps extends PropsWithChildren {
   hideFooter?: boolean;
 }
 
+// Export as both named and default export to maintain compatibility
 export const Layout = ({
   children,
   hideNavigation = false,
@@ -28,4 +29,7 @@ export const Layout = ({
       {!hideFooter && <Footer />}
     </div>
   );
-}
+};
+
+// Add default export for backwards compatibility
+export default Layout;
