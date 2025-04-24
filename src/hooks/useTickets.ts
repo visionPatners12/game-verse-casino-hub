@@ -42,9 +42,18 @@ export function useTickets() {
 
   const createTicket = useMutation({
     mutationFn: async ({ category, content }: { category: Ticket['category']; content: string }) => {
+      // Get the user's ID from the current session
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) throw new Error("Utilisateur non connecté");
+      
+      // Insert ticket with user_id included
       const { data: ticketData, error: ticketError } = await supabase
         .from('support_tickets')
-        .insert([{ category }])
+        .insert([{ 
+          category, 
+          user_id: user.id
+        }])
         .select()
         .single();
 

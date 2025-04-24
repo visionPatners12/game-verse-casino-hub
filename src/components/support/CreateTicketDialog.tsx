@@ -48,7 +48,12 @@ export function CreateTicketDialog() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await createTicket.mutateAsync(values);
+    // Ensure values are not optional
+    const { category, content } = values;
+    await createTicket.mutateAsync({ 
+      category, 
+      content 
+    });
     form.reset();
     setOpen(false);
   }
