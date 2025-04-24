@@ -29,12 +29,20 @@ export function MatchesList() {
     refetch();
   };
 
+  console.log("MatchesList render:", { 
+    isLoading, 
+    error: error ? error.message : null,
+    matchCount: matches?.length
+  });
+
   if (error) {
     return (
       <div className="text-center py-8">
         <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
         <p className="text-lg font-semibold text-red-500 mb-2">Erreur lors du chargement des matchs</p>
-        <p className="text-sm text-muted-foreground mb-4">{error.message}</p>
+        <p className="text-sm text-muted-foreground mb-4">
+          {error instanceof Error ? error.message : "Erreur inconnue"}
+        </p>
         <Button onClick={handleRetry} variant="outline">
           <RefreshCw className="mr-2 h-4 w-4" />
           Réessayer

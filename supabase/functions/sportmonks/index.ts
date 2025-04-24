@@ -23,6 +23,8 @@ Deno.serve(async (req) => {
       throw new Error('SportMonks API key not configured');
     }
 
+    console.log(`Fetching matches for date: ${date}`);
+
     const response = await fetch(
       `https://api.sportmonks.com/v3/football/leagues/date/${date}?include=today.scores;today.participants;today.stage;today.group;today.round`,
       {
@@ -34,10 +36,13 @@ Deno.serve(async (req) => {
     );
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`SportMonks API error: ${response.status}`, errorText);
       throw new Error(`SportMonks API error: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log(`Got ${data?.data?.length || 0} leagues`);
 
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
