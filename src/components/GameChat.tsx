@@ -9,7 +9,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
 const GameChat = () => {
-  const { matches, selectedDate, isLoading, error } = useMatches();
+  const { matches, selectedDate, isLoading, error, nextFiveDays, setSelectedDate } = useMatches();
   
   const formattedMatches = matches?.map(match => ({
     teams: `${match.participants[0].name} vs ${match.participants[1].name}`,
@@ -28,7 +28,10 @@ const GameChat = () => {
   } else if (formattedMatches.length > 0) {
     matchesString = formattedMatches.map(m => `${m.time} - ${m.teams} (${m.league})`).join("\n");
   } else {
-    matchesString = `Aucun match disponible pour le ${formattedDate}.\nSélectionnez une autre date pour voir les matchs.`;
+    matchesString = `Aucun match disponible pour le ${formattedDate}.\nSélectionnez une autre date pour voir les matchs.\n\nDates disponibles:`;
+    nextFiveDays.forEach((day, index) => {
+      matchesString += `\n - ${format(day, "EEE d MMM", { locale: fr })}`;
+    });
   }
   
   const messages: Message[] = [
@@ -55,6 +58,11 @@ ${matchesString}`,
     console.log("Sending message:", message);
   };
   
+  const handleDateSelection = (date: Date) => {
+    console.log(`Selecting date: ${format(date, "yyyy-MM-dd")}`);
+    setSelectedDate(date);
+  };
+  
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-3">
@@ -64,6 +72,21 @@ ${matchesString}`,
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 px-3">
+        <div className="mb-4 flex gap-2 overflow-x-auto pb-2">
+          {nextFiveDays.map((date, index) => (
+            <button 
+              key={index}
+              className={`px-2 py-1 text-xs rounded whitespace-nowrap ${
+                date.getDate() === selectedDate.getDate() ? 
+                'bg-primary text-primary-foreground' : 
+                'bg-secondary text-secondary-foreground'
+              }`}
+              onClick={() => handleDateSelection(date)}
+            >
+              {format(date, "EEE d MMM", { locale: fr })}
+            </button>
+          ))}
+        </div>
         <ChatMessageList messages={messages} currentUser={currentUser} />
       </CardContent>
       <CardFooter className="pt-3">

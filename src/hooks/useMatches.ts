@@ -59,6 +59,7 @@ export function useMatches() {
           throw new Error("Format de réponse invalide");
         }
         
+        // Process and return the data even if it's an empty array
         return data.map(match => ({
           id: match.id || Math.floor(Math.random() * 100000),
           name: match.name || "Match sans nom",
@@ -93,22 +94,6 @@ export function useMatches() {
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000,
   });
-
-  const getRacketAsciiArt = () => {
-    return `
-    🎾 Raquette de Tennis
-    ┌───────┐
-    │       │
-    │   O   │
-    │       │
-    └───┬───┘
-        │    
-        │    
-    ════╪════
-        │    
-        │    
-    `;
-  };
 
   return {
     matches,
