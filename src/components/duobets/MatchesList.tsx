@@ -61,12 +61,11 @@ export function MatchesList() {
               key={match.id} 
               className="overflow-hidden hover:bg-accent/50 transition-colors cursor-pointer group"
               onClick={() => {
-                // TODO: Open create bet dialog
                 console.log("Match selected:", match);
               }}
             >
               <AspectRatio ratio={16 / 9} className="bg-muted">
-                {match.stage.image_path ? (
+                {match.stage?.image_path ? (
                   <img
                     src={match.stage.image_path}
                     alt={match.stage.name}
@@ -104,11 +103,11 @@ export function MatchesList() {
                         </div>
                       )}
                     </div>
-                    <span className="font-medium truncate">{match.participants[0]?.name || 'Équipe A'}</span>
+                    <span className="font-medium truncate">{match.participants[0]?.name}</span>
                   </div>
                   <span className="text-muted-foreground font-bold">vs</span>
                   <div className="flex items-center gap-2 flex-1 justify-end">
-                    <span className="font-medium truncate">{match.participants[1]?.name || 'Équipe B'}</span>
+                    <span className="font-medium truncate">{match.participants[1]?.name}</span>
                     <div className="w-8 h-8 shrink-0">
                       {match.participants[1]?.image_path ? (
                         <img
