@@ -7,23 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface MatchOutput {
-  id: number;
-  name: string;
-  starting_at: string;
-  participants: {
-    name: string;
-    image_path: string | null;
-  }[];
-  stage: {
-    name: string;
-    image_path: string | null;
-  };
-  round: {
-    name: string;
-  };
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -38,8 +21,8 @@ serve(async (req) => {
       throw new Error("API key not configured.");
     }
     
-    // Direct URL to get matches with all necessary includes
-    const apiUrl = `https://api.sportmonks.com/v3/football/fixtures/date/${date}?api_token=${SPORTMONKS_API_KEY}&include=participants,league,round,stage`;
+    // Using the new leagues endpoint
+    const apiUrl = `https://api.sportmonks.com/v3/football/leagues/date/${date}?api_token=${SPORTMONKS_API_KEY}&include=today.scores,today.participants,today.stage,today.group,today.round`;
     console.log(`API URL: ${apiUrl}`);
     
     const response = await fetch(apiUrl, {
@@ -56,77 +39,14 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log("API response received. Data structure:", JSON.stringify(data.data ? { count: data.data.length } : {}, null, 2));
-    
-    if (!data || !data.data || !Array.isArray(data.data) || data.data.length === 0) {
-      console.error("No matches found or invalid response format");
-      return new Response(
-        JSON.stringify([]),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    console.log(`Processing ${data.data.length} matches from API`);
-    
-    const formattedMatches: MatchOutput[] = data.data.map(match => {
-      // Extract participants
-      const participants = [];
-      if (match.participants && match.participants.data && Array.isArray(match.participants.data)) {
-        for (const participant of match.participants.data) {
-          participants.push({
-            name: participant.name || "Équipe inconnue",
-            image_path: participant.image_path || null
-          });
-        }
-      }
-      
-      // Ensure we have at least two participants (even if data is missing)
-      while (participants.length < 2) {
-        participants.push({
-          name: `Équipe ${participants.length + 1}`,
-          image_path: null
-        });
-      }
-      
-      // Extract league/stage info
-      let stageName = "Ligue";
-      let stageImage = null;
-      
-      if (match.league && match.league.data) {
-        stageName = match.league.data.name || stageName;
-        stageImage = match.league.data.image_path || null;
-      }
-      
-      // Extract round info
-      let roundName = "1";
-      if (match.round && match.round.data) {
-        roundName = match.round.data.name || roundName;
-      }
-      
-      // Format match data
-      return {
-        id: match.id,
-        name: match.name || `${participants[0].name} vs ${participants[1].name}`,
-        starting_at: match.starting_at,
-        participants: participants,
-        stage: { 
-          name: stageName,
-          image_path: stageImage
-        },
-        round: { 
-          name: roundName
-        }
-      };
-    });
-    
-    console.log(`Returning ${formattedMatches.length} formatted matches`);
-    
+    console.log("Raw API response structure:", JSON.stringify(data, null, 2));
+
+    // Pour l'instant, retournons un tableau vide le temps d'analyser la structure
     return new Response(
-      JSON.stringify(formattedMatches),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify([]),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+    
   } catch (error) {
     console.error(`Error processing request: ${error.message}`);
     return new Response(
