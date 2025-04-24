@@ -6,7 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Interface pour la structure des données de sortie
 interface MatchOutput {
   id: number;
   name: string;
@@ -25,21 +24,20 @@ interface MatchOutput {
 }
 
 serve(async (req) => {
-  // Gestion de la requête OPTIONS pour CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
     const { date } = await req.json();
-    console.log(`Fetching matches for date: ${date}`);
+    console.log(`Fetching leagues and matches for date: ${date}`);
     
     if (!SPORTMONKS_API_KEY) {
       console.error("SPORTMONKS_API_KEY not configured");
       throw new Error("API key not configured.");
     }
     
-    const apiUrl = `https://api.sportmonks.com/v3/football/fixtures/date/${date}?api_token=${SPORTMONKS_API_KEY}&include=participants;venue;league;stage;round`;
+    const apiUrl = `https://api.sportmonks.com/v3/football/leagues/date/${date}?api_token=${SPORTMONKS_API_KEY}&include=today.scores,today.participants,today.stage,today.group,today.round`;
     console.log(`API URL: ${apiUrl}`);
     
     const response = await fetch(apiUrl, {
@@ -62,88 +60,54 @@ serve(async (req) => {
     
     if (data && data.data && Array.isArray(data.data)) {
       if (data.data.length === 0) {
-        console.log("No matches found in API response. Using mock data.");
+        console.log("No leagues found in API response. Using mock data.");
         return new Response(
           JSON.stringify(generateMockMatches()),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      // Traiter les données réelles
-      console.log(`Processing ${data.data.length} real matches from API`);
+      console.log(`Processing ${data.data.length} leagues from API`);
       
-      for (const match of data.data) {
-        console.log(`Processing match ID: ${match.id} - ${match.name}`);
-        
-        // Extraction des participants avec vérification
-        const participants = [];
-        if (match.participants && match.participants.data && Array.isArray(match.participants.data)) {
-          console.log(`Match ${match.id} has ${match.participants.data.length} participants`);
-          
-          for (const participant of match.participants.data) {
-            // Log des données du participant pour le débogage
-            console.log(`Participant data for match ${match.id}:`, JSON.stringify({
-              name: participant.name,
-              image_path: participant.image_path
-            }));
+      for (const league of data.data) {
+        if (league.today && Array.isArray(league.today.data)) {
+          for (const match of league.today.data) {
+            console.log(`Processing match ID: ${match.id} - ${match.name}`);
             
-            participants.push({
-              name: participant.name || `Team ${participants.length + 1}`,
-              image_path: participant.image_path || null
-            });
+            const participants = [];
+            if (match.participants && match.participants.data && Array.isArray(match.participants.data)) {
+              for (const participant of match.participants.data) {
+                participants.push({
+                  name: participant.name || "Équipe inconnue",
+                  image_path: participant.image_path || null
+                });
+              }
+            }
+            
+            while (participants.length < 2) {
+              participants.push({
+                name: `Équipe ${participants.length + 1}`,
+                image_path: null
+              });
+            }
+            
+            const formattedMatch: MatchOutput = {
+              id: match.id,
+              name: match.name || `${participants[0].name} vs ${participants[1].name}`,
+              starting_at: match.starting_at,
+              participants: participants,
+              stage: { 
+                name: league.name || "Ligue",
+                image_path: league.image_path || null
+              },
+              round: { 
+                name: match.round?.data?.name || "1"
+              }
+            };
+            
+            formattedMatches.push(formattedMatch);
           }
-        } else {
-          console.log(`Match ${match.id} has no valid participants data`);
-          // Utiliser des équipes par défaut si les données sont manquantes
-          const teamNames = match.name?.split(" vs ") || [`Team 1`, `Team 2`];
-          participants.push({ name: teamNames[0], image_path: null });
-          participants.push({ name: teamNames[1] || "Team 2", image_path: null });
         }
-        
-        // Si nous n'avons pas 2 participants, ajouter des placeholders
-        while (participants.length < 2) {
-          participants.push({
-            name: `Team ${participants.length + 1}`,
-            image_path: null
-          });
-        }
-        
-        // Extraction des informations sur la ligue/stage
-        let stageName = "Ligue";
-        let leagueImage = null;
-        
-        if (match.stage && match.stage.data) {
-          stageName = match.stage.data.name || "Ligue";
-          console.log(`Match ${match.id} stage: ${stageName}`);
-        }
-        
-        if (match.league && match.league.data) {
-          leagueImage = match.league.data.image_path;
-          console.log(`Match ${match.id} league: ${match.league.data.name}, Image: ${leagueImage || 'None'}`);
-        }
-        
-        // Construction de l'objet match formaté
-        const formattedMatch: MatchOutput = {
-          id: match.id,
-          name: match.name || `${participants[0].name} vs ${participants[1].name}`,
-          starting_at: match.starting_at,
-          participants: participants,
-          stage: { 
-            name: stageName,
-            image_path: leagueImage
-          },
-          round: { name: match.round?.data?.name || "1" }
-        };
-        
-        // Log de l'objet match formaté pour le débogage
-        console.log(`Formatted match ${match.id}:`, JSON.stringify({
-          id: formattedMatch.id,
-          name: formattedMatch.name,
-          participants: formattedMatch.participants.map(p => p.name),
-          has_images: formattedMatch.participants.map(p => !!p.image_path)
-        }));
-        
-        formattedMatches.push(formattedMatch);
       }
       
       console.log(`Returning ${formattedMatches.length} formatted matches`);
@@ -167,7 +131,6 @@ serve(async (req) => {
   }
 });
 
-// Fonction pour générer des données de test de haute qualité avec des images fonctionnelles
 function generateMockMatches(): MatchOutput[] {
   const now = new Date();
   const startTime1 = new Date(now);
