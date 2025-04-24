@@ -29,13 +29,12 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useDuoBets } from "@/hooks/useDuoBets";
+import { useMatches } from "@/hooks/useMatches";
 import { Loader2, Plus } from "lucide-react";
 
 const formSchema = z.object({
   amount: z.number().min(1, "Le montant doit être supérieur à 0"),
-  team_a: z.string().min(1, "L'équipe A est requise"),
-  team_b: z.string().min(1, "L'équipe B est requise"),
-  match_description: z.string().min(3, "La description doit contenir au moins 3 caractères"),
+  match_id: z.string().min(1, "La sélection d'un match est requise"),
   creator_prediction: z.enum(["TeamA", "TeamB", "Draw"]),
   expires_at: z.string().min(1, "La date d'expiration est requise"),
 });
@@ -43,14 +42,13 @@ const formSchema = z.object({
 export function CreateDuoBetDialog() {
   const [open, setOpen] = useState(false);
   const { createBet } = useDuoBets();
+  const { data: matches, isLoading: matchesLoading } = useMatches();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      amount: 10, // Set a default non-zero value
-      team_a: "",
-      team_b: "",
-      match_description: "",
+      amount: 10,
+      match_id: "",
       creator_prediction: "TeamA",
       expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     },
@@ -58,12 +56,16 @@ export function CreateDuoBetDialog() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      // Ensure all required fields are present and properly typed
+      const selectedMatch = matches?.find(m => m.id.toString() === values.match_id);
+      if (!selectedMatch) {
+        throw new Error("Match non trouvé");
+      }
+
       const betData = {
         amount: values.amount,
-        team_a: values.team_a,
-        team_b: values.team_b,
-        match_description: values.match_description,
+        team_a: selectedMatch.participants[0].name,
+        team_b: selectedMatch.participants[1].name,
+        match_description: `${selectedMatch.stage.name} - ${selectedMatch.round.name}ème journée`,
         creator_prediction: values.creator_prediction,
         expires_at: values.expires_at,
       };
@@ -95,39 +97,28 @@ export function CreateDuoBetDialog() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="team_a"
+              name="match_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Équipe A</FormLabel>
-                  <FormControl>
-                    <Input placeholder="PSG" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="team_b"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Équipe B</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Real Madrid" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="match_description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description du match</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ligue des Champions - Quart de finale" {...field} />
-                  </FormControl>
+                  <FormLabel>Match</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez un match" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {matchesLoading ? (
+                        <SelectItem value="loading" disabled>
+                          Chargement des matchs...
+                        </SelectItem>
+                      ) : matches?.map((match) => (
+                        <SelectItem key={match.id} value={match.id.toString()}>
+                          {match.name} - {new Date(match.starting_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

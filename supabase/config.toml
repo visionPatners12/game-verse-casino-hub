@@ -1,1 +1,4 @@
-project_id = "ipmhknkldybzfmnwcgav"
+
+[functions.get-matches]
+verify_jwt = false
+
