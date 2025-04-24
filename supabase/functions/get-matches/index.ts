@@ -15,7 +15,7 @@ serve(async (req) => {
   try {
     const today = new Date().toISOString().split('T')[0];
     const response = await fetch(
-      `https://api.sportmonks.com/api/v3/football/fixtures/date/${today}?api_token=${SPORTMONKS_API_KEY}`,
+      `https://api.sportmonks.com/v3/football/fixtures/date/${today}?api_token=${SPORTMONKS_API_KEY}&include=participants;stage;round`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -24,23 +24,42 @@ serve(async (req) => {
     );
 
     const data = await response.json();
+    console.log("API Response:", JSON.stringify(data).substring(0, 200) + "...");
+
+    // Check if data.data exists (API might return data in a nested structure)
+    const fixtures = data.data || data;
+    
+    if (!Array.isArray(fixtures)) {
+      console.log("Invalid data format received:", typeof fixtures);
+      return new Response(
+        JSON.stringify({ error: "Invalid data format received from API" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
     // Transform the data to match the expected structure for duo bets
-    const formattedMatches = data.map(match => ({
+    const formattedMatches = fixtures.map(match => ({
       id: match.id,
-      name: match.name,
+      name: match.name || `${match.participants?.[0]?.name || 'Team A'} vs ${match.participants?.[1]?.name || 'Team B'}`,
       starting_at: match.starting_at,
-      participants: match.participants.map(team => ({
-        name: team.name
-      })),
+      participants: Array.isArray(match.participants) ? 
+        match.participants.map(team => ({
+          name: team.name
+        })) : 
+        [{ name: 'Team A' }, { name: 'Team B' }],
       stage: {
-        name: match.stage?.name || 'Unknown Stage'
+        name: match.stage?.name || 'Ligue'
       },
       round: {
-        name: match.round?.name || 'Unknown Round'
+        name: match.round?.name || '1'
       }
     }));
 
+    console.log(`Returning ${formattedMatches.length} formatted matches`);
+    
     return new Response(
       JSON.stringify(formattedMatches),
       {
@@ -48,6 +67,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    console.error("Error fetching matches:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
@@ -57,4 +77,3 @@ serve(async (req) => {
     );
   }
 });
-

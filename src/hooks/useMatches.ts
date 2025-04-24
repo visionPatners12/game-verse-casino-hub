@@ -12,15 +12,23 @@ interface Match {
 }
 
 export function useMatches() {
-  return useQuery<Match[]>({
+  return useQuery<Match[], Error>({
     queryKey: ['matches'],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('get-matches');
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching matches:", error);
+        throw error;
+      }
       
-      return data || [];
+      if (!data || !Array.isArray(data)) {
+        console.error("Invalid response format:", data);
+        throw new Error("Format de réponse invalide");
+      }
+      
+      return data;
     },
+    retry: 1,
   });
 }
-
