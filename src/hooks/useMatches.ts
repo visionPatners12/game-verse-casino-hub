@@ -8,8 +8,8 @@ interface Match {
   id: number;
   name: string;
   starting_at: string;
-  participants: { name: string }[];
-  stage: { name: string };
+  participants: { name: string; image_path?: string }[];
+  stage: { name: string; image_path?: string };
   round: { name: string };
   image?: string;
 }
@@ -24,8 +24,11 @@ export function useMatches() {
   const { data: matches, isLoading, error } = useQuery<Match[], Error>({
     queryKey: ['matches', format(selectedDate, 'yyyy-MM-dd')],
     queryFn: async () => {
+      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+      console.log(`Fetching matches for date: ${formattedDate}`);
+      
       const { data, error } = await supabase.functions.invoke('get-matches', {
-        body: { date: format(selectedDate, 'yyyy-MM-dd') }
+        body: { date: formattedDate }
       });
       
       if (error) {

@@ -1,7 +1,7 @@
 
 import { Card } from "@/components/ui/card";
 import { useMatches } from "@/hooks/useMatches";
-import { Loader2, CalendarIcon, Clock } from "lucide-react";
+import { Loader2, Clock, Image as ImageIcon } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Button } from "../ui/button";
@@ -34,14 +34,6 @@ export function MatchesList() {
     );
   }
 
-  const placeholderImages = [
-    "photo-1488590528505-98d2b5aba04b",
-    "photo-1461749280684-dccba630e2f6",
-    "photo-1581091226825-a6a2a5aee158",
-    "photo-1531297484001-80022131f5a1",
-    "photo-1487058792275-0ad4aaf24ca7"
-  ];
-
   return (
     <div className="space-y-6">
       <div className="flex gap-2 overflow-x-auto py-2 px-1">
@@ -64,7 +56,7 @@ export function MatchesList() {
             <p className="text-sm">Sélectionnez une autre date pour voir les matchs.</p>
           </div>
         ) : (
-          matches.map((match, index) => (
+          matches.map((match) => (
             <Card 
               key={match.id} 
               className="overflow-hidden hover:bg-accent/50 transition-colors cursor-pointer group"
@@ -73,12 +65,18 @@ export function MatchesList() {
                 console.log("Match selected:", match);
               }}
             >
-              <AspectRatio ratio={16 / 9}>
-                <img
-                  src={`https://images.unsplash.com/${placeholderImages[index % placeholderImages.length]}?auto=format&fit=crop&w=800&q=80`}
-                  alt={match.name}
-                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                />
+              <AspectRatio ratio={16 / 9} className="bg-muted">
+                {match.stage.image_path ? (
+                  <img
+                    src={match.stage.image_path}
+                    alt={match.stage.name}
+                    className="object-contain w-full h-full p-4 group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full">
+                    <ImageIcon className="h-16 w-16 text-muted-foreground/50" />
+                  </div>
+                )}
               </AspectRatio>
               <div className="p-4 space-y-2">
                 <div className="flex justify-between items-center">
@@ -91,10 +89,40 @@ export function MatchesList() {
                 <div className="text-sm text-muted-foreground">
                   {match.stage.name} - {match.round.name}
                 </div>
-                <div className="mt-2 text-sm flex justify-between">
-                  <span className="font-medium">{match.participants[0]?.name || 'Équipe A'}</span>
-                  <span className="text-muted-foreground">vs</span>
-                  <span className="font-medium">{match.participants[1]?.name || 'Équipe B'}</span>
+                <div className="mt-4 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 flex-1">
+                    <div className="w-8 h-8 shrink-0">
+                      {match.participants[0]?.image_path ? (
+                        <img
+                          src={match.participants[0].image_path}
+                          alt={match.participants[0].name}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted rounded-full flex items-center justify-center">
+                          <ImageIcon className="h-4 w-4 text-muted-foreground/50" />
+                        </div>
+                      )}
+                    </div>
+                    <span className="font-medium truncate">{match.participants[0]?.name || 'Équipe A'}</span>
+                  </div>
+                  <span className="text-muted-foreground font-bold">vs</span>
+                  <div className="flex items-center gap-2 flex-1 justify-end">
+                    <span className="font-medium truncate">{match.participants[1]?.name || 'Équipe B'}</span>
+                    <div className="w-8 h-8 shrink-0">
+                      {match.participants[1]?.image_path ? (
+                        <img
+                          src={match.participants[1].image_path}
+                          alt={match.participants[1].name}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted rounded-full flex items-center justify-center">
+                          <ImageIcon className="h-4 w-4 text-muted-foreground/50" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </Card>
