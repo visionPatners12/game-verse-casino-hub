@@ -4,8 +4,22 @@ import { MessageSquare } from "lucide-react";
 import ChatMessageList from "./chat/ChatMessageList";
 import ChatInputForm from "./chat/ChatInputForm";
 import { Message } from "./chat/types";
+import { useMatches } from "@/hooks/useMatches";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 const GameChat = () => {
+  const { matches } = useMatches();
+  
+  const formattedMatches = matches?.map(match => ({
+    teams: `${match.participants[0].name} vs ${match.participants[1].name}`,
+    time: format(new Date(match.starting_at), "HH:mm", { locale: fr })
+  })) || [];
+  
+  const matchesString = formattedMatches.map(m => 
+    `${m.time} - ${m.teams}`
+  ).join("\n");
+  
   const messages: Message[] = [
     {
       id: "msg1",
@@ -16,19 +30,16 @@ const GameChat = () => {
     {
       id: "msg2",
       user: { id: "system", name: "System", avatar: "" },
-      text: `
-      🎾 Raquette de Tennis
+      text: `🎾 Matchs du jour:
       ┌───────┐
-      │       │
-      │   O   │
-      │       │
-      └───┬───┘
-          │    
+      │  🎯   │ ${formattedMatches[0]?.teams || ""}
+      │       │ ${formattedMatches[1]?.teams || ""}
+      └───┬───┘ ${formattedMatches[2]?.teams || ""}
+          │     ${formattedMatches[3]?.teams || ""}
           │    
       ════╪════
           │    
-          │    
-      `,
+          │    `,
       timestamp: "1 min ago",
       isSpecial: true,
     },
