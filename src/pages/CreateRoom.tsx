@@ -61,14 +61,29 @@ const CreateRoom = () => {
     queryFn: async () => {
       if (!validGameType) throw new Error("Game type not specified or invalid");
       
-      const { data, error } = await supabase
-        .from('game_types')
-        .select('*')
-        .eq('code', validGameType)
-        .single();
+      // For ArenaPlay games that might not have config in the database yet
+      // Only query specific classic games that we know have configs
+      const classicGameTypes = ['ludo', 'checkers', 'tictactoe', 'checkgame', 'futarena'];
       
-      if (error) throw error;
-      return data;
+      if (classicGameTypes.includes(validGameType)) {
+        const { data, error } = await supabase
+          .from('game_types')
+          .select('*')
+          .eq('code', validGameType)
+          .single();
+        
+        if (error) throw error;
+        return data;
+      } else {
+        // For ArenaPlay games, return a default config object
+        return {
+          code: validGameType,
+          name: validGameType.charAt(0).toUpperCase() + validGameType.slice(1),
+          min_players: 2,
+          max_players: 2,
+          is_configurable: false
+        };
+      }
     },
     enabled: !!validGameType
   });
