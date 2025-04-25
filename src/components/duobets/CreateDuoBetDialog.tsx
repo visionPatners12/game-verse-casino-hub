@@ -40,17 +40,23 @@ const formSchema = z.object({
   expires_at: z.string().min(1, "La date d'expiration est requise"),
 });
 
-interface CreateDuoBetDialogProps {
+export interface CreateDuoBetDialogProps {
   defaultTeams?: {
     teamA: string;
     teamB: string;
     description: string;
   };
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function CreateDuoBetDialog({ defaultTeams }: CreateDuoBetDialogProps) {
-  const [open, setOpen] = useState(false);
+export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateDuoBetDialogProps) {
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { createBet } = useDuoBets();
+  
+  // Use controlled state if provided, otherwise use internal state
+  const isOpen = open !== undefined ? open : dialogOpen;
+  const setOpen = onOpenChange || setDialogOpen;
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -85,13 +91,15 @@ export function CreateDuoBetDialog({ defaultTeams }: CreateDuoBetDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Nouveau Pari Duo
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={setOpen}>
+      {!defaultTeams && (
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Nouveau Pari Duo
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Créer un pari duo</DialogTitle>
