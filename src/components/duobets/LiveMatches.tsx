@@ -1,12 +1,14 @@
-import { useState } from "react";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSportMonksData } from "@/hooks/useSportMonksData";
 import { Loader2, AlertCircle } from "lucide-react";
 import { LeagueMatchList } from "./LeagueMatchList";
-import { DateSelector } from "./components/DateSelector";
 
-export function LiveMatches() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+interface LiveMatchesProps {
+  selectedDate: Date;
+}
+
+export function LiveMatches({ selectedDate }: LiveMatchesProps) {
   const { data: leaguesData, isLoading: isMatchesLoading, error: matchesError } = useSportMonksData(selectedDate);
 
   if (isMatchesLoading) {
@@ -30,17 +32,13 @@ export function LiveMatches() {
   if (!leaguesData || leaguesData.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        Aucun match disponible aujourd'hui.
+        Aucun match disponible pour cette date.
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <DateSelector 
-        date={selectedDate} 
-        onDateChange={setSelectedDate}
-      />
       {leaguesData.map((league) => (
         <LeagueMatchList key={league.id} league={league} />
       ))}

@@ -35,7 +35,7 @@ export default function DuoBets() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <LiveMatches />
+            <LiveMatches selectedDate={selectedDate} />
           </CardContent>
         </Card>
 
