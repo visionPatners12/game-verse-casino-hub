@@ -3,12 +3,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useSportMonksData } from "@/hooks/useSportMonksData";
 import { Loader2, AlertCircle } from "lucide-react";
 import { LeagueMatchList } from "./LeagueMatchList";
+import { DateFilter } from "./components/DateFilter";
 
 interface LiveMatchesProps {
   selectedDate: Date;
+  onDateChange: (date: Date) => void;
 }
 
-export function LiveMatches({ selectedDate }: LiveMatchesProps) {
+export function LiveMatches({ selectedDate, onDateChange }: LiveMatchesProps) {
   const { data: leaguesData, isLoading: isMatchesLoading, error: matchesError } = useSportMonksData(selectedDate);
 
   if (isMatchesLoading) {
@@ -39,6 +41,11 @@ export function LiveMatches({ selectedDate }: LiveMatchesProps) {
 
   return (
     <div className="space-y-6">
+      <DateFilter 
+        selectedDate={selectedDate}
+        onDateChange={onDateChange}
+      />
+      
       {leaguesData.map((league) => (
         <LeagueMatchList key={league.id} league={league} />
       ))}

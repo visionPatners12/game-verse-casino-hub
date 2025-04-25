@@ -6,7 +6,6 @@ import { BetsList } from "@/components/duobets/BetsList";
 import { useEffect, useState } from "react";
 import { useSportMonksData } from "@/hooks/useSportMonksData";
 import { toast } from "sonner";
-import { DateFilter } from "@/components/duobets/components/DateFilter";
 
 export default function DuoBets() {
   const { error: matchesError } = useSportMonksData();
@@ -19,14 +18,13 @@ export default function DuoBets() {
     }
   }, [matchesError]);
 
+  const handleDateChange = (date: Date) => {
+    setSelectedDate(date);
+  };
+
   return (
     <Layout>
       <div className="grid gap-6">
-        <DateFilter 
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-        />
-        
         <Card>
           <CardHeader>
             <CardTitle>Matchs en Direct</CardTitle>
@@ -35,7 +33,10 @@ export default function DuoBets() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <LiveMatches selectedDate={selectedDate} />
+            <LiveMatches 
+              selectedDate={selectedDate} 
+              onDateChange={handleDateChange}
+            />
           </CardContent>
         </Card>
 
