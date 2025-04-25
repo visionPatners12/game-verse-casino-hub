@@ -1,9 +1,10 @@
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { CreateDuoBetDialog } from "./CreateDuoBetDialog";
+import { useState } from "react";
 
 interface MatchCardProps {
   match: any;
@@ -11,7 +12,22 @@ interface MatchCardProps {
 }
 
 export function MatchCard({ match, leagueName }: MatchCardProps) {
-  const getCurrentScore = (match: any) => {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  
+  const isLive = match.result_info?.toLowerCase().includes("live");
+  const isFinished = ["ft", "finished"].some(status => 
+    match.result_info?.toLowerCase().includes(status)
+  );
+
+  const getMatchStatus = () => {
+    if (isLive) return { label: "En direct", className: "bg-red-500" };
+    if (isFinished) return { label: "Terminé", className: "bg-gray-500" };
+    return { label: "À venir", className: "bg-green-500" };
+  };
+
+  const getCurrentScore = () => {
+    if (!isLive && !isFinished) return null;
+
     const homeScore = match.scores?.find(
       (s: any) => s.description === "CURRENT" && s.score.participant === "home"
     );
@@ -22,60 +38,54 @@ export function MatchCard({ match, leagueName }: MatchCardProps) {
     if (homeScore && awayScore) {
       return `${homeScore.score.goals} - ${awayScore.score.goals}`;
     }
-    return "0 - 0";
+    return null;
   };
 
   return (
-    <Card key={match.id} className="p-4 overflow-hidden">
-      <div className="grid gap-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            {match.participants.sort((a: any, b: any) => 
-              a.meta.location === 'home' ? -1 : 1
-            ).map((team: any) => (
-              <div key={team.id} className="flex items-center gap-2">
+    <Card 
+      className="w-[280px] hover:bg-accent cursor-pointer transition-colors"
+      onClick={() => setDialogOpen(true)}
+    >
+      <div className="p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <Badge className={getMatchStatus().className}>
+            {getMatchStatus().label}
+          </Badge>
+          <span className="text-sm text-muted-foreground">
+            {format(new Date(match.starting_at), "HH:mm", { locale: fr })}
+          </span>
+        </div>
+
+        <div className="space-y-4">
+          {match.participants
+            .sort((a: any, b: any) => a.meta.location === "home" ? -1 : 1)
+            .map((team: any, index: number) => (
+              <div key={team.id} className="flex items-center gap-3">
                 <img 
                   src={team.image_path} 
                   alt={team.name}
-                  className="h-8 w-8 object-contain" 
+                  className="h-6 w-6 object-contain" 
                 />
-                <div>
-                  <p className="font-medium">{team.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Position: {team.meta.position}
-                  </p>
-                </div>
-                {team.meta.location === 'home' && (
-                  <span className="mx-2 text-xl font-bold">vs</span>
+                <span className="font-medium">{team.name}</span>
+                {index === 0 && getCurrentScore() && (
+                  <span className="ml-auto font-semibold">
+                    {getCurrentScore()}
+                  </span>
                 )}
               </div>
-            ))}
-          </div>
-          <CreateDuoBetDialog 
-            defaultTeams={{
-              teamA: match.participants.find((t: any) => t.meta.location === 'home')?.name || '',
-              teamB: match.participants.find((t: any) => t.meta.location === 'away')?.name || '',
-              description: `${leagueName} - ${match.stage?.name || match.round?.name || ''}`
-            }}
-          />
-        </div>
-        <div className="flex justify-between items-center text-sm">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="font-bold">
-              {getCurrentScore(match)}
-            </Badge>
-            <Badge variant="outline">
-              {match.result_info}
-            </Badge>
-          </div>
-          <span className="text-muted-foreground">
-            {formatDistanceToNow(new Date(match.starting_at), {
-              addSuffix: true,
-              locale: fr,
-            })}
-          </span>
+          ))}
         </div>
       </div>
+
+      <CreateDuoBetDialog 
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        defaultTeams={{
+          teamA: match.participants.find((t: any) => t.meta.location === "home")?.name || "",
+          teamB: match.participants.find((t: any) => t.meta.location === "away")?.name || "",
+          description: `${leagueName} - ${match.stage?.name || match.round?.name || ""}`
+        }}
+      />
     </Card>
   );
 }

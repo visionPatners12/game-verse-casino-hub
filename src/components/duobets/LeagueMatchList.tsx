@@ -1,4 +1,5 @@
 
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { MatchCard } from "./MatchCard";
 
 interface LeagueMatchListProps {
@@ -21,7 +22,7 @@ export function LeagueMatchList({ league }: LeagueMatchListProps) {
 
   return (
     <div key={league.id} className="space-y-4">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 pl-2">
         <img 
           src={league.image_path} 
           alt={league.name} 
@@ -29,15 +30,18 @@ export function LeagueMatchList({ league }: LeagueMatchListProps) {
         />
         <h3 className="font-semibold">{league.name}</h3>
       </div>
-      <div className="grid gap-4">
-        {league.today.map((match) => (
-          <MatchCard 
-            key={match.id} 
-            match={match}
-            leagueName={league.name}
-          />
-        ))}
-      </div>
+      <ScrollArea className="w-full whitespace-nowrap">
+        <div className="flex space-x-4 pb-4">
+          {league.today.map((match) => (
+            <MatchCard 
+              key={match.id} 
+              match={match}
+              leagueName={league.name}
+            />
+          ))}
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
     </div>
   );
 }
