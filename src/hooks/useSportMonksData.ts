@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -46,6 +45,7 @@ export function useSportMonksData(selectedDate: Date = new Date()) {
       try {
         console.log("Fetching matches for date:", formattedDate);
         
+        // Appeler directement la fonction get_matches_by_date
         const { data: matches, error } = await supabase
           .rpc('get_matches_by_date', { target_date: formattedDate });
 
