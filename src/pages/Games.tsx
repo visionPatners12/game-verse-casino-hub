@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GamesList from "@/components/games/GamesList";
@@ -9,15 +8,14 @@ import { Users } from "lucide-react";
 import { JoinGameDialog } from "@/components/games/JoinGameDialog";
 import { Layout } from "@/components/Layout";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { Gamepad } from "lucide-react";
 
 const Games = () => {
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
   const navigate = useNavigate();
   
-  // Utiliser le hook useRequireAuth pour vérifier l'authentification
   const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
   
-  // Définir useQuery en dehors des conditions - toujours présent mais activé sous condition
   const { data: games, isLoading: gamesLoading } = useQuery({
     queryKey: ['game-types'],
     queryFn: async () => {
@@ -39,18 +37,15 @@ const Games = () => {
         image: game.image_url || "https://images.unsplash.com/photo-1611996575749-79a3a250f948?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3"
       }));
     },
-    // Désactiver la requête si l'utilisateur n'est pas authentifié
     enabled: isAuthenticated
   });
   
   const isLoading = authLoading || gamesLoading;
   
-  // Afficher un indicateur de chargement pendant la vérification d'authentification
   if (authLoading) {
     return <div className="flex items-center justify-center min-h-screen">Chargement...</div>;
   }
 
-  // Si l'utilisateur n'est pas authentifié, le hook useRequireAuth s'occupe de la redirection
   if (!isAuthenticated) {
     return null;
   }
@@ -58,15 +53,25 @@ const Games = () => {
   return (
     <Layout>
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Games</h1>
-        <Button 
-          onClick={() => setIsJoinDialogOpen(true)}
-          variant="outline"
-          className="gap-2"
-        >
-          <Users className="h-4 w-4" />
-          Join a Room
-        </Button>
+        <h1 className="text-3xl font-bold">Classic Games</h1>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => navigate("/arenaplay")}
+            variant="outline"
+            className="gap-2"
+          >
+            <Gamepad className="h-4 w-4" />
+            ArenaPlay Games
+          </Button>
+          <Button 
+            onClick={() => setIsJoinDialogOpen(true)}
+            variant="outline"
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Join a Room
+          </Button>
+        </div>
       </div>
       
       {isLoading ? (
