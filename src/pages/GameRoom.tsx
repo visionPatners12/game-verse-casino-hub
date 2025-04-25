@@ -10,6 +10,7 @@ import { useGameRoom } from "@/hooks/useGameRoom";
 import { useWallet } from "@/hooks/useWallet";
 import { useActiveRoomGuard } from "@/hooks/useActiveRoomGuard";
 import { useRoomConnectionStatus } from "@/hooks/room/useRoomConnectionStatus";
+import { WelcomeMessage } from "@/components/game/WelcomeMessage";
 
 const GameRoom = () => {
   useActiveRoomGuard();
@@ -35,6 +36,7 @@ const GameRoom = () => {
   } = useGameRoom();
 
   const [showFutIdDialog, setShowFutIdDialog] = useState(false);
+  const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
   
   const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId || "");
   const [isFutArena, setIsFutArena] = useState(false);
@@ -77,6 +79,12 @@ const GameRoom = () => {
   }, [isFutArena, currentUserId, futId, futIdLoading, showFutIdDialog, authLoading, session]);
 
   useEffect(() => {
+    if (roomData?.game_type?.toLowerCase() === "futarena" && roomData?.status === "waiting") {
+      setShowWelcomeMessage(true);
+    }
+  }, [roomData]);
+
+  useEffect(() => {
     if (roomId && !loading) {
       fetchRoomData();
       
@@ -113,13 +121,21 @@ const GameRoom = () => {
         onStartGame={startGame}
         onForfeit={forfeitGame}
       />
-      {isFutArena && (
-        <FutIdDialog
-          open={showFutIdDialog}
-          onOpenChange={setShowFutIdDialog}
-          onSave={saveFutId}
-          isLoading={futIdLoading}
-        />
+      {roomData?.game_type?.toLowerCase() === "futarena" && (
+        <>
+          <WelcomeMessage
+            open={showWelcomeMessage}
+            onOpenChange={setShowWelcomeMessage}
+          />
+          {isFutArena && (
+            <FutIdDialog
+              open={showFutIdDialog}
+              onOpenChange={setShowFutIdDialog}
+              onSave={saveFutId}
+              isLoading={futIdLoading}
+            />
+          )}
+        </>
       )}
     </Layout>
   );
