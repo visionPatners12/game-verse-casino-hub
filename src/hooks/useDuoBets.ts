@@ -3,10 +3,23 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRequireAuth } from "./useRequireAuth";
+import { DuoBetResult, MarketType } from "@/components/duobets/types";
 
-export type DuoBetResult = 'TeamA' | 'TeamB' | 'Draw';
+export interface CreateBetInput {
+  amount: number;
+  creator_prediction: DuoBetResult;
+  match_description: string;
+  team_a: string;
+  team_b: string;
+  expires_at: string;
+  bet_code?: string;
+  is_private?: boolean;
+  match_id?: number;
+  market_id?: number;
+  market_value?: string;
+}
 
-interface DuoBet {
+export interface DuoBet {
   id: string;
   creator_id: string;
   opponent_id: string | null;
@@ -29,23 +42,23 @@ interface DuoBet {
   market_value?: string;
 }
 
-interface CreateBetInput {
-  amount: number;
-  creator_prediction: DuoBetResult;
-  match_description: string;
-  team_a: string;
-  team_b: string;
-  expires_at: string;
-  bet_code?: string;
-  is_private?: boolean;
-  match_id?: number;
-  market_id?: number;
-  market_value?: string;
-}
-
 export function useDuoBets() {
   const queryClient = useQueryClient();
   useRequireAuth();
+
+  const { data: markets, isLoading: isMarketsLoading } = useQuery<MarketType[]>({
+    queryKey: ['markets'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_available_markets');
+      
+      if (error) {
+        toast.error("Impossible de charger les types de paris");
+        throw error;
+      }
+
+      return data || [];
+    },
+  });
 
   const { data: bets, isLoading } = useQuery({
     queryKey: ['duo-bets'],
@@ -103,7 +116,9 @@ export function useDuoBets() {
 
   return {
     bets,
+    markets,
     isLoading,
+    isMarketsLoading,
     createBet
   };
 }

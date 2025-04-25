@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { useDuoBets } from "@/hooks/useDuoBets";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +7,7 @@ import { Loader2, Copy, Lock, Globe, Clock } from "lucide-react";
 import { formatDistanceToNow, format, isSameDay, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
+import { DuoBetResult } from "./types";
 
 interface BetsListProps {
   selectedDate: Date;

@@ -619,6 +619,27 @@ export type Database = {
           },
         ]
       }
+      market_types: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string
@@ -1106,6 +1127,15 @@ export type Database = {
         Args: { p_user_id: string; p_amount: number }
         Returns: {
           new_balance: number
+        }[]
+      }
+      get_available_markets: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: number
+          name: string
+          description: string
+          created_at: string
         }[]
       }
       get_matches_by_date: {
