@@ -13,6 +13,7 @@ import { fr } from "date-fns/locale";
 import { Globe, Lock, X } from "lucide-react";
 import { generateBetCode } from "@/lib/utils";
 import { toast } from "sonner";
+import { useDuoBets } from "@/hooks/useDuoBets";
 
 interface MatchDialogProps {
   match: any;
@@ -23,18 +24,38 @@ interface MatchDialogProps {
 
 export function MatchDialog({ match, leagueName, open, onOpenChange }: MatchDialogProps) {
   const [selectedAmount, setSelectedAmount] = useState(5);
+  const { createBet } = useDuoBets();
   const homeTeam = match.participants.find((t: any) => t.meta.location === "home");
   const awayTeam = match.participants.find((t: any) => t.meta.location === "away");
 
   const possibleGains = selectedAmount * 1.8; // Example multiplier
 
-  const handleCreateBet = (isPublic: boolean) => {
-    const betCode = generateBetCode();
-    toast.success(
-      `Pari ${isPublic ? "public" : "privé"} créé ! Code: ${betCode}`, 
-      { duration: 5000 }
-    );
-    onOpenChange(false);
+  const handleCreateBet = async (isPrivate: boolean) => {
+    try {
+      const betCode = generateBetCode();
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 48); // Expires in 48 hours
+      
+      await createBet.mutateAsync({
+        amount: selectedAmount,
+        creator_prediction: 'TeamA', // Default to home team
+        team_a: homeTeam.name,
+        team_b: awayTeam.name,
+        match_description: `${leagueName} - ${match.stage?.name || match.round?.name || ""}`,
+        expires_at: expiresAt.toISOString(),
+        bet_code: betCode,
+        is_private: isPrivate
+      });
+      
+      toast.success(
+        `Pari ${isPrivate ? "privé" : "public"} créé ! Code: ${betCode}`, 
+        { duration: 5000 }
+      );
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error creating bet:", error);
+      toast.error("Erreur lors de la création du pari");
+    }
   };
 
   return (
@@ -101,13 +122,13 @@ export function MatchDialog({ match, leagueName, open, onOpenChange }: MatchDial
           <div className="flex justify-between gap-4">
             <Button
               className="flex-1"
-              onClick={() => handleCreateBet(false)}
+              onClick={() => handleCreateBet(true)}
             >
               <Lock className="mr-2" /> Paris Privé
             </Button>
             <Button
               className="flex-1"
-              onClick={() => handleCreateBet(true)}
+              onClick={() => handleCreateBet(false)}
             >
               <Globe className="mr-2" /> Paris Public
             </Button>

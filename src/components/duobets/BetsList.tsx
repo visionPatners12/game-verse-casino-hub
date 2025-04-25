@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { useDuoBets } from "@/hooks/useDuoBets";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Copy } from "lucide-react";
+import { Loader2, Copy, Lock, Globe } from "lucide-react";
 import { formatDistanceToNow, isSameDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -31,6 +31,14 @@ export function BetsList({ selectedDate }: BetsListProps) {
       case 'TeamB': return '2';
       case 'Draw': return 'X';
     }
+  };
+
+  const getBetTypeIcon = (isPrivate: boolean) => {
+    return isPrivate ? (
+      <Lock className="h-3 w-3 mr-1" />
+    ) : (
+      <Globe className="h-3 w-3 mr-1" />
+    );
   };
 
   const copyBetCode = (code: string) => {
@@ -73,9 +81,18 @@ export function BetsList({ selectedDate }: BetsListProps) {
                     {bet.match_description}
                   </p>
                 </div>
-                <Badge className={`${getStatusColor(bet.status)} border`}>
-                  {bet.status}
-                </Badge>
+                <div className="flex gap-2">
+                  <Badge 
+                    variant="outline" 
+                    className={`flex items-center ${bet.opponent_id ? 'bg-purple-500/20 text-purple-500 border-purple-500/50' : 'bg-sky-500/20 text-sky-500 border-sky-500/50'}`}
+                  >
+                    {getBetTypeIcon(!!bet.opponent_id)}
+                    {bet.opponent_id ? 'Privé' : 'Public'}
+                  </Badge>
+                  <Badge className={`${getStatusColor(bet.status)} border`}>
+                    {bet.status}
+                  </Badge>
+                </div>
               </div>
 
               <div className="flex items-center justify-between text-sm">
@@ -89,12 +106,12 @@ export function BetsList({ selectedDate }: BetsListProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <code className="bg-muted px-2 py-1 rounded font-mono text-xs">
-                    {bet.bet_code}
+                    {bet.bet_code || "CODE"}
                   </code>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => copyBetCode(bet.bet_code)}
+                    onClick={() => copyBetCode(bet.bet_code || "")}
                     className="h-8 w-8"
                   >
                     <Copy className="h-4 w-4" />

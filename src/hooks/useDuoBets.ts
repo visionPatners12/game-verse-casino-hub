@@ -30,7 +30,8 @@ interface CreateBetInput {
   team_a: string;
   team_b: string;
   expires_at: string;
-  bet_code: string;
+  bet_code?: string;
+  is_private?: boolean;
 }
 
 export function useDuoBets() {
