@@ -4,7 +4,7 @@ import { useDuoBets } from "@/hooks/useDuoBets";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, Copy, Lock, Globe, Clock } from "lucide-react";
-import { formatDistanceToNow, format, isSameDay } from "date-fns";
+import { formatDistanceToNow, format, isSameDay, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 
@@ -50,11 +50,17 @@ export function BetsList({ selectedDate }: BetsListProps) {
     );
   }
 
+  // Filter bets for the selected date
   const filteredBets = bets?.filter((bet) => 
     isSameDay(new Date(bet.created_at), selectedDate)
   ) || [];
 
-  if (filteredBets.length === 0) {
+  // Group bets by date and sort by match time (created_at)
+  const sortedBets = [...filteredBets].sort((a, b) => 
+    new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
+
+  if (sortedBets.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         Aucun pari pour cette date.
@@ -63,9 +69,9 @@ export function BetsList({ selectedDate }: BetsListProps) {
   }
 
   return (
-    <div className="grid gap-4 max-w-3xl mx-auto">
-      {filteredBets.map((bet) => (
-        <Card key={bet.id} className="overflow-hidden bg-card/50 backdrop-blur-sm">
+    <div className="grid gap-4 w-full max-w-3xl mx-auto">
+      {sortedBets.map((bet) => (
+        <Card key={bet.id} className="overflow-hidden bg-card/50 backdrop-blur-sm w-full">
           <div className="border-l-4 border-accent p-4">
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between flex-wrap gap-2">
