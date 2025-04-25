@@ -657,6 +657,89 @@ export type Database = {
           },
         ]
       }
+      sport_leagues: {
+        Row: {
+          data: Json | null
+          id: number
+          image_path: string | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          data?: Json | null
+          id: number
+          image_path?: string | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          data?: Json | null
+          id?: number
+          image_path?: string | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      sport_matches: {
+        Row: {
+          data: Json | null
+          id: number
+          is_active: boolean | null
+          league_id: number
+          scores: Json | null
+          starting_at: string
+          status: string | null
+          team_a: string
+          team_a_id: number | null
+          team_a_image: string | null
+          team_b: string
+          team_b_id: number | null
+          team_b_image: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          data?: Json | null
+          id: number
+          is_active?: boolean | null
+          league_id: number
+          scores?: Json | null
+          starting_at: string
+          status?: string | null
+          team_a: string
+          team_a_id?: number | null
+          team_a_image?: string | null
+          team_b: string
+          team_b_id?: number | null
+          team_b_image?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          data?: Json | null
+          id?: number
+          is_active?: boolean | null
+          league_id?: number
+          scores?: Json | null
+          starting_at?: string
+          status?: string | null
+          team_a?: string
+          team_a_id?: number | null
+          team_a_image?: string | null
+          team_b?: string
+          team_b_id?: number | null
+          team_b_image?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sport_matches_league_id_fkey"
+            columns: ["league_id"]
+            isOneToOne: false
+            referencedRelation: "sport_leagues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store: {
         Row: {
           created_at: string | null
@@ -1023,6 +1106,23 @@ export type Database = {
         Args: { p_user_id: string; p_amount: number }
         Returns: {
           new_balance: number
+        }[]
+      }
+      get_matches_by_date: {
+        Args: { target_date: string }
+        Returns: {
+          id: number
+          league_id: number
+          league_name: string
+          league_image: string
+          starting_at: string
+          team_a: string
+          team_b: string
+          team_a_image: string
+          team_b_image: string
+          status: string
+          scores: Json
+          match_data: Json
         }[]
       }
       has_active_room: {

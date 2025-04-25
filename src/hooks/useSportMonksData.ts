@@ -11,26 +11,46 @@ export function useSportMonksData(selectedDate: Date = new Date()) {
     queryKey: ['sportmonks-matches', formattedDate],
     queryFn: async () => {
       try {
-        console.log("Fetching SportMonks data for date:", formattedDate);
+        console.log("Fetching matches for date:", formattedDate);
         
-        const { data, error } = await supabase.functions.invoke('get-sportmonks-matches', {
-          body: { date: formattedDate, singleDay: true }
-        });
+        const { data: matches, error } = await supabase
+          .rpc('get_matches_by_date', { target_date: formattedDate });
 
         if (error) {
-          console.error("Error fetching SportMonks data:", error);
+          console.error("Error fetching matches:", error);
           toast.error("Erreur lors du chargement des matchs");
           throw error;
         }
+
+        // Transformer les données dans le même format que l'API SportMonks
+        const leaguesMap = new Map();
         
-        return data;
+        matches?.forEach((match) => {
+          if (!leaguesMap.has(match.league_id)) {
+            leaguesMap.set(match.league_id, {
+              id: match.league_id,
+              name: match.league_name,
+              image_path: match.league_image,
+              today: []
+            });
+          }
+          
+          const league = leaguesMap.get(match.league_id);
+          league.today.push({
+            ...match.match_data,
+            scores: match.scores,
+            result_info: match.status
+          });
+        });
+        
+        return Array.from(leaguesMap.values());
       } catch (err) {
-        console.error("Exception in useSportMonksData:", err);
+        console.error("Error in useSportMonksData:", err);
         toast.error("Impossible de charger les matchs du jour");
         throw err;
       }
     },
-    retry: 2,
-    refetchOnWindowFocus: false
+    refetchInterval: 30000, // Rafraîchir toutes les 30 secondes pour les mises à jour en direct
+    retry: 2
   });
 }
