@@ -10,6 +10,7 @@ import { CreateRoomForm } from "@/components/room/CreateRoomForm";
 import { GameRules } from "@/components/game/GameRules";
 import { toast } from "sonner";
 import { useRoomValidation } from "@/hooks/room/useRoomValidation";
+import { GameCode } from "@/lib/gameTypes";
 
 const CreateRoom = () => {
   const { gameType } = useParams<{ gameType: string }>();
@@ -60,9 +61,9 @@ const CreateRoom = () => {
       if (!validGameType) throw new Error("Game type not specified or invalid");
       
       // For ArenaPlay games that might not have config in the database yet
-      const classicGameTypes = ['ludo', 'checkers', 'tictactoe', 'checkgame', 'futarena'];
+      const classicGameTypes = ['ludo', 'checkers', 'tictactoe', 'checkgame', 'futarena'] as const;
       
-      if (classicGameTypes.includes(validGameType)) {
+      if (classicGameTypes.includes(validGameType as any)) {
         const { data, error } = await supabase
           .from('game_types')
           .select('*')
@@ -104,7 +105,7 @@ const CreateRoom = () => {
             ) : (
               <CreateRoomForm 
                 username={username} 
-                gameType={gameType} 
+                gameType={gameType as GameCode | undefined} 
                 gameConfig={gameConfig} 
               />
             )}

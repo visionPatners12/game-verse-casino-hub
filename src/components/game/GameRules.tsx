@@ -7,11 +7,20 @@ import { GameCode } from "@/lib/gameTypes";
 import { FileText } from "lucide-react";
 
 interface GameRulesProps {
-  gameType: GameCode;
+  gameType: string;
 }
 
 export const GameRules = ({ gameType }: GameRulesProps) => {
-  if (gameType !== "futarena" && !gameType.includes("2k") && !gameType.includes("madden")) {
+  // Show rules for sports games (all ArenaPlay games)
+  const showRules = gameType === "futarena" || 
+    gameType === "madden" || 
+    gameType === "nba2k" || 
+    gameType === "college" || 
+    gameType === "mlb" || 
+    gameType === "cod" || 
+    gameType === "fortnite";
+    
+  if (!showRules) {
     return null;
   }
 
