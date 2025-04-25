@@ -19,23 +19,33 @@ serve(async (req) => {
   try {
     console.log("Edge function called: get-sportmonks-matches");
     
-    const { date } = await req.json();
-    console.log("Request received with date:", date);
+    const { date, singleDay = false } = await req.json();
+    console.log("Request received with date:", date, "singleDay:", singleDay);
     
     if (!SPORTMONKS_API_KEY) {
       console.error("SPORTMONKS_API_KEY is not defined");
       throw new Error("API key not configured");
     }
 
-    // Fetch matches for the next 5 days
-    const responses = await Promise.all(
-      Array.from({ length: 5 }, (_, i) => {
-        const currentDate = format(addDays(new Date(date), i), 'yyyy-MM-dd');
-        return fetch(
-          `${SPORTMONKS_BASE_URL}/leagues/date/${currentDate}?include=today.scores;today.participants;today.stage;today.group;today.round&api_token=${SPORTMONKS_API_KEY}`
-        ).then(res => res.json());
-      })
-    );
+    let responses = [];
+    
+    if (singleDay) {
+      // Fetch matches for just the single day
+      const response = await fetch(
+        `${SPORTMONKS_BASE_URL}/leagues/date/${date}?include=today.scores;today.participants;today.stage;today.group;today.round&api_token=${SPORTMONKS_API_KEY}`
+      );
+      responses = [await response.json()];
+    } else {
+      // Fetch matches for the next 5 days
+      responses = await Promise.all(
+        Array.from({ length: 5 }, (_, i) => {
+          const currentDate = format(addDays(new Date(date), i), 'yyyy-MM-dd');
+          return fetch(
+            `${SPORTMONKS_BASE_URL}/leagues/date/${currentDate}?include=today.scores;today.participants;today.stage;today.group;today.round&api_token=${SPORTMONKS_API_KEY}`
+          ).then(res => res.json());
+        })
+      );
+    }
     
     // Combine and merge matches from all days into their respective leagues
     const leaguesMap = new Map();

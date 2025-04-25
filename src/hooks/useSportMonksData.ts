@@ -14,7 +14,7 @@ export function useSportMonksData(selectedDate: Date = new Date()) {
         console.log("Fetching SportMonks data for date:", formattedDate);
         
         const { data, error } = await supabase.functions.invoke('get-sportmonks-matches', {
-          body: { date: formattedDate }
+          body: { date: formattedDate, singleDay: true }
         });
 
         if (error) {
