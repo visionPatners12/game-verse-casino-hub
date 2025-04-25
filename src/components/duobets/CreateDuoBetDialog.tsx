@@ -1,6 +1,4 @@
-
 import { useState } from "react";
-import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,7 +18,6 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
   const [dialogOpen, setDialogOpen] = useState(false);
   const { createBet } = useDuoBets();
   
-  // Use controlled state if provided, otherwise use internal state
   const isOpen = open !== undefined ? open : dialogOpen;
   const setOpen = onOpenChange || setDialogOpen;
 
@@ -30,7 +27,6 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
 
   async function onSubmit(values: BetFormSchema) {
     try {
-      // Ensure all required fields are provided with their correct types
       const betData = {
         amount: values.amount,
         team_a: values.team_a,
@@ -63,15 +59,6 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
           <DialogDescription>
             Proposez un pari à un autre utilisateur sur l'issue d'un match.
           </DialogDescription>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-4 top-4"
-            onClick={handleClose}
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Fermer</span>
-          </Button>
         </DialogHeader>
         
         <BetForm 

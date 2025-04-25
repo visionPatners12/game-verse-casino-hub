@@ -1,11 +1,13 @@
-
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSportMonksData } from "@/hooks/useSportMonksData";
 import { Loader2, AlertCircle } from "lucide-react";
 import { LeagueMatchList } from "./LeagueMatchList";
+import { DateSelector } from "./components/DateSelector";
 
 export function LiveMatches() {
-  const { data: leaguesData, isLoading: isMatchesLoading, error: matchesError } = useSportMonksData();
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const { data: leaguesData, isLoading: isMatchesLoading, error: matchesError } = useSportMonksData(selectedDate);
 
   if (isMatchesLoading) {
     return (
@@ -35,6 +37,10 @@ export function LiveMatches() {
 
   return (
     <div className="space-y-6">
+      <DateSelector 
+        date={selectedDate} 
+        onDateChange={setSelectedDate}
+      />
       {leaguesData.map((league) => (
         <LeagueMatchList key={league.id} league={league} />
       ))}
