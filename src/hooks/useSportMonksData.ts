@@ -36,10 +36,14 @@ export function useSportMonksData(selectedDate: Date = new Date()) {
           }
           
           const league = leaguesMap.get(match.league_id);
+          
+          // Fix: Create a proper object instead of using spread on match_data
           league.today.push({
-            ...match.match_data,
-            scores: match.scores,
-            result_info: match.status
+            id: match.id,
+            starting_at: match.starting_at,
+            participants: match.match_data?.participants || [],
+            scores: match.scores || [],
+            result_info: match.status || 'Scheduled'
           });
         });
         
