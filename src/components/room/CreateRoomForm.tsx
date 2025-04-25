@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -14,129 +15,11 @@ import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
 import { GameCode } from "@/lib/gameTypes";
 import { useState } from "react";
 import { RulesDialog } from "@/components/game/RulesDialog";
-
-type CreateRoomFormProps = {
-  username: string;
-  gameType: string | undefined;
-  gameConfig: any;
-};
-
-export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFormProps) {
-  const [showRules, setShowRules] = useState(gameType === "futarena");
-  
-  const form = useForm<CreateRoomFormData>({
-    resolver: zodResolver(createRoomSchema),
-    defaultValues: {
-      bet: 0,
-      maxPlayers: gameConfig?.min_players || 2,
-      winnerCount: 1,
-      gridSize: gameType === 'tictactoe' ? 3 : undefined,
-      matchDuration: gameType === "futarena" ? 12 : undefined,
-      eaId: "",
-      _gameType: gameType,
-    },
-    mode: "onChange"
-  });
-
-  const { createRoom } = useCreateRoom(username, gameType);
-  const { hasSufficientBalance } = useWalletBalanceCheck();
-
-  const handleSubmit = async (values: CreateRoomFormData) => {
-    if (values.bet > 0 && !hasSufficientBalance(values.bet)) {
-      return;
-    }
-    
-    if (gameType === "futarena") {
-      setShowRules(true);
-    } else {
-      createRoom(values);
-    }
-  };
-
-  const handleAcceptRules = () => {
-    setShowRules(false);
-    const values = form.getValues();
-    createRoom(values);
-  };
-
-  return (
-    <>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <BetAmountField form={form} disableControls={true} />
-          <PlayersField form={form} gameConfig={gameConfig} />
-          <WinnersField form={form} />
-
-          {gameType === 'tictactoe' && gameConfig?.is_configurable && (
-            <GridSizeField form={form} />
-          )}
-
-          {gameType === "futarena" && (
-            <>
-              <FormField
-                control={form.control}
-                name="eaId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Text className="h-4 w-4" />
-                      Ton EA - ID <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="text"
-                        placeholder="Ton identifiant EA"
-                        required
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="matchDuration"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Timer className="h-4 w-4" />
-                      Durée mi-temps (minutes) <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={1}
-                        max={60}
-                        defaultValue={5}
-                        {...field}
-                        onChange={e => field.onChange(Number(e.target.value))}
-                        required
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </>
-          )}
-
-          <Button 
-            type="submit" 
-            className="w-full"
-            disabled={!username}
-          >
-            Create Room
-          </Button>
-        </form>
-      </Form>
-
-      <RulesDialog
-        open={showRules}
-        onOpenChange={setShowRules}
-        onAccept={handleAcceptRules}
-      />
-    </>
-  );
-}
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";

@@ -1,7 +1,6 @@
 
 import { z } from "zod";
 
-// Zod refinement: require eaId only for futarena gameType
 export const createRoomSchema = z.object({
   bet: z.number().min(0, "Bet amount must be positive"),
   maxPlayers: z.number().min(2, "Must have at least 2 players"),
@@ -12,7 +11,10 @@ export const createRoomSchema = z.object({
     .max(60, "Maximum 60 minutes")
     .optional(),
   eaId: z.string().optional(),
-  _gameType: z.string().optional() // Added this field to the schema
+  legacyDefending: z.boolean().optional(),
+  customFormations: z.boolean().optional(),
+  teamType: z.enum(['anyTeams', 'clubOnly', 'nationalOnly', '85rated', 'futTeam']).optional(),
+  _gameType: z.string().optional()
 }).superRefine((data, ctx) => {
   // Only required for futarena
   if (data._gameType === "futarena") {
