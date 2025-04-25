@@ -2,9 +2,11 @@
 import { Card } from "@/components/ui/card";
 import { useDuoBets } from "@/hooks/useDuoBets";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, Copy } from "lucide-react";
 import { formatDistanceToNow, isSameDay } from "date-fns";
 import { fr } from "date-fns/locale";
+import { toast } from "sonner";
 
 interface BetsListProps {
   selectedDate: Date;
@@ -31,6 +33,11 @@ export function BetsList({ selectedDate }: BetsListProps) {
     }
   };
 
+  const copyBetCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast.success("Code copié !");
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
@@ -55,7 +62,7 @@ export function BetsList({ selectedDate }: BetsListProps) {
     <div className="grid gap-4">
       {filteredBets.map((bet) => (
         <Card key={bet.id} className="overflow-hidden bg-card/50 backdrop-blur-sm">
-          <div className="border-l-4 border-accent p-4 hover:bg-accent/5 transition-colors">
+          <div className="border-l-4 border-accent p-4">
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
@@ -71,17 +78,27 @@ export function BetsList({ selectedDate }: BetsListProps) {
                 </Badge>
               </div>
 
-              <div className="flex items-center gap-4 text-sm">
+              <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="font-mono">
-                    {bet.bet_code}
-                  </Badge>
                   <Badge variant="outline" className="font-mono">
                     {bet.amount}€
                   </Badge>
                   <Badge variant="outline" className="font-mono">
                     {getPredictionLabel(bet.creator_prediction)}
                   </Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <code className="bg-muted px-2 py-1 rounded font-mono text-xs">
+                    {bet.bet_code}
+                  </code>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => copyBetCode(bet.bet_code)}
+                    className="h-8 w-8"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
 
