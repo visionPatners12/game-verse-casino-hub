@@ -17,10 +17,10 @@ const CreateRoom = () => {
   const navigate = useNavigate();
   
   // Validate the game type
-  useRoomValidation(gameType);
+  const isValidGame = useRoomValidation(gameType);
 
   // Get a type-safe gameType or null
-  const validGameType = isValidGameType(gameType) ? gameType : null;
+  const validGameType = isValidGame ? gameType : null;
 
   useEffect(() => {
     const getUsername = async () => {
