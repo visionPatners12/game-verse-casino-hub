@@ -103,6 +103,7 @@ export function MatchDialog({ match, leagueName, open, onOpenChange }: MatchDial
             selectedMarket={selectedMarket}
             setSelectedMarket={setSelectedMarket}
             markets={markets}
+            match={match} 
             getMarketOptions={getMarketOptions}
             possibleGains={possibleGains}
           />
