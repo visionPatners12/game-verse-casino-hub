@@ -112,10 +112,18 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
             Proposez un pari à un autre utilisateur sur l'issue d'un match.
           </DialogDescription>
         </DialogHeader>
-        <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+        
+        {/* Bouton de fermeture personnalisé qui utilise handleClose */}
+        <button 
+          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+          onClick={handleClose}
+          type="button"
+          aria-label="Close"
+        >
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
-        </DialogClose>
+        </button>
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -225,3 +233,4 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
     </Dialog>
   );
 }
+
