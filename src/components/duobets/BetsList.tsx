@@ -15,23 +15,19 @@ export function BetsList({ selectedDate }: BetsListProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Pending': return 'bg-yellow-500';
-      case 'Active': return 'bg-blue-500';
-      case 'Completed': return 'bg-green-500';
-      case 'Cancelled': return 'bg-gray-500';
-      default: return 'bg-gray-500';
+      case 'Pending': return 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50';
+      case 'Active': return 'bg-blue-500/20 text-blue-500 border-blue-500/50';
+      case 'Completed': return 'bg-green-500/20 text-green-500 border-green-500/50';
+      case 'Cancelled': return 'bg-gray-500/20 text-gray-500 border-gray-500/50';
+      default: return 'bg-gray-500/20 text-gray-500 border-gray-500/50';
     }
   };
 
-  const filteredBets = bets?.filter((bet) => 
-    isSameDay(new Date(bet.created_at), selectedDate)
-  ) || [];
-
-  const getPredictionText = (prediction: 'TeamA' | 'TeamB' | 'Draw') => {
+  const getPredictionLabel = (prediction: 'TeamA' | 'TeamB' | 'Draw') => {
     switch (prediction) {
-      case 'TeamA': return 'Victoire Équipe A';
-      case 'TeamB': return 'Victoire Équipe B';
-      case 'Draw': return 'Match Nul';
+      case 'TeamA': return '1';
+      case 'TeamB': return '2';
+      case 'Draw': return 'X';
     }
   };
 
@@ -42,6 +38,10 @@ export function BetsList({ selectedDate }: BetsListProps) {
       </div>
     );
   }
+
+  const filteredBets = bets?.filter((bet) => 
+    isSameDay(new Date(bet.created_at), selectedDate)
+  ) || [];
 
   if (filteredBets.length === 0) {
     return (
@@ -54,41 +54,43 @@ export function BetsList({ selectedDate }: BetsListProps) {
   return (
     <div className="grid gap-4">
       {filteredBets.map((bet) => (
-        <Card key={bet.id} className="p-4 hover:bg-accent/50 transition-colors">
-          <div className="flex flex-col gap-4">
-            <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <h3 className="font-semibold text-lg">
-                  {bet.team_a} vs {bet.team_b}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {bet.match_description}
-                </p>
-              </div>
-              <Badge className={getStatusColor(bet.status)}>
-                {bet.status}
-              </Badge>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline">
-                Mise: {bet.amount}€
-              </Badge>
-              <Badge variant="outline">
-                {getPredictionText(bet.creator_prediction)}
-              </Badge>
-              {bet.commission_rate && (
-                <Badge variant="outline">
-                  Commission: {bet.commission_rate}%
+        <Card key={bet.id} className="overflow-hidden bg-card/50 backdrop-blur-sm">
+          <div className="border-l-4 border-accent p-4 hover:bg-accent/5 transition-colors">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <h3 className="font-semibold tracking-tight">
+                    {bet.team_a} vs {bet.team_b}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {bet.match_description}
+                  </p>
+                </div>
+                <Badge className={`${getStatusColor(bet.status)} border`}>
+                  {bet.status}
                 </Badge>
-              )}
-            </div>
+              </div>
 
-            <div className="text-xs text-muted-foreground">
-              Créé {formatDistanceToNow(new Date(bet.created_at), {
-                addSuffix: true,
-                locale: fr,
-              })}
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="font-mono">
+                    {bet.bet_code}
+                  </Badge>
+                  <Badge variant="outline" className="font-mono">
+                    {bet.amount}€
+                  </Badge>
+                  <Badge variant="outline" className="font-mono">
+                    {getPredictionLabel(bet.creator_prediction)}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="text-xs text-muted-foreground">
+                Créé {formatDistanceToNow(new Date(bet.created_at), {
+                  addSuffix: true,
+                  locale: fr,
+                })}
+              </div>
             </div>
           </div>
         </Card>
