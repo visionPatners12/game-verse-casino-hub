@@ -1,6 +1,7 @@
 
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { MatchCard } from "./MatchCard";
+import { Card } from "@/components/ui/card";
 
 interface LeagueMatchListProps {
   league: {
@@ -14,15 +15,25 @@ interface LeagueMatchListProps {
 export function LeagueMatchList({ league }: LeagueMatchListProps) {
   if (!league.today || league.today.length === 0) {
     return (
-      <div className="text-center py-4 text-sm text-muted-foreground">
-        Aucun match aujourd'hui dans cette ligue.
-      </div>
+      <Card className="p-4 mb-4">
+        <div className="flex items-center gap-2">
+          <img 
+            src={league.image_path} 
+            alt={league.name} 
+            className="h-6 w-6 object-contain"
+          />
+          <h3 className="font-semibold">{league.name}</h3>
+        </div>
+        <div className="text-center py-4 text-sm text-muted-foreground">
+          Aucun match aujourd'hui dans cette ligue.
+        </div>
+      </Card>
     );
   }
 
   return (
-    <div key={league.id} className="space-y-4">
-      <div className="flex items-center gap-2 pl-2">
+    <Card className="p-4 mb-4">
+      <div className="flex items-center gap-2 mb-3">
         <img 
           src={league.image_path} 
           alt={league.name} 
@@ -42,6 +53,6 @@ export function LeagueMatchList({ league }: LeagueMatchListProps) {
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
-    </div>
+    </Card>
   );
 }

@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -29,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useDuoBets } from "@/hooks/useDuoBets";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, X } from "lucide-react";
 
 const formSchema = z.object({
   amount: z.number().min(1, "Le montant doit être supérieur à 0"),
@@ -90,6 +91,10 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
     }
   }
 
+  const handleClose = () => {
+    setOpen(false);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setOpen}>
       {!defaultTeams && (
@@ -107,6 +112,10 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
             Proposez un pari à un autre utilisateur sur l'issue d'un match.
           </DialogDescription>
         </DialogHeader>
+        <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </DialogClose>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -116,7 +125,12 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
                 <FormItem>
                   <FormLabel>Équipe A</FormLabel>
                   <FormControl>
-                    <Input placeholder="PSG" {...field} />
+                    <Input 
+                      placeholder="PSG" 
+                      {...field} 
+                      readOnly={!!defaultTeams}
+                      className={defaultTeams ? "bg-muted cursor-not-allowed" : ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -129,7 +143,12 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
                 <FormItem>
                   <FormLabel>Équipe B</FormLabel>
                   <FormControl>
-                    <Input placeholder="Real Madrid" {...field} />
+                    <Input 
+                      placeholder="Real Madrid" 
+                      {...field} 
+                      readOnly={!!defaultTeams}
+                      className={defaultTeams ? "bg-muted cursor-not-allowed" : ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -142,7 +161,12 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
                 <FormItem>
                   <FormLabel>Description du match</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ligue des Champions - Quart de finale" {...field} />
+                    <Input 
+                      placeholder="Ligue des Champions - Quart de finale" 
+                      {...field} 
+                      readOnly={!!defaultTeams}
+                      className={defaultTeams ? "bg-muted cursor-not-allowed" : ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
