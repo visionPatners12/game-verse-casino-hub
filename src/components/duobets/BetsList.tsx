@@ -3,8 +3,8 @@ import { Card } from "@/components/ui/card";
 import { useDuoBets } from "@/hooks/useDuoBets";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Copy, Lock, Globe } from "lucide-react";
-import { formatDistanceToNow, isSameDay } from "date-fns";
+import { Loader2, Copy, Lock, Globe, Clock } from "lucide-react";
+import { formatDistanceToNow, format, isSameDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 
@@ -63,16 +63,20 @@ export function BetsList({ selectedDate }: BetsListProps) {
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-4 max-w-3xl mx-auto">
       {filteredBets.map((bet) => (
         <Card key={bet.id} className="overflow-hidden bg-card/50 backdrop-blur-sm">
           <div className="border-l-4 border-accent p-4">
             <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="space-y-1">
                   <h3 className="font-semibold tracking-tight">
                     {bet.team_a} vs {bet.team_b}
                   </h3>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    {format(new Date(bet.created_at), "HH:mm", { locale: fr })}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {bet.match_description}
                   </p>
@@ -91,7 +95,7 @@ export function BetsList({ selectedDate }: BetsListProps) {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="font-mono">
                     {bet.amount}€
@@ -119,7 +123,7 @@ export function BetsList({ selectedDate }: BetsListProps) {
               </div>
 
               <div className="text-xs text-muted-foreground">
-                Créé {formatDistanceToNow(new Date(bet.created_at), {
+                {formatDistanceToNow(new Date(bet.created_at), {
                   addSuffix: true,
                   locale: fr,
                 })}
