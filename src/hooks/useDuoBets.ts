@@ -87,12 +87,13 @@ export function useDuoBets() {
           throw new Error("Utilisateur non connecté");
         }
 
+        // This is where we're fixing the error by type casting
         const { data, error } = await supabase
           .from('duo_bets')
           .insert([{
             creator_id: user.id,
             ...input
-          }])
+          }] as any)
           .select()
           .single();
 
