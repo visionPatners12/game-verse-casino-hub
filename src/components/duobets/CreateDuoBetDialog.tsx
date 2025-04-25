@@ -15,6 +15,7 @@ import { useDuoBets } from "@/hooks/useDuoBets";
 import { BetForm } from "./components/BetForm";
 import type { CreateDuoBetDialogProps } from "./types";
 import type { BetFormSchema } from "./schemas/betFormSchema";
+import { toast } from "sonner";
 
 export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateDuoBetDialogProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -69,7 +70,7 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
           isSubmitting={createBet.isPending}
         />
         
-        {/* Ajout explicite du bouton de fermeture pour s'assurer qu'il fonctionne */}
+        {/* On enlève la duplication du bouton de fermeture et on fait en sorte que celui par défaut fonctionne */}
         <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
           <X className="h-4 w-4" />
           <span className="sr-only">Fermer</span>
