@@ -21,6 +21,21 @@ interface Participant {
   };
 }
 
+interface Stage {
+  id: number;
+  name: string;
+}
+
+interface Group {
+  id: number;
+  name: string;
+}
+
+interface Round {
+  id: number;
+  name: string;
+}
+
 interface Match {
   id: number;
   name: string;
@@ -31,6 +46,9 @@ interface Match {
     score: Score;
     description: string;
   }>;
+  stage?: Stage;
+  group?: Group;
+  round?: Round;
 }
 
 interface LeagueResponse {

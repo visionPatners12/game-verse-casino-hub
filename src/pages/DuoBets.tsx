@@ -126,7 +126,7 @@ export default function DuoBets() {
                                   defaultTeams={{
                                     teamA: match.participants.find(t => t.meta.location === 'home')?.name || '',
                                     teamB: match.participants.find(t => t.meta.location === 'away')?.name || '',
-                                    description: `${league.name} - ${match.stage?.name || ''}`
+                                    description: `${league.name} - ${match.stage?.name || match.round?.name || ''}`
                                   }}
                                 />
                               </div>
