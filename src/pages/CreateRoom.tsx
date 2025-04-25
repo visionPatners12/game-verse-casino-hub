@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
@@ -17,7 +16,6 @@ const CreateRoom = () => {
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
   
-  // Validate the game type
   const isValidGame = useRoomValidation(gameType);
   const validGameType = isValidGame ? gameType : null;
 
@@ -60,7 +58,6 @@ const CreateRoom = () => {
     queryFn: async () => {
       if (!validGameType) throw new Error("Game type not specified or invalid");
       
-      // For ArenaPlay games that might not have config in the database yet
       const classicGameTypes = ['ludo', 'checkers', 'tictactoe', 'checkgame', 'futarena'] as const;
       
       if (classicGameTypes.includes(validGameType as any)) {
@@ -73,7 +70,6 @@ const CreateRoom = () => {
         if (error) throw error;
         return data;
       } else {
-        // For ArenaPlay games, return a default config object
         return {
           code: validGameType,
           name: validGameType.charAt(0).toUpperCase() + validGameType.slice(1),
@@ -88,31 +84,35 @@ const CreateRoom = () => {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              Create a Room 
-              {gameConfig && <span className="text-primary">- {gameConfig.name}</span>}
-            </CardTitle>
-          </CardHeader>
-          
-          <CardContent className="space-y-6">
-            {isLoading ? (
-              <div className="flex justify-center">
-                <Loader2 className="h-6 w-6 animate-spin" />
-              </div>
-            ) : (
-              <CreateRoomForm 
-                username={username} 
-                gameType={gameType as GameCode | undefined} 
-                gameConfig={gameConfig} 
-              />
-            )}
-          </CardContent>
-        </Card>
+      <div className="container grid lg:grid-cols-2 gap-6 mx-auto">
+        <div className="lg:order-1 order-2">
+          {gameType && <GameRules gameType={gameType} />}
+        </div>
 
-        {gameType && <GameRules gameType={gameType} />}
+        <div className="lg:order-2 order-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Create a Room 
+                {gameConfig && <span className="text-primary">- {gameConfig.name}</span>}
+              </CardTitle>
+            </CardHeader>
+            
+            <CardContent>
+              {isLoading ? (
+                <div className="flex justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              ) : (
+                <CreateRoomForm 
+                  username={username} 
+                  gameType={gameType as GameCode | undefined} 
+                  gameConfig={gameConfig} 
+                />
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </Layout>
   );

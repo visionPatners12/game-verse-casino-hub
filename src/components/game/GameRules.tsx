@@ -25,7 +25,7 @@ export const GameRules = ({ gameType }: GameRulesProps) => {
   }
 
   return (
-    <Card className="mt-6">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
@@ -33,7 +33,7 @@ export const GameRules = ({ gameType }: GameRulesProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[400px] rounded-md pr-4">
+        <ScrollArea className="h-[calc(100vh-16rem)] rounded-md pr-4">
           <div className="space-y-4">
             <section>
               <h3 className="font-semibold mb-2">Disconnections</h3>
