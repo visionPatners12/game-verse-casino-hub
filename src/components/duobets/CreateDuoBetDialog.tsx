@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,13 +19,15 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
   const [dialogOpen, setDialogOpen] = useState(false);
   const { createBet } = useDuoBets();
   const navigate = useNavigate();
-  
+
   const isOpen = open !== undefined ? open : dialogOpen;
   const setOpen = onOpenChange || setDialogOpen;
 
-  const handleClose = () => {
-    setOpen(false);
-    navigate("/duo-bets");
+  const handleDialogChange = (open: boolean) => {
+    setOpen(open);
+    if (!open) {
+      navigate("/duo-bets");
+    }
   };
 
   async function onSubmit(values: BetFormSchema) {
@@ -39,16 +40,16 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
         creator_prediction: values.creator_prediction,
         expires_at: values.expires_at
       };
-      
+
       await createBet.mutateAsync(betData);
-      handleClose();
+      handleDialogChange(false); // ferme le dialog et redirige
     } catch (error) {
       console.error('Form submission error:', error);
     }
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={handleDialogChange}>
       {!defaultTeams && (
         <DialogTrigger asChild>
           <Button>
@@ -64,8 +65,8 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
             Proposez un pari à un autre utilisateur sur l'issue d'un match.
           </DialogDescription>
         </DialogHeader>
-        
-        <BetForm 
+
+        <BetForm
           defaultTeams={defaultTeams}
           onSubmit={onSubmit}
           isSubmitting={createBet.isPending}
