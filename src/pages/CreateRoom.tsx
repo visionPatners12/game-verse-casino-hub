@@ -9,11 +9,15 @@ import { Loader2 } from "lucide-react";
 import { CreateRoomForm } from "@/components/room/CreateRoomForm";
 import { GameCode, isValidGameType } from "@/lib/gameTypes";
 import { toast } from "sonner";
+import { useRoomValidation } from "@/hooks/room/useRoomValidation";
 
 const CreateRoom = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
+  
+  // Validate the game type
+  useRoomValidation(gameType);
 
   // Get a type-safe gameType or null
   const validGameType = isValidGameType(gameType) ? gameType : null;
