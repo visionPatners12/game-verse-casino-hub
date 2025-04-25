@@ -294,6 +294,7 @@ export type Database = {
       duo_bets: {
         Row: {
           amount: number
+          bet_code: string
           commission_rate: number | null
           completed_at: string | null
           created_at: string | null
@@ -313,6 +314,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          bet_code?: string
           commission_rate?: number | null
           completed_at?: string | null
           created_at?: string | null
@@ -332,6 +334,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          bet_code?: string
           commission_rate?: number | null
           completed_at?: string | null
           created_at?: string | null
