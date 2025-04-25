@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
@@ -58,9 +59,11 @@ const CreateRoom = () => {
     queryFn: async () => {
       if (!validGameType) throw new Error("Game type not specified or invalid");
       
-      const classicGameTypes = ['ludo', 'checkers', 'tictactoe', 'checkgame', 'futarena'] as const;
+      // Define classic game types that are stored in the database
+      // Note: Don't cast as a const array here to avoid type restriction
+      const classicGameTypes = ['ludo', 'checkers', 'tictactoe', 'checkgame', 'futarena'];
       
-      if (classicGameTypes.includes(validGameType as any)) {
+      if (classicGameTypes.includes(validGameType)) {
         const { data, error } = await supabase
           .from('game_types')
           .select('*')
