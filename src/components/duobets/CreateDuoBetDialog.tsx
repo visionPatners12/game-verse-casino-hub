@@ -13,21 +13,16 @@ import { useDuoBets } from "@/hooks/useDuoBets";
 import { BetForm } from "./components/BetForm";
 import type { CreateDuoBetDialogProps } from "./types";
 import type { BetFormSchema } from "./schemas/betFormSchema";
-import { useNavigate } from "react-router-dom";
 
 export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateDuoBetDialogProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { createBet } = useDuoBets();
-  const navigate = useNavigate();
 
   const isOpen = open !== undefined ? open : dialogOpen;
   const setOpen = onOpenChange || setDialogOpen;
 
   const handleDialogChange = (open: boolean) => {
     setOpen(open);
-    if (!open) {
-      navigate("/duo-bets");
-    }
   };
 
   async function onSubmit(values: BetFormSchema) {
@@ -42,7 +37,7 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
       };
 
       await createBet.mutateAsync(betData);
-      handleDialogChange(false); // ferme le dialog et redirige
+      handleDialogChange(false); // Ferme simplement la boîte de dialogue
     } catch (error) {
       console.error('Form submission error:', error);
     }
