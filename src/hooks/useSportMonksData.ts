@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface Score {
   goals: number;
@@ -45,12 +46,28 @@ export function useSportMonksData() {
   return useQuery({
     queryKey: ['sportmonks-matches', today],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('get-sportmonks-matches', {
-        body: { date: today }
-      });
+      try {
+        console.log("Fetching SportMonks data for date:", today);
+        
+        const { data, error } = await supabase.functions.invoke('get-sportmonks-matches', {
+          body: { date: today }
+        });
 
-      if (error) throw error;
-      return data as LeagueResponse[];
-    }
+        if (error) {
+          console.error("Error fetching SportMonks data:", error);
+          toast.error("Erreur lors du chargement des matchs");
+          throw error;
+        }
+        
+        console.log("SportMonks data received:", data);
+        return data as LeagueResponse[];
+      } catch (err) {
+        console.error("Exception in useSportMonksData:", err);
+        toast.error("Impossible de charger les matchs du jour");
+        throw err;
+      }
+    },
+    retry: 2,
+    refetchOnWindowFocus: false
   });
 }

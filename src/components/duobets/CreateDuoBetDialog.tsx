@@ -40,17 +40,25 @@ const formSchema = z.object({
   expires_at: z.string().min(1, "La date d'expiration est requise"),
 });
 
-export function CreateDuoBetDialog() {
+interface CreateDuoBetDialogProps {
+  defaultTeams?: {
+    teamA: string;
+    teamB: string;
+    description: string;
+  };
+}
+
+export function CreateDuoBetDialog({ defaultTeams }: CreateDuoBetDialogProps) {
   const [open, setOpen] = useState(false);
   const { createBet } = useDuoBets();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      amount: 10, // Set a default non-zero value
-      team_a: "",
-      team_b: "",
-      match_description: "",
+      amount: 10,
+      team_a: defaultTeams?.teamA || "",
+      team_b: defaultTeams?.teamB || "",
+      match_description: defaultTeams?.description || "",
       creator_prediction: "TeamA",
       expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     },
