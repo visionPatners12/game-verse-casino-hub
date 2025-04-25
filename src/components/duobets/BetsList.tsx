@@ -84,10 +84,10 @@ export function BetsList({ selectedDate }: BetsListProps) {
                 <div className="flex gap-2">
                   <Badge 
                     variant="outline" 
-                    className={`flex items-center ${bet.opponent_id ? 'bg-purple-500/20 text-purple-500 border-purple-500/50' : 'bg-sky-500/20 text-sky-500 border-sky-500/50'}`}
+                    className={`flex items-center ${bet.is_private ? 'bg-purple-500/20 text-purple-500 border-purple-500/50' : 'bg-sky-500/20 text-sky-500 border-sky-500/50'}`}
                   >
-                    {getBetTypeIcon(!!bet.opponent_id)}
-                    {bet.opponent_id ? 'Privé' : 'Public'}
+                    {bet.is_private ? <Lock className="h-3 w-3 mr-1" /> : <Globe className="h-3 w-3 mr-1" />}
+                    {bet.is_private ? 'Privé' : 'Public'}
                   </Badge>
                   <Badge className={`${getStatusColor(bet.status)} border`}>
                     {bet.status}

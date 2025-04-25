@@ -31,7 +31,7 @@ interface CreateBetInput {
   team_b: string;
   expires_at: string;
   bet_code?: string;
-  is_private?: boolean;
+  is_private?: boolean;  // Ensure this matches the database column
 }
 
 export function useDuoBets() {

@@ -44,7 +44,7 @@ export function MatchDialog({ match, leagueName, open, onOpenChange }: MatchDial
         match_description: `${leagueName} - ${match.stage?.name || match.round?.name || ""}`,
         expires_at: expiresAt.toISOString(),
         bet_code: betCode,
-        is_private: isPrivate
+        is_private: isPrivate  // Add the is_private flag
       });
       
       toast.success(

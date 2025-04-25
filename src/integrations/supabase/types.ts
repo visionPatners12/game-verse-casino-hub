@@ -302,6 +302,7 @@ export type Database = {
           creator_prediction: Database["public"]["Enums"]["duo_bet_result"]
           expires_at: string
           id: string
+          is_private: boolean
           match_description: string
           opponent_id: string | null
           opponent_prediction:
@@ -322,6 +323,7 @@ export type Database = {
           creator_prediction: Database["public"]["Enums"]["duo_bet_result"]
           expires_at: string
           id?: string
+          is_private?: boolean
           match_description: string
           opponent_id?: string | null
           opponent_prediction?:
@@ -342,6 +344,7 @@ export type Database = {
           creator_prediction?: Database["public"]["Enums"]["duo_bet_result"]
           expires_at?: string
           id?: string
+          is_private?: boolean
           match_description?: string
           opponent_id?: string | null
           opponent_prediction?:

@@ -1,14 +1,4 @@
 
-export interface CreateDuoBetDialogProps {
-  defaultTeams?: {
-    teamA: string;
-    teamB: string;
-    description: string;
-  };
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-}
-
 export type BetFormData = {
   amount: number;
   team_a: string;
@@ -16,4 +6,5 @@ export type BetFormData = {
   match_description: string;
   creator_prediction: 'TeamA' | 'TeamB' | 'Draw';
   expires_at: string;
+  is_private?: boolean;  // Add optional is_private field
 }
