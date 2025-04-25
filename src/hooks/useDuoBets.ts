@@ -20,6 +20,7 @@ interface DuoBet {
   expires_at: string;
   completed_at: string | null;
   commission_rate: number;
+  bet_code: string;
 }
 
 interface CreateBetInput {
@@ -29,6 +30,7 @@ interface CreateBetInput {
   team_a: string;
   team_b: string;
   expires_at: string;
+  bet_code: string;
 }
 
 export function useDuoBets() {
@@ -86,7 +88,6 @@ export function useDuoBets() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['duo-bets'] });
-      toast.success("Pari créé avec succès");
     }
   });
 

@@ -21,7 +21,7 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
   const [dialogOpen, setDialogOpen] = useState(false);
   const { createBet } = useDuoBets();
   
-  // Use controlled state from props if provided, otherwise use local state
+  // Utiliser l'état contrôlé depuis les props si fourni, sinon utiliser l'état local
   const isOpen = open !== undefined ? open : dialogOpen;
   const setOpen = onOpenChange || setDialogOpen;
 
