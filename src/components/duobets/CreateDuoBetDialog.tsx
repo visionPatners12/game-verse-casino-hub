@@ -15,11 +15,13 @@ import { BetForm } from "./components/BetForm";
 import type { CreateDuoBetDialogProps } from "./types";
 import type { BetFormSchema } from "./schemas/betFormSchema";
 import { toast } from "sonner";
+import { generateBetCode } from "@/lib/utils";
 
 export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateDuoBetDialogProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { createBet } = useDuoBets();
-
+  
+  // Use controlled state from props if provided, otherwise use local state
   const isOpen = open !== undefined ? open : dialogOpen;
   const setOpen = onOpenChange || setDialogOpen;
 
@@ -29,17 +31,20 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
 
   async function onSubmit(values: BetFormSchema) {
     try {
+      const betCode = generateBetCode();
+      
       const betData = {
         amount: values.amount,
         team_a: values.team_a,
         team_b: values.team_b,
         match_description: values.match_description,
         creator_prediction: values.creator_prediction,
-        expires_at: values.expires_at
+        expires_at: values.expires_at,
+        bet_code: betCode
       };
 
       await createBet.mutateAsync(betData);
-      toast.success("Pari créé avec succès");
+      toast.success(`Pari créé avec succès! Code du pari: ${betCode}`);
       handleDialogChange(false);
     } catch (error) {
       console.error('Form submission error:', error);
@@ -58,11 +63,12 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
         </DialogTrigger>
       )}
       
-      <DialogContent>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Créer un pari duo</DialogTitle>
           <DialogDescription>
             Proposez un pari à un autre utilisateur sur l'issue d'un match.
+            Un code unique sera généré pour partager votre pari.
           </DialogDescription>
         </DialogHeader>
 
@@ -75,8 +81,7 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
         <button
           type="button"
           onClick={() => handleDialogChange(false)}
-          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
-          aria-label="Fermer"
+          className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
         >
           <X className="h-4 w-4" />
           <span className="sr-only">Fermer</span>
