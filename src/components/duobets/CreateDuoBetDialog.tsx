@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,16 +14,19 @@ import { useDuoBets } from "@/hooks/useDuoBets";
 import { BetForm } from "./components/BetForm";
 import type { CreateDuoBetDialogProps } from "./types";
 import type { BetFormSchema } from "./schemas/betFormSchema";
+import { useNavigate } from "react-router-dom";
 
 export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateDuoBetDialogProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { createBet } = useDuoBets();
+  const navigate = useNavigate();
   
   const isOpen = open !== undefined ? open : dialogOpen;
   const setOpen = onOpenChange || setDialogOpen;
 
   const handleClose = () => {
     setOpen(false);
+    navigate("/duo-bets");
   };
 
   async function onSubmit(values: BetFormSchema) {
@@ -37,14 +41,14 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
       };
       
       await createBet.mutateAsync(betData);
-      setOpen(false);
+      handleClose();
     } catch (error) {
       console.error('Form submission error:', error);
     }
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       {!defaultTeams && (
         <DialogTrigger asChild>
           <Button>
