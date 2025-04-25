@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -24,6 +23,7 @@ import { toast } from "sonner";
 import { useDuoBets } from "@/hooks/useDuoBets";
 import { supabase } from "@/integrations/supabase/client";
 import { DuoBetResult, MarketType } from "../types";
+import { MARKET_DISPLAYS, MarketOption } from "../types";
 
 interface MatchDialogProps {
   match: any;
@@ -45,21 +45,14 @@ export function MatchDialog({ match, leagueName, open, onOpenChange }: MatchDial
   const homeTeam = match.participants.find((t: any) => t.meta.location === "home");
   const awayTeam = match.participants.find((t: any) => t.meta.location === "away");
   
-  const getMarketOptions = (marketId: number): { value: DuoBetResult; label: string }[] => {
-    switch (marketId) {
-      case 1: // 1X2
-        return [
-          { value: "TeamA", label: homeTeam.name },
-          { value: "Draw", label: "Match nul" },
-          { value: "TeamB", label: awayTeam.name }
-        ];
-      default:
-        return [
-          { value: "TeamA", label: homeTeam.name },
-          { value: "Draw", label: "Match nul" },
-          { value: "TeamB", label: awayTeam.name }
-        ];
-    }
+  const getMarketOptions = (marketId: number): MarketOption[] => {
+    const display = MARKET_DISPLAYS[marketId];
+    if (!display) return [];
+    
+    const homeTeam = match.participants.find((t: any) => t.meta.location === "home");
+    const awayTeam = match.participants.find((t: any) => t.meta.location === "away");
+    
+    return display.getOptions(homeTeam.name, awayTeam.name);
   };
 
   const possibleGains = selectedAmount * 1.8; // Example multiplier

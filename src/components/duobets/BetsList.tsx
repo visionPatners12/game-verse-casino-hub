@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { useDuoBets } from "@/hooks/useDuoBets";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +7,7 @@ import { formatDistanceToNow, format, isSameDay, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { DuoBetResult } from "./types";
+import { MARKET_DISPLAYS } from "./types";
 
 interface BetsListProps {
   selectedDate: Date;
@@ -26,11 +26,15 @@ export function BetsList({ selectedDate }: BetsListProps) {
     }
   };
 
-  const getPredictionLabel = (prediction: DuoBetResult) => {
+  const getPredictionLabel = (prediction: DuoBetResult, marketId?: number) => {
+    if (marketId && MARKET_DISPLAYS[marketId]) {
+      return MARKET_DISPLAYS[marketId].getLabel(prediction);
+    }
     switch (prediction) {
       case 'TeamA': return '1';
       case 'TeamB': return '2';
       case 'Draw': return 'X';
+      default: return prediction;
     }
   };
 
@@ -106,8 +110,13 @@ export function BetsList({ selectedDate }: BetsListProps) {
                     {bet.amount}€
                   </Badge>
                   <Badge variant="outline" className="font-mono">
-                    {getPredictionLabel(bet.creator_prediction)}
+                    {getPredictionLabel(bet.creator_prediction, bet.market_id)}
                   </Badge>
+                  {bet.market_id && (
+                    <Badge variant="secondary">
+                      {bet.market_id === 1 ? '1X2' : 'Les deux équipes marquent'}
+                    </Badge>
+                  )}
                 </div>
                 
                 {bet.bet_code && (
