@@ -2,9 +2,9 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { isValidGameType } from "@/lib/gameTypes";
+import { GameCode, isValidGameType } from "@/lib/gameTypes";
 
-export const useRoomValidation = (gameType: string | undefined) => {
+export const useRoomValidation = (gameType: string | undefined): gameType is GameCode => {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,4 +14,6 @@ export const useRoomValidation = (gameType: string | undefined) => {
       navigate("/games");
     }
   }, [gameType, navigate]);
+
+  return gameType !== undefined && isValidGameType(gameType);
 };

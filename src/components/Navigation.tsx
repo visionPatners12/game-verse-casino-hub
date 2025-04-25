@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { GamepadIcon, Store, BarChart3, Wallet, Package2, Users } from "lucide-react";
@@ -51,7 +52,8 @@ const Navigation = ({ disableNavigation = false }: NavigationProps) => {
   };
   
   const navItems: NavItem[] = [
-    { label: "Games", href: "/games", icon: <GamepadIcon className="h-5 w-5" /> },
+    { label: "Classic Games", href: "/games", icon: <GamepadIcon className="h-5 w-5" /> },
+    { label: "ArenaPlay", href: "/arenaplay", icon: <GamepadIcon className="h-5 w-5" /> },
     { label: "Store", href: "/store", icon: <Store className="h-5 w-5" /> },
     { label: "Dashboard", href: "/dashboard", icon: <BarChart3 className="h-5 w-5" /> },
     { label: "Wallet", href: "/wallet", icon: <Wallet className="h-5 w-5" /> },
