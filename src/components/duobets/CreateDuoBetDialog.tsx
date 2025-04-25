@@ -8,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Plus, X } from "lucide-react";
 import { useDuoBets } from "@/hooks/useDuoBets";
@@ -40,9 +39,11 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
       };
 
       await createBet.mutateAsync(betData);
+      toast.success("Pari créé avec succès");
       handleDialogChange(false);
     } catch (error) {
       console.error('Form submission error:', error);
+      toast.error("Erreur lors de la création du pari");
     }
   }
 
@@ -56,6 +57,7 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
           </Button>
         </DialogTrigger>
       )}
+      
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Créer un pari duo</DialogTitle>
@@ -73,7 +75,7 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
         <button
           type="button"
           onClick={() => handleDialogChange(false)}
-          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
           aria-label="Fermer"
         >
           <X className="h-4 w-4" />
