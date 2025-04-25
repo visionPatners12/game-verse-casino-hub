@@ -20,7 +20,7 @@ const CreateRoom = () => {
   const isValidGame = useRoomValidation(gameType);
 
   // Get a type-safe gameType or null
-  const validGameType = isValidGame ? gameType : null;
+  const validGameType = isValidGame ? gameType as GameCode : null;
 
   useEffect(() => {
     const getUsername = async () => {
