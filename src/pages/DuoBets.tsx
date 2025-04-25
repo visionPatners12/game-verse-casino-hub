@@ -6,10 +6,13 @@ import { BetsList } from "@/components/duobets/BetsList";
 import { useEffect, useState } from "react";
 import { useSportMonksData } from "@/hooks/useSportMonksData";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function DuoBets() {
   const { error: matchesError } = useSportMonksData();
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     if (matchesError) {
@@ -22,15 +25,42 @@ export default function DuoBets() {
     setSelectedDate(date);
   };
 
+  const syncSportMonksData = async () => {
+    try {
+      setSyncing(true);
+      toast.info("Synchronisation des données SportMonks en cours...");
+      
+      const { error } = await supabase.functions.invoke('sync-sportmonks-data');
+      
+      if (error) throw error;
+      
+      toast.success("Données SportMonks synchronisées avec succès!");
+    } catch (err) {
+      console.error("Erreur lors de la synchronisation:", err);
+      toast.error("Erreur de synchronisation des données SportMonks");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="grid gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Matchs en Direct</CardTitle>
-            <CardDescription>
-              Sélectionnez un match pour créer un pari duo
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Matchs en Direct</CardTitle>
+              <CardDescription>
+                Sélectionnez un match pour créer un pari duo
+              </CardDescription>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={syncSportMonksData}
+              disabled={syncing}
+            >
+              {syncing ? "Synchronisation..." : "Synchroniser les données"}
+            </Button>
           </CardHeader>
           <CardContent>
             <LiveMatches 
