@@ -50,12 +50,12 @@ export function BetsList({ selectedDate }: BetsListProps) {
     );
   }
 
-  // Filter bets for the selected date and ensure they exist
+  // Filter bets for the selected date
   const filteredBets = bets?.filter((bet) => 
     isSameDay(new Date(bet.created_at), selectedDate)
   ) || [];
 
-  // Sort bets by creation time within the selected date
+  // Group bets by date and sort by match time (created_at)
   const sortedBets = [...filteredBets].sort((a, b) => 
     new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );
