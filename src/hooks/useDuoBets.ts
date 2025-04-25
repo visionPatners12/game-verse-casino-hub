@@ -9,30 +9,36 @@ interface DuoBet {
   creator_id: string;
   opponent_id: string | null;
   amount: number;
-  creator_prediction: 'TeamA' | 'TeamB' | 'Draw';
-  opponent_prediction: 'TeamA' | 'TeamB' | 'Draw' | null;
+  creator_prediction: string;
+  opponent_prediction: string | null;
   match_description: string;
   team_a: string;
   team_b: string;
   status: 'Pending' | 'Active' | 'Completed' | 'Cancelled';
-  result: 'TeamA' | 'TeamB' | 'Draw' | null;
+  result: string | null;
   created_at: string;
   expires_at: string;
   completed_at: string | null;
   commission_rate: number;
   bet_code: string;
-  is_private: boolean;  // Ajout de cette propriété
+  is_private: boolean;
+  match_id?: number;
+  market_id?: number;
+  market_value?: string;
 }
 
 interface CreateBetInput {
   amount: number;
-  creator_prediction: 'TeamA' | 'TeamB' | 'Draw';
+  creator_prediction: string;
   match_description: string;
   team_a: string;
   team_b: string;
   expires_at: string;
   bet_code?: string;
-  is_private?: boolean;  // Ensure this matches the database column
+  is_private?: boolean;
+  match_id?: number;
+  market_id?: number;
+  market_value?: string;
 }
 
 export function useDuoBets() {

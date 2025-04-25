@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -31,21 +31,27 @@ interface MatchDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Define the market type interface
+interface MarketType {
+  id: number;
+  name: string;
+  description?: string;
+}
+
 export function MatchDialog({ match, leagueName, open, onOpenChange }: MatchDialogProps) {
   const [selectedAmount, setSelectedAmount] = useState(5);
   const [selectedMarket, setSelectedMarket] = useState({ id: 1, value: "TeamA" });
   const { createBet } = useDuoBets();
-  const [markets, setMarkets] = useState<any[]>([]);
+  const [markets, setMarkets] = useState<MarketType[]>([]);
   const homeTeam = match.participants.find((t: any) => t.meta.location === "home");
   const awayTeam = match.participants.find((t: any) => t.meta.location === "away");
   
   // Fetch available markets when dialog opens
-  useState(() => {
+  useEffect(() => {
     const fetchMarkets = async () => {
+      // Using a function to get market types instead of direct table access
       const { data, error } = await supabase
-        .from('market_types')
-        .select('*')
-        .order('id');
+        .rpc('get_available_markets');
       
       if (error) {
         console.error("Error fetching markets:", error);
@@ -97,9 +103,12 @@ export function MatchDialog({ match, leagueName, open, onOpenChange }: MatchDial
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 48); // Expires in 48 hours
       
+      // For 1X2 markets, map value to TeamA/Draw/TeamB
+      let mappedPrediction = selectedMarket.value;
+      
       await createBet.mutateAsync({
         amount: selectedAmount,
-        creator_prediction: selectedMarket.value,
+        creator_prediction: mappedPrediction,
         team_a: homeTeam.name,
         team_b: awayTeam.name,
         match_description: `${leagueName} - ${match.stage?.name || match.round?.name || ""}`,
