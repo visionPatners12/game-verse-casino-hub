@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -23,6 +22,14 @@ import { generateBetCode } from "@/lib/utils";
 import { toast } from "sonner";
 import { useDuoBets } from "@/hooks/useDuoBets";
 import { supabase } from "@/integrations/supabase/client";
+import { DuoBetResult } from "@/hooks/useDuoBets";
+
+interface MarketType {
+  id: number;
+  name: string;
+  description: string | null;
+  created_at?: string;
+}
 
 interface MatchDialogProps {
   match: any;
@@ -31,25 +38,19 @@ interface MatchDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// Define the market type interface
-interface MarketType {
-  id: number;
-  name: string;
-  description?: string;
-}
-
 export function MatchDialog({ match, leagueName, open, onOpenChange }: MatchDialogProps) {
   const [selectedAmount, setSelectedAmount] = useState(5);
-  const [selectedMarket, setSelectedMarket] = useState({ id: 1, value: "TeamA" });
+  const [selectedMarket, setSelectedMarket] = useState<{ id: number; value: DuoBetResult }>({ 
+    id: 1, 
+    value: "TeamA" 
+  });
   const { createBet } = useDuoBets();
   const [markets, setMarkets] = useState<MarketType[]>([]);
   const homeTeam = match.participants.find((t: any) => t.meta.location === "home");
   const awayTeam = match.participants.find((t: any) => t.meta.location === "away");
   
-  // Fetch available markets when dialog opens
   useEffect(() => {
     const fetchMarkets = async () => {
-      // Using a function to get market types instead of direct table access
       const { data, error } = await supabase
         .rpc('get_available_markets');
       
@@ -66,9 +67,7 @@ export function MatchDialog({ match, leagueName, open, onOpenChange }: MatchDial
     }
   }, [open]);
 
-  const possibleGains = selectedAmount * 1.8; // Example multiplier
-
-  const getMarketOptions = (marketId: number) => {
+  const getMarketOptions = (marketId: number): { value: DuoBetResult; label: string }[] => {
     switch (marketId) {
       case 1: // 1X2
         return [
@@ -76,39 +75,26 @@ export function MatchDialog({ match, leagueName, open, onOpenChange }: MatchDial
           { value: "Draw", label: "Match nul" },
           { value: "TeamB", label: awayTeam.name }
         ];
-      case 14: // Both Teams To Score
-        return [
-          { value: "Yes", label: "Oui" },
-          { value: "No", label: "Non" }
-        ];
-      case 29: // Double Chance
-        return [
-          { value: "1X", label: `${homeTeam.name} ou Nul` },
-          { value: "12", label: `${homeTeam.name} ou ${awayTeam.name}` },
-          { value: "X2", label: `Nul ou ${awayTeam.name}` }
-        ];
-      case 10: // Over/Under
-        return [
-          { value: "Over2.5", label: "Plus de 2.5 buts" },
-          { value: "Under2.5", label: "Moins de 2.5 buts" }
-        ];
       default:
-        return [];
+        return [
+          { value: "TeamA", label: homeTeam.name },
+          { value: "Draw", label: "Match nul" },
+          { value: "TeamB", label: awayTeam.name }
+        ];
     }
   };
+
+  const possibleGains = selectedAmount * 1.8; // Example multiplier
 
   const handleCreateBet = async (isPrivate: boolean) => {
     try {
       const betCode = generateBetCode();
       const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 48); // Expires in 48 hours
-      
-      // For 1X2 markets, map value to TeamA/Draw/TeamB
-      let mappedPrediction = selectedMarket.value;
+      expiresAt.setHours(expiresAt.getHours() + 48);
       
       await createBet.mutateAsync({
         amount: selectedAmount,
-        creator_prediction: mappedPrediction,
+        creator_prediction: selectedMarket.value,
         team_a: homeTeam.name,
         team_b: awayTeam.name,
         match_description: `${leagueName} - ${match.stage?.name || match.round?.name || ""}`,
@@ -175,7 +161,7 @@ export function MatchDialog({ match, leagueName, open, onOpenChange }: MatchDial
               <label className="text-sm font-medium">Type de Pari</label>
               <Select 
                 value={selectedMarket.id.toString()} 
-                onValueChange={(value) => setSelectedMarket({ id: parseInt(value), value: "" })}
+                onValueChange={(value) => setSelectedMarket({ id: parseInt(value), value: "" as DuoBetResult })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un type de pari" />

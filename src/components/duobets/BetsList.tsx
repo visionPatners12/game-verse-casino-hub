@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { useDuoBets } from "@/hooks/useDuoBets";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +24,7 @@ export function BetsList({ selectedDate }: BetsListProps) {
     }
   };
 
-  const getPredictionLabel = (prediction: 'TeamA' | 'TeamB' | 'Draw') => {
+  const getPredictionLabel = (prediction: DuoBetResult) => {
     switch (prediction) {
       case 'TeamA': return '1';
       case 'TeamB': return '2';
@@ -50,12 +49,10 @@ export function BetsList({ selectedDate }: BetsListProps) {
     );
   }
 
-  // Filter bets for the selected date
   const filteredBets = bets?.filter((bet) => 
     isSameDay(new Date(bet.created_at), selectedDate)
   ) || [];
 
-  // Group bets by date and sort by match time (created_at)
   const sortedBets = [...filteredBets].sort((a, b) => 
     new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );

@@ -4,18 +4,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRequireAuth } from "./useRequireAuth";
 
+export type DuoBetResult = 'TeamA' | 'TeamB' | 'Draw';
+
 interface DuoBet {
   id: string;
   creator_id: string;
   opponent_id: string | null;
   amount: number;
-  creator_prediction: string;
-  opponent_prediction: string | null;
+  creator_prediction: DuoBetResult;
+  opponent_prediction: DuoBetResult | null;
   match_description: string;
   team_a: string;
   team_b: string;
   status: 'Pending' | 'Active' | 'Completed' | 'Cancelled';
-  result: string | null;
+  result: DuoBetResult | null;
   created_at: string;
   expires_at: string;
   completed_at: string | null;
@@ -29,7 +31,7 @@ interface DuoBet {
 
 interface CreateBetInput {
   amount: number;
-  creator_prediction: string;
+  creator_prediction: DuoBetResult;
   match_description: string;
   team_a: string;
   team_b: string;
