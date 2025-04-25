@@ -8,11 +8,13 @@ import { useSportMonksData } from "@/hooks/useSportMonksData";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { RefreshCw } from "lucide-react";
 
 export default function DuoBets() {
   const { error: matchesError } = useSportMonksData();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [syncing, setSyncing] = useState(false);
+  const [settling, setSettling] = useState(false);
 
   useEffect(() => {
     if (matchesError) {
@@ -43,6 +45,28 @@ export default function DuoBets() {
     }
   };
 
+  const checkBetSettlements = async () => {
+    try {
+      setSettling(true);
+      toast.info("Vérification des résultats des paris en cours...");
+      
+      const { data, error } = await supabase.functions.invoke('settle-duo-bets');
+      
+      if (error) throw error;
+      
+      if (data?.settled_bets?.length > 0) {
+        toast.success(`${data.settled_bets.length} paris ont été réglés!`);
+      } else {
+        toast.info("Aucun pari à régler pour le moment");
+      }
+    } catch (err) {
+      console.error("Erreur lors du règlement des paris:", err);
+      toast.error("Erreur lors de la vérification des résultats");
+    } finally {
+      setSettling(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="grid gap-6">
@@ -54,13 +78,23 @@ export default function DuoBets() {
                 Sélectionnez un match pour créer un pari duo
               </CardDescription>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={syncSportMonksData}
-              disabled={syncing}
-            >
-              {syncing ? "Synchronisation..." : "Synchroniser les données"}
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={syncSportMonksData}
+                disabled={syncing}
+              >
+                {syncing ? "Synchronisation..." : "Synchroniser les données"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={checkBetSettlements}
+                disabled={settling}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${settling ? 'animate-spin' : ''}`} />
+                Vérifier les Résultats
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <LiveMatches 
