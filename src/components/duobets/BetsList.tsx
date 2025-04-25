@@ -1,15 +1,16 @@
 
-import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { useDuoBets } from "@/hooks/useDuoBets";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
-import { formatDistanceToNow, format, isSameDay } from "date-fns";
+import { formatDistanceToNow, isSameDay } from "date-fns";
 import { fr } from "date-fns/locale";
-import { DateFilter } from "./components/DateFilter";
 
-export function BetsList() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+interface BetsListProps {
+  selectedDate: Date;
+}
+
+export function BetsList({ selectedDate }: BetsListProps) {
   const { bets, isLoading } = useDuoBets();
 
   const getStatusColor = (status: string) => {
@@ -42,50 +43,56 @@ export function BetsList() {
     );
   }
 
-  return (
-    <div className="space-y-4">
-      <DateFilter 
-        selectedDate={selectedDate}
-        onDateChange={setSelectedDate}
-      />
+  if (filteredBets.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        Aucun pari pour cette date.
+      </div>
+    );
+  }
 
-      {filteredBets.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          Aucun pari pour cette date.
-        </div>
-      ) : (
-        filteredBets.map((bet) => (
-          <Card key={bet.id} className="p-4">
+  return (
+    <div className="grid gap-4">
+      {filteredBets.map((bet) => (
+        <Card key={bet.id} className="p-4 hover:bg-accent/50 transition-colors">
+          <div className="flex flex-col gap-4">
             <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-semibold text-lg mb-2">
+              <div className="space-y-1">
+                <h3 className="font-semibold text-lg">
                   {bet.team_a} vs {bet.team_b}
                 </h3>
-                <p className="text-sm text-muted-foreground mb-2">
+                <p className="text-sm text-muted-foreground">
                   {bet.match_description}
                 </p>
-                <div className="flex gap-2 items-center text-sm">
-                  <Badge>
-                    Mise: ${bet.amount}
-                  </Badge>
-                  <Badge variant="outline">
-                    {getPredictionText(bet.creator_prediction)}
-                  </Badge>
-                </div>
-                <div className="text-xs text-muted-foreground mt-2">
-                  Créé {formatDistanceToNow(new Date(bet.created_at), {
-                    addSuffix: true,
-                    locale: fr,
-                  })}
-                </div>
               </div>
               <Badge className={getStatusColor(bet.status)}>
                 {bet.status}
               </Badge>
             </div>
-          </Card>
-        ))
-      )}
+
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline">
+                Mise: {bet.amount}€
+              </Badge>
+              <Badge variant="outline">
+                {getPredictionText(bet.creator_prediction)}
+              </Badge>
+              {bet.commission_rate && (
+                <Badge variant="outline">
+                  Commission: {bet.commission_rate}%
+                </Badge>
+              )}
+            </div>
+
+            <div className="text-xs text-muted-foreground">
+              Créé {formatDistanceToNow(new Date(bet.created_at), {
+                addSuffix: true,
+                locale: fr,
+              })}
+            </div>
+          </div>
+        </Card>
+      ))}
     </div>
   );
 }
