@@ -3,8 +3,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CreateDuoBetDialog } from "./CreateDuoBetDialog";
-import { useState } from "react";
 
 interface MatchCardProps {
   match: any;
@@ -12,8 +10,6 @@ interface MatchCardProps {
 }
 
 export function MatchCard({ match, leagueName }: MatchCardProps) {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  
   const isLive = match.result_info?.toLowerCase().includes("live");
   const isFinished = ["ft", "finished"].some(status => 
     match.result_info?.toLowerCase().includes(status)
@@ -42,10 +38,7 @@ export function MatchCard({ match, leagueName }: MatchCardProps) {
   };
 
   return (
-    <Card 
-      className="w-[280px] hover:bg-accent cursor-pointer transition-colors"
-      onClick={() => setDialogOpen(true)}
-    >
+    <Card className="w-[280px] hover:bg-accent transition-colors">
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between">
           <Badge className={getMatchStatus().className}>
@@ -76,16 +69,6 @@ export function MatchCard({ match, leagueName }: MatchCardProps) {
           ))}
         </div>
       </div>
-
-      <CreateDuoBetDialog 
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        defaultTeams={{
-          teamA: match.participants.find((t: any) => t.meta.location === "home")?.name || "",
-          teamB: match.participants.find((t: any) => t.meta.location === "away")?.name || "",
-          description: `${leagueName} - ${match.stage?.name || match.round?.name || ""}`
-        }}
-      />
     </Card>
   );
 }
