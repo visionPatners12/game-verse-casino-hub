@@ -30,7 +30,17 @@ export function CreateDuoBetDialog({ defaultTeams, open, onOpenChange }: CreateD
 
   async function onSubmit(values: BetFormSchema) {
     try {
-      await createBet.mutateAsync(values);
+      // Ensure all required fields are provided with their correct types
+      const betData = {
+        amount: values.amount,
+        team_a: values.team_a,
+        team_b: values.team_b,
+        match_description: values.match_description,
+        creator_prediction: values.creator_prediction,
+        expires_at: values.expires_at
+      };
+      
+      await createBet.mutateAsync(betData);
       setOpen(false);
     } catch (error) {
       console.error('Form submission error:', error);
