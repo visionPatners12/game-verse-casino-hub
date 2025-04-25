@@ -21,6 +21,7 @@ interface DuoBet {
   completed_at: string | null;
   commission_rate: number;
   bet_code: string;
+  is_private: boolean;  // Ajout de cette propriété
 }
 
 interface CreateBetInput {
