@@ -1,8 +1,9 @@
-
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { MatchDialog } from "./dialogs/MatchDialog";
 
 interface MatchCardProps {
   match: any;
@@ -10,6 +11,8 @@ interface MatchCardProps {
 }
 
 export function MatchCard({ match, leagueName }: MatchCardProps) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   const isLive = match.result_info?.toLowerCase().includes("live");
   const isFinished = ["ft", "finished"].some(status => 
     match.result_info?.toLowerCase().includes(status)
@@ -38,37 +41,49 @@ export function MatchCard({ match, leagueName }: MatchCardProps) {
   };
 
   return (
-    <Card className="w-[280px] hover:bg-accent transition-colors">
-      <div className="p-4 space-y-4">
-        <div className="flex items-center justify-between">
-          <Badge className={getMatchStatus().className}>
-            {getMatchStatus().label}
-          </Badge>
-          <span className="text-sm text-muted-foreground">
-            {format(new Date(match.starting_at), "HH:mm", { locale: fr })}
-          </span>
-        </div>
+    <>
+      <Card 
+        className="w-[280px] hover:bg-accent cursor-pointer transition-colors"
+        onClick={() => setDialogOpen(true)}
+      >
+        <div className="p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <Badge className={getMatchStatus().className}>
+              {getMatchStatus().label}
+            </Badge>
+            <span className="text-sm text-muted-foreground">
+              {format(new Date(match.starting_at), "HH:mm", { locale: fr })}
+            </span>
+          </div>
 
-        <div className="space-y-4">
-          {match.participants
-            .sort((a: any, b: any) => a.meta.location === "home" ? -1 : 1)
-            .map((team: any, index: number) => (
-              <div key={team.id} className="flex items-center gap-3">
-                <img 
-                  src={team.image_path} 
-                  alt={team.name}
-                  className="h-6 w-6 object-contain" 
-                />
-                <span className="font-medium">{team.name}</span>
-                {index === 0 && getCurrentScore() && (
-                  <span className="ml-auto font-semibold">
-                    {getCurrentScore()}
-                  </span>
-                )}
-              </div>
-          ))}
+          <div className="space-y-4">
+            {match.participants
+              .sort((a: any, b: any) => a.meta.location === "home" ? -1 : 1)
+              .map((team: any, index: number) => (
+                <div key={team.id} className="flex items-center gap-3">
+                  <img 
+                    src={team.image_path} 
+                    alt={team.name}
+                    className="h-6 w-6 object-contain" 
+                  />
+                  <span className="font-medium">{team.name}</span>
+                  {index === 0 && getCurrentScore() && (
+                    <span className="ml-auto font-semibold">
+                      {getCurrentScore()}
+                    </span>
+                  )}
+                </div>
+              ))}
+          </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+
+      <MatchDialog
+        match={match}
+        leagueName={leagueName}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+      />
+    </>
   );
 }
