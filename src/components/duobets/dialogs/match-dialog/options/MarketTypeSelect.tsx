@@ -31,14 +31,19 @@ export function MarketTypeSelect({
           value: "" as DuoBetResult 
         })}
       >
-        <SelectTrigger>
+        <SelectTrigger className="w-full">
           <SelectValue placeholder="Sélectionner un type de pari" />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
             {markets?.map((market) => (
-              <SelectItem key={market.id} value={market.id.toString()}>
-                {market.name}
+              <SelectItem 
+                key={market.id} 
+                value={market.id.toString()}
+                className="flex items-center justify-between"
+              >
+                <span>{market.name}</span>
+                {market.odds && <span className="text-green-600">@{market.odds}</span>}
               </SelectItem>
             ))}
           </SelectGroup>

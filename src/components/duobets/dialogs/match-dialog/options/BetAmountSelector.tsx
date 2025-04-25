@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface BetAmountSelectorProps {
   selectedAmount: number;
@@ -13,9 +14,14 @@ export function BetAmountSelector({
   setSelectedAmount,
   possibleGains,
 }: BetAmountSelectorProps) {
+  const handleCustomAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value) || 0;
+    setSelectedAmount(value);
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="space-y-2">
         <span className="text-sm font-medium">Montant du pari:</span>
         <div className="flex items-center gap-2">
           {[5, 10, 20, 50].map((amount) => (
@@ -29,6 +35,14 @@ export function BetAmountSelector({
             </Button>
           ))}
         </div>
+        <Input
+          type="number"
+          value={selectedAmount}
+          onChange={handleCustomAmount}
+          min={1}
+          className="mt-2"
+          placeholder="Montant personnalisé"
+        />
       </div>
 
       <div className="text-sm">

@@ -1,5 +1,10 @@
-
 export type DuoBetResult = 'TeamA' | 'TeamB' | 'Draw' | 'Yes' | 'No';
+
+export interface Market {
+  id: number;
+  name: string;
+  odds?: number;
+}
 
 export interface MarketType {
   id: number;

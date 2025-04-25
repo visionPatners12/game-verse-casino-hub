@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -56,7 +55,10 @@ export function useDuoBets() {
         throw error;
       }
 
-      return data || [];
+      return data.map(market => ({
+        ...market,
+        odds: market.id === 1 ? 1.8 : 1.95 // Exemple de cotes différentes selon le marché
+      })) || [];
     },
   });
 
@@ -87,7 +89,6 @@ export function useDuoBets() {
           throw new Error("Utilisateur non connecté");
         }
 
-        // This is where we're fixing the error by type casting
         const { data, error } = await supabase
           .from('duo_bets')
           .insert([{
