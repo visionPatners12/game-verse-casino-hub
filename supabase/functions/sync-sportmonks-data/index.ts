@@ -30,15 +30,24 @@ Deno.serve(async (req) => {
       
       console.log(`Fetching data for date: ${formattedDate}`);
       
-      // Updated URL to include odds data
-      const response = await fetch(
-        `https://api.sportmonks.com/v3/football/rounds/(room_id)?include=fixtures.odds.market;fixtures.odds.bookmaker;fixtures.participants;league.country&filters=markets:1;bookmakers:39&api_token=${SPORTMONKS_API_KEY}`
-      );
+      // Updated URL to include odds data correctly
+      const url = `https://api.sportmonks.com/v3/football/leagues/date/${formattedDate}?include=today.scores;today.participants;today.stage;today.group;today.round;today.odds.bookmaker&filters=markets:1;bookmakers:8&api_token=${SPORTMONKS_API_KEY}`;
+      console.log("Requesting URL:", url);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        console.error(`API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error("API error details:", errorText);
+        continue; // Skip this date and try the next one
+      }
       
       const data = await response.json();
+      console.log(`Fetched data with ${data.data?.length || 0} leagues`);
       
       // Process leagues and matches with odds
-      for (const league of data.data) {
+      for (const league of data.data || []) {
         await supabase
           .from('sport_leagues')
           .upsert({
@@ -53,23 +62,11 @@ Deno.serve(async (req) => {
         const matches = league.today || [];
         for (const match of matches) {
           const participants = match.participants || [];
-          const homeTeam = participants.find((p: any) => p.meta.location === 'home');
-          const awayTeam = participants.find((p: any) => p.meta.location === 'away');
+          const homeTeam = participants.find((p) => p.meta?.location === 'home');
+          const awayTeam = participants.find((p) => p.meta?.location === 'away');
 
           // Transform odds data
-          const odds = match.odds?.reduce((acc: any, odd: any) => {
-            if (odd.market_id === 1) { // Match Winner market
-              return {
-                ...acc,
-                [odd.label.toLowerCase()]: {
-                  value: odd.value,
-                  probability: odd.probability,
-                  updated_at: odd.latest_bookmaker_update
-                }
-              };
-            }
-            return acc;
-          }, {}) || null;
+          const odds = transformOdds(match.odds || []);
 
           await supabase
             .from('sport_matches')
@@ -101,10 +98,54 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error in sync-sportmonks-data:', error);
+    console.error('Error in sync-sportmonks-data:', error.message, error.stack);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
+
+// Helper function to transform odds from SportMonks format to our app format
+function transformOdds(oddsArray) {
+  if (!oddsArray || !Array.isArray(oddsArray)) {
+    return {};
+  }
+  
+  const transformedOdds = {};
+  
+  // Process each odds entry
+  oddsArray.forEach(odd => {
+    if (!odd || !odd.name) return;
+    
+    // Map SportMonks odds names to our app's format
+    let key;
+    switch (odd.name.toLowerCase()) {
+      case '1':
+        key = 'teama';
+        break;
+      case 'x':
+        key = 'draw';
+        break;
+      case '2':
+        key = 'teamb';
+        break;
+      default:
+        return; // Skip unknown odds types
+    }
+    
+    // Extract the value and probability if available
+    const value = odd.odds?.[0]?.value || odd.value;
+    const probability = odd.odds?.[0]?.probability || odd.probability;
+    
+    if (value) {
+      transformedOdds[key] = {
+        value,
+        probability: probability || null,
+        updated_at: new Date().toISOString()
+      };
+    }
+  });
+  
+  return transformedOdds;
+}

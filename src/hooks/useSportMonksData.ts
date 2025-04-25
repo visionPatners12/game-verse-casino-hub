@@ -1,9 +1,10 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
-// Define types for our data structure to help TypeScript
+// Define types for match participants
 interface MatchParticipant {
   id: number;
   name: string;
@@ -13,27 +14,34 @@ interface MatchParticipant {
   };
 }
 
-interface MatchData {
+// Define types for odds data
+interface OddsData {
+  value: string;
+  probability?: string | null;
+  updated_at?: string;
+}
+
+// Define matches structure
+interface SportMonksMatch {
   id: number;
   starting_at: string;
   participants?: MatchParticipant[];
   scores?: any[];
   result_info?: string;
+  odds?: {
+    teama?: OddsData;
+    teamb?: OddsData;
+    draw?: OddsData;
+    [key: string]: OddsData | undefined;
+  };
 }
 
-interface SportMonksMatch {
+// Define league structure
+interface SportMonksLeague {
   id: number;
-  league_id: number;
-  league_name: string;
-  league_image: string;
-  starting_at: string;
-  team_a: string;
-  team_b: string;
-  team_a_image: string;
-  team_b_image: string;
-  status: string;
-  scores: any[];
-  match_data: any;
+  name: string;
+  image_path: string;
+  today: SportMonksMatch[];
 }
 
 export function useSportMonksData(selectedDate: Date = new Date()) {
@@ -45,53 +53,33 @@ export function useSportMonksData(selectedDate: Date = new Date()) {
       try {
         console.log("Fetching matches for date:", formattedDate);
         
-        // Appeler directement la fonction get_matches_by_date
-        const { data: matches, error } = await supabase
-          .rpc('get_matches_by_date', { target_date: formattedDate });
+        // Call the Edge Function directly instead of the RPC
+        const { data, error } = await supabase.functions.invoke('get-sportmonks-matches', {
+          body: { date: formattedDate, singleDay: true }
+        });
 
         if (error) {
-          console.error("Error fetching matches:", error);
+          console.error("Error fetching matches from Edge Function:", error);
           toast.error("Erreur lors du chargement des matchs");
           throw error;
         }
 
-        // Transformer les données dans le même format que l'API SportMonks
-        const leaguesMap = new Map();
+        // Log the response to check if odds data is included
+        console.log("Edge function returned data:", data);
         
-        matches?.forEach((match: SportMonksMatch) => {
-          if (!leaguesMap.has(match.league_id)) {
-            leaguesMap.set(match.league_id, {
-              id: match.league_id,
-              name: match.league_name,
-              image_path: match.league_image,
-              today: []
-            });
-          }
-          
-          const league = leaguesMap.get(match.league_id);
-          
-          // Fix: Create a properly typed match object
-          const matchData = typeof match.match_data === 'string' 
-            ? JSON.parse(match.match_data) 
-            : match.match_data;
-            
-          league.today.push({
-            id: match.id,
-            starting_at: match.starting_at,
-            participants: Array.isArray(matchData?.participants) ? matchData.participants : [],
-            scores: match.scores || [],
-            result_info: match.status || 'Scheduled'
-          });
-        });
+        if (!data || !Array.isArray(data)) {
+          console.error("Invalid data format returned from Edge Function");
+          throw new Error("Invalid data format");
+        }
         
-        return Array.from(leaguesMap.values());
+        return data as SportMonksLeague[];
       } catch (err) {
         console.error("Error in useSportMonksData:", err);
         toast.error("Impossible de charger les matchs du jour");
         throw err;
       }
     },
-    refetchInterval: 30000, // Rafraîchir toutes les 30 secondes pour les mises à jour en direct
+    refetchInterval: 30000, // Refresh every 30 seconds for live updates
     retry: 2
   });
 }

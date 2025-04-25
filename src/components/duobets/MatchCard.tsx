@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,25 @@ export function MatchCard({ match, leagueName }: MatchCardProps) {
     return null;
   };
 
+  // Display odds if available
+  const getOdds = () => {
+    if (!match.odds) return null;
+    
+    const homeOdds = match.odds.teama?.value;
+    const drawOdds = match.odds.draw?.value;
+    const awayOdds = match.odds.teamb?.value;
+    
+    if (!homeOdds && !drawOdds && !awayOdds) return null;
+    
+    return (
+      <div className="flex justify-between text-xs text-muted-foreground mt-2 px-1">
+        <span>{homeOdds ? `1: ${homeOdds}` : '-'}</span>
+        <span>{drawOdds ? `X: ${drawOdds}` : '-'}</span>
+        <span>{awayOdds ? `2: ${awayOdds}` : '-'}</span>
+      </div>
+    );
+  };
+
   return (
     <>
       <Card 
@@ -75,6 +95,8 @@ export function MatchCard({ match, leagueName }: MatchCardProps) {
                 </div>
               ))}
           </div>
+          
+          {getOdds()}
         </div>
       </Card>
 

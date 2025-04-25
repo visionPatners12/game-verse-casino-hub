@@ -23,6 +23,9 @@ export function MarketTypeSelect({
   markets,
   match
 }: MarketTypeSelectProps) {
+  // Log odds data for debugging
+  console.log("MarketTypeSelect - match odds:", match.odds);
+  
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">Type de Pari</label>
@@ -39,10 +42,10 @@ export function MarketTypeSelect({
         <SelectContent>
           <SelectGroup>
             {markets?.map((market) => {
-              const odds = match.odds || {};
-              const homeOdds = odds.home?.value;
-              const drawOdds = odds.draw?.value;
-              const awayOdds = odds.away?.value;
+              // Display odds if available
+              const homeOdds = match.odds?.teama?.value;
+              const drawOdds = match.odds?.draw?.value;
+              const awayOdds = match.odds?.teamb?.value;
               
               return (
                 <SelectItem 

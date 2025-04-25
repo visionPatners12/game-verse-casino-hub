@@ -27,13 +27,28 @@ export function BettingOptions({
   possibleGains,
 }: BettingOptionsProps) {
   const marketOptions = selectedMarket.id ? getMarketOptions(selectedMarket.id) : [];
+  
+  // Get odds for selected prediction
+  const getOddsValue = (prediction: DuoBetResult): string | null => {
+    if (!match.odds) return null;
+    
+    switch (prediction) {
+      case 'TeamA':
+        return match.odds.teama?.value || null;
+      case 'TeamB':
+        return match.odds.teamb?.value || null;
+      case 'Draw':
+        return match.odds.draw?.value || null;
+      default:
+        return null;
+    }
+  };
 
-  const selectedOdds = selectedMarket.value && match.odds ? 
-    match.odds[selectedMarket.value.toLowerCase()]?.value : null;
-
-  const calculatedGains = selectedOdds ? 
-    Math.round(selectedAmount * parseFloat(selectedOdds) * 100) / 100 : 
-    possibleGains;
+  const selectedOddsValue = getOddsValue(selectedMarket.value);
+  
+  const calculatedGains = selectedOddsValue 
+    ? Math.round(selectedAmount * parseFloat(selectedOddsValue) * 100) / 100 
+    : possibleGains;
 
   return (
     <div className="space-y-4">

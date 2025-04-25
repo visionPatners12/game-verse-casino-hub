@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Dialog,
@@ -37,18 +38,37 @@ export function MatchDialog({ match, leagueName, open, onOpenChange }: MatchDial
   const homeTeam = match.participants.find((t: any) => t.meta.location === "home");
   const awayTeam = match.participants.find((t: any) => t.meta.location === "away");
   
+  // Log odds data for debugging
+  console.log("Match odds data:", match.odds);
+  
   const getMarketOptions = (marketId: number): MarketOption[] => {
     const display = MARKET_DISPLAYS[marketId];
     if (!display) return [];
-    return display.getOptions(homeTeam.name, awayTeam.name);
+    return display.getOptions(homeTeam.name, awayTeam.name, match.odds);
   };
 
-  const selectedOdds = selectedMarket.value && match.odds ? 
-    match.odds[selectedMarket.value.toLowerCase()]?.value : null;
+  // Determine the selected odds based on prediction
+  const getOddsValue = (prediction: DuoBetResult): string | null => {
+    if (!match.odds) return null;
+    
+    switch (prediction) {
+      case 'TeamA':
+        return match.odds.teama?.value || null;
+      case 'TeamB':
+        return match.odds.teamb?.value || null;
+      case 'Draw':
+        return match.odds.draw?.value || null;
+      default:
+        return null;
+    }
+  };
 
-  const possibleGains = selectedOdds ? 
-    Math.round(selectedAmount * parseFloat(selectedOdds) * 100) / 100 : 
-    selectedAmount * 1.8;
+  const selectedOddsValue = getOddsValue(selectedMarket.value);
+  console.log("Selected odds value:", selectedOddsValue);
+
+  const possibleGains = selectedOddsValue 
+    ? Math.round(selectedAmount * parseFloat(selectedOddsValue) * 100) / 100 
+    : selectedAmount * 1.8;
 
   const handleCreateBet = async (isPrivate: boolean) => {
     try {
