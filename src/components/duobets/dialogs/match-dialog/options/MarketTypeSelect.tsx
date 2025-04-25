@@ -14,12 +14,14 @@ interface MarketTypeSelectProps {
   selectedMarket: { id: number; value: DuoBetResult };
   setSelectedMarket: (market: { id: number; value: DuoBetResult }) => void;
   markets: any[];
+  match: any;
 }
 
 export function MarketTypeSelect({
   selectedMarket,
   setSelectedMarket,
   markets,
+  match
 }: MarketTypeSelectProps) {
   return (
     <div className="space-y-2">
@@ -36,16 +38,29 @@ export function MarketTypeSelect({
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            {markets?.map((market) => (
-              <SelectItem 
-                key={market.id} 
-                value={market.id.toString()}
-                className="flex items-center justify-between"
-              >
-                <span>{market.name}</span>
-                {market.odds && <span className="text-green-600">@{market.odds}</span>}
-              </SelectItem>
-            ))}
+            {markets?.map((market) => {
+              const odds = match.odds || {};
+              const homeOdds = odds.home?.value;
+              const drawOdds = odds.draw?.value;
+              const awayOdds = odds.away?.value;
+              
+              return (
+                <SelectItem 
+                  key={market.id} 
+                  value={market.id.toString()}
+                  className="flex items-center justify-between"
+                >
+                  <span>{market.name}</span>
+                  {market.id === 1 && (
+                    <span className="text-xs text-muted-foreground">
+                      {homeOdds && `1:${homeOdds} `}
+                      {drawOdds && `X:${drawOdds} `}
+                      {awayOdds && `2:${awayOdds}`}
+                    </span>
+                  )}
+                </SelectItem>
+              );
+            })}
           </SelectGroup>
         </SelectContent>
       </Select>

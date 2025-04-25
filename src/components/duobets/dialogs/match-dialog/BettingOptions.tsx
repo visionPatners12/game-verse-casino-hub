@@ -11,6 +11,7 @@ interface BettingOptionsProps {
   selectedMarket: { id: number; value: DuoBetResult };
   setSelectedMarket: (market: { id: number; value: DuoBetResult }) => void;
   markets: any[];
+  match: any;
   getMarketOptions: (marketId: number) => MarketOption[];
   possibleGains: number;
 }
@@ -21,10 +22,18 @@ export function BettingOptions({
   selectedMarket,
   setSelectedMarket,
   markets,
+  match,
   getMarketOptions,
   possibleGains,
 }: BettingOptionsProps) {
   const marketOptions = selectedMarket.id ? getMarketOptions(selectedMarket.id) : [];
+
+  const selectedOdds = selectedMarket.value && match.odds ? 
+    match.odds[selectedMarket.value.toLowerCase()]?.value : null;
+
+  const calculatedGains = selectedOdds ? 
+    Math.round(selectedAmount * parseFloat(selectedOdds) * 100) / 100 : 
+    possibleGains;
 
   return (
     <div className="space-y-4">
@@ -32,6 +41,7 @@ export function BettingOptions({
         selectedMarket={selectedMarket}
         setSelectedMarket={setSelectedMarket}
         markets={markets}
+        match={match}
       />
 
       <PredictionSelect
@@ -43,7 +53,7 @@ export function BettingOptions({
       <BetAmountSelector
         selectedAmount={selectedAmount}
         setSelectedAmount={setSelectedAmount}
-        possibleGains={possibleGains}
+        possibleGains={calculatedGains}
       />
     </div>
   );

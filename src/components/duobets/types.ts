@@ -3,7 +3,11 @@ export type DuoBetResult = 'TeamA' | 'TeamB' | 'Draw' | 'Yes' | 'No';
 export interface Market {
   id: number;
   name: string;
-  odds?: number;
+  odds?: {
+    home?: { value: string; probability: string };
+    away?: { value: string; probability: string };
+    draw?: { value: string; probability: string };
+  };
 }
 
 export interface MarketType {
@@ -20,7 +24,7 @@ export interface MarketOption {
 
 export interface MarketDisplay {
   getLabel: (prediction: DuoBetResult) => string;
-  getOptions: (teamA: string, teamB: string) => MarketOption[];
+  getOptions: (teamA: string, teamB: string, odds?: Market['odds']) => MarketOption[];
 }
 
 export const MARKET_DISPLAYS: Record<number, MarketDisplay> = {
@@ -33,10 +37,10 @@ export const MARKET_DISPLAYS: Record<number, MarketDisplay> = {
         default: return prediction;
       }
     },
-    getOptions: (teamA: string, teamB: string) => [
-      { value: 'TeamA', label: teamA },
-      { value: 'Draw', label: 'Match nul' },
-      { value: 'TeamB', label: teamB }
+    getOptions: (teamA: string, teamB: string, odds) => [
+      { value: 'TeamA', label: `${teamA} ${odds?.home ? `@${odds.home.value}` : ''}` },
+      { value: 'Draw', label: `Match nul ${odds?.draw ? `@${odds.draw.value}` : ''}` },
+      { value: 'TeamB', label: `${teamB} ${odds?.away ? `@${odds.away.value}` : ''}` }
     ]
   },
   2: {

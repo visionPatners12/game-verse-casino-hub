@@ -30,13 +30,14 @@ Deno.serve(async (req) => {
       
       console.log(`Fetching data for date: ${formattedDate}`);
       
+      // Updated URL to include odds data
       const response = await fetch(
-        `https://api.sportmonks.com/v3/football/leagues/date/${formattedDate}?include=today.scores;today.participants;today.stage;today.group;today.round&api_token=${SPORTMONKS_API_KEY}`
+        `https://api.sportmonks.com/v3/football/rounds/(room_id)?include=fixtures.odds.market;fixtures.odds.bookmaker;fixtures.participants;league.country&filters=markets:1;bookmakers:39&api_token=${SPORTMONKS_API_KEY}`
       );
       
       const data = await response.json();
       
-      // Traiter et sauvegarder les ligues
+      // Process leagues and matches with odds
       for (const league of data.data) {
         await supabase
           .from('sport_leagues')
@@ -48,12 +49,27 @@ Deno.serve(async (req) => {
             updated_at: new Date().toISOString()
           }, { onConflict: 'id' });
 
-        // Traiter et sauvegarder les matchs
+        // Process matches and odds
         const matches = league.today || [];
         for (const match of matches) {
           const participants = match.participants || [];
           const homeTeam = participants.find((p: any) => p.meta.location === 'home');
           const awayTeam = participants.find((p: any) => p.meta.location === 'away');
+
+          // Transform odds data
+          const odds = match.odds?.reduce((acc: any, odd: any) => {
+            if (odd.market_id === 1) { // Match Winner market
+              return {
+                ...acc,
+                [odd.label.toLowerCase()]: {
+                  value: odd.value,
+                  probability: odd.probability,
+                  updated_at: odd.latest_bookmaker_update
+                }
+              };
+            }
+            return acc;
+          }, {}) || null;
 
           await supabase
             .from('sport_matches')
@@ -69,6 +85,7 @@ Deno.serve(async (req) => {
               team_b_image: awayTeam?.image_path,
               status: match.result_info,
               scores: match.scores,
+              odds: odds, // Store transformed odds
               data: match,
               updated_at: new Date().toISOString()
             }, { onConflict: 'id' });
