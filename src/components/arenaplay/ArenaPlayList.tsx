@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Users, PlusCircle, Globe } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { GameCode } from "@/lib/gameTypes";
 
 interface Game {
   id: string;
   name: string;
   description: string;
-  type: string;
+  type: GameCode;
   image: string;
   players: {
     min: number;

@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, Globe, PlusCircle, CircleDot } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { GameCode } from "@/lib/gameTypes";
 
-// Ajout du type pour ArenaPlay Football
-export type GameType = "ludo" | "checkers" | "tictactoe" | "checkgame" | "futarena";
+// Update the GameType to use the centralized type definition
+export type GameType = GameCode;
 
 interface GameCardProps {
   id: string;

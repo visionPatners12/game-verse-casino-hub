@@ -4,13 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Lock, Unlock, DollarSign, PlayCircle, Trophy } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { GameType } from "./GameCard";
+import { GameCode } from "@/lib/gameTypes";
 import { JoinRoomConfirmDialog } from "./games/JoinRoomConfirmDialog";
 import { useJoinRoom } from "@/hooks/room/useJoinRoom";
 
 interface RoomCardProps {
   id: string;
-  gameType: GameType;
+  gameType: GameCode;
   gameName: string;
   bet: number;
   maxPlayers: number;
