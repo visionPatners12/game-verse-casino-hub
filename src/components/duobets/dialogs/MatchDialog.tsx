@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Dialog,
@@ -44,7 +43,12 @@ export function MatchDialog({ match, leagueName, open, onOpenChange }: MatchDial
     return display.getOptions(homeTeam.name, awayTeam.name);
   };
 
-  const possibleGains = selectedAmount * 1.8;
+  const selectedOdds = selectedMarket.value && match.odds ? 
+    match.odds[selectedMarket.value.toLowerCase()]?.value : null;
+
+  const possibleGains = selectedOdds ? 
+    Math.round(selectedAmount * parseFloat(selectedOdds) * 100) / 100 : 
+    selectedAmount * 1.8;
 
   const handleCreateBet = async (isPrivate: boolean) => {
     try {
