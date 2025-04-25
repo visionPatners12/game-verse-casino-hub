@@ -33,15 +33,11 @@ export function BetsList({ selectedDate }: BetsListProps) {
     }
   };
 
-  const getBetTypeIcon = (isPrivate: boolean) => {
-    return isPrivate ? (
-      <Lock className="h-3 w-3 mr-1" />
-    ) : (
-      <Globe className="h-3 w-3 mr-1" />
-    );
-  };
-
   const copyBetCode = (code: string) => {
+    if (!code) {
+      toast.error("Code de pari non disponible");
+      return;
+    }
     navigator.clipboard.writeText(code);
     toast.success("Code copié !");
   };
@@ -104,19 +100,22 @@ export function BetsList({ selectedDate }: BetsListProps) {
                     {getPredictionLabel(bet.creator_prediction)}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-2">
-                  <code className="bg-muted px-2 py-1 rounded font-mono text-xs">
-                    {bet.bet_code || "CODE"}
-                  </code>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => copyBetCode(bet.bet_code || "")}
-                    className="h-8 w-8"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
+                
+                {bet.bet_code && (
+                  <div className="flex items-center gap-1">
+                    <div className="bg-muted px-2 py-1 rounded font-mono text-xs flex items-center">
+                      <span>Code: {bet.bet_code}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => copyBetCode(bet.bet_code)}
+                        className="h-6 w-6 ml-1 p-0"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="text-xs text-muted-foreground">
