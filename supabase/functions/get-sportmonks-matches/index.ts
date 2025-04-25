@@ -1,10 +1,10 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { format, addDays } from "npm:date-fns";
 
 const SPORTMONKS_API_KEY = Deno.env.get('SPORTMONKS_API_KEY');
 const SPORTMONKS_BASE_URL = 'https://api.sportmonks.com/v3/football';
 
-// Ajout des headers CORS pour permettre les requêtes depuis le frontend
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -12,7 +12,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -20,7 +19,6 @@ serve(async (req) => {
   try {
     console.log("Edge function called: get-sportmonks-matches");
     
-    // Extraire les données de la requête
     const { date } = await req.json();
     console.log("Request received with date:", date);
     
@@ -28,21 +26,36 @@ serve(async (req) => {
       console.error("SPORTMONKS_API_KEY is not defined");
       throw new Error("API key not configured");
     }
-    
-    console.log("Calling SportMonks API...");
-    const response = await fetch(
-      `${SPORTMONKS_BASE_URL}/leagues/date/${date}?include=today.scores;today.participants;today.stage;today.group;today.round&api_token=${SPORTMONKS_API_KEY}`
+
+    // Fetch matches for the next 5 days
+    const responses = await Promise.all(
+      Array.from({ length: 5 }, (_, i) => {
+        const currentDate = format(addDays(new Date(date), i), 'yyyy-MM-dd');
+        return fetch(
+          `${SPORTMONKS_BASE_URL}/leagues/date/${currentDate}?include=today.scores;today.participants;today.stage;today.group;today.round&api_token=${SPORTMONKS_API_KEY}`
+        ).then(res => res.json());
+      })
     );
-
-    if (!response.ok) {
-      console.error(`SportMonks API returned ${response.status}`);
-      throw new Error(`SportMonks API returned ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log("API response received successfully");
     
-    return new Response(JSON.stringify(data.data), {
+    // Combine and merge matches from all days into their respective leagues
+    const leaguesMap = new Map();
+    
+    responses.forEach(response => {
+      response.data.forEach(league => {
+        if (!leaguesMap.has(league.id)) {
+          leaguesMap.set(league.id, {
+            ...league,
+            today: []
+          });
+        }
+        const existingLeague = leaguesMap.get(league.id);
+        existingLeague.today = [...existingLeague.today, ...(league.today || [])];
+      });
+    });
+    
+    const mergedData = Array.from(leaguesMap.values());
+    
+    return new Response(JSON.stringify(mergedData), {
       headers: corsHeaders,
     });
   } catch (error) {
