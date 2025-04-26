@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +9,7 @@ import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
 export function useJoinRoom() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { hasSufficientBalance } = useWalletBalanceCheck();
+  const { checkBalance } = useWalletBalanceCheck();
 
   const joinRoom = async (roomCode: string, onOpenChange?: (open: boolean) => void) => {
     if (roomCode.length !== 6) {
@@ -50,7 +51,8 @@ export function useJoinRoom() {
       }
       
       if (room.entry_fee > 0) {
-        if (!hasSufficientBalance(room.entry_fee)) {
+        const hasEnoughBalance = await checkBalance(room.entry_fee);
+        if (!hasEnoughBalance) {
           if (onOpenChange) {
             onOpenChange(false);
           }

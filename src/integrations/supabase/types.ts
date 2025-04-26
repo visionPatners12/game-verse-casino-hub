@@ -9,6 +9,47 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      arena_game_sessions: {
+        Row: {
+          created_at: string | null
+          custom_formations_allowed: boolean
+          id: string
+          legacy_defending_allowed: boolean
+          mode: Database["public"]["Enums"]["game_mode"]
+          platform: Database["public"]["Enums"]["game_platform"]
+          team_type: Database["public"]["Enums"]["team_type"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          custom_formations_allowed?: boolean
+          id: string
+          legacy_defending_allowed?: boolean
+          mode?: Database["public"]["Enums"]["game_mode"]
+          platform?: Database["public"]["Enums"]["game_platform"]
+          team_type?: Database["public"]["Enums"]["team_type"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          custom_formations_allowed?: boolean
+          id?: string
+          legacy_defending_allowed?: boolean
+          mode?: Database["public"]["Enums"]["game_mode"]
+          platform?: Database["public"]["Enums"]["game_platform"]
+          team_type?: Database["public"]["Enums"]["team_type"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arena_game_sessions_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -1187,11 +1228,14 @@ export type Database = {
         | "checkers"
         | "futarena"
         | "checkgame"
+      game_mode: "online_friendlies" | "fut"
+      game_platform: "ps5" | "xbox_series" | "cross_play"
       game_type: "Ludo" | "Checkers" | "TicTacToe" | "CheckGame" | "FUTArena"
       game_variant: "ludo" | "checkers" | "tictactoe" | "checkgame" | "futarena"
       kyc_status: "Pending" | "Approved" | "Rejected"
       room_type: "public" | "private"
       session_status: "Waiting" | "Active" | "Finished"
+      team_type: "any_teams" | "85_rated" | "country" | "fut_team"
       ticket_category: "Technical" | "Billing" | "Behavior" | "Other"
       ticket_status: "Open" | "InProgress" | "Resolved" | "Closed"
       transaction_status: "Pending" | "Success" | "Failed" | "Rejected"
@@ -1331,11 +1375,14 @@ export const Constants = {
         "futarena",
         "checkgame",
       ],
+      game_mode: ["online_friendlies", "fut"],
+      game_platform: ["ps5", "xbox_series", "cross_play"],
       game_type: ["Ludo", "Checkers", "TicTacToe", "CheckGame", "FUTArena"],
       game_variant: ["ludo", "checkers", "tictactoe", "checkgame", "futarena"],
       kyc_status: ["Pending", "Approved", "Rejected"],
       room_type: ["public", "private"],
       session_status: ["Waiting", "Active", "Finished"],
+      team_type: ["any_teams", "85_rated", "country", "fut_team"],
       ticket_category: ["Technical", "Billing", "Behavior", "Other"],
       ticket_status: ["Open", "InProgress", "Resolved", "Closed"],
       transaction_status: ["Pending", "Success", "Failed", "Rejected"],
