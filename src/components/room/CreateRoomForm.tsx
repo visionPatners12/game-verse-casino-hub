@@ -1,7 +1,12 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Timer, Clock, FileText } from "lucide-react";
 import { createRoomSchema, type CreateRoomFormData } from "./schemas/createRoomSchema";
 import { BetAmountField } from "./components/BetAmountField";
 import { PlayersField } from "./components/PlayersField";
@@ -86,7 +91,7 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">
-                      <Text className="h-4 w-4" />
+                      <FileText className="h-4 w-4" />
                       EA ID (obligatoire)
                     </FormLabel>
                     <FormControl>
