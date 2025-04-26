@@ -12,7 +12,7 @@ import { Layout } from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useWallet } from "@/hooks/useWallet";
-import { useActiveRoomGuard } from "@/hooks/useActiveRoomGuard"; // Use the hook
+import { useActiveRoomGuard } from "@/hooks/useActiveRoomGuard"; 
 
 const PublicRooms = () => {
   // Use the active room guard to redirect if user has an active room elsewhere
@@ -128,6 +128,6 @@ const PublicRooms = () => {
       )}
     </Layout>
   );
-}
+};
 
 export default PublicRooms;
