@@ -30,9 +30,10 @@ export function WinnersField({ form }: WinnersFieldProps) {
             <Input
               type="number"
               min={1}
-              max={form.watch('maxPlayers') - 1}
+              max={form.getValues("maxPlayers") ? Number(form.getValues("maxPlayers")) - 1 : 1}
               {...field}
               onChange={e => field.onChange(Number(e.target.value))}
+              value={field.value || 1}
             />
           </FormControl>
           <FormMessage />

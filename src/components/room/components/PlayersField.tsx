@@ -34,6 +34,7 @@ export function PlayersField({ form, gameConfig }: PlayersFieldProps) {
               max={gameConfig?.max_players}
               {...field}
               onChange={e => field.onChange(Number(e.target.value))}
+              value={field.value || 2}
             />
           </FormControl>
           <FormMessage />

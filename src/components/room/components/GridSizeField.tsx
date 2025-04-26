@@ -33,6 +33,7 @@ export function GridSizeField({ form }: GridSizeFieldProps) {
               max={5}
               {...field}
               onChange={e => field.onChange(Number(e.target.value))}
+              value={field.value || 3}
             />
           </FormControl>
           <FormMessage />

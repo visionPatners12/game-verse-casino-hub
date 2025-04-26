@@ -24,16 +24,23 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       }
 
       const safeGameType = gameType as GameCode;
-      const gameTypeEnum = gameCodeToType[safeGameType];
+      const gameTypeEnum = safeGameType === "futarena" ? "FUTArena" : gameCodeToType[safeGameType];
 
-      const insertData = {
+      const insertData: any = {
         game_type: gameTypeEnum,
         room_type: 'private' as 'private' | 'public',
         room_id: Math.random().toString(36).substring(2, 8).toUpperCase(),
-        max_players: 2,
+        max_players: values.maxPlayers || 2,
         entry_fee: values.bet,
         commission_rate: 5,
       };
+
+      if (gameType === "futarena" && values.matchDuration) {
+        insertData["match_duration"] = values.matchDuration;
+        if (values.eaId) {
+          insertData["ea_id"] = values.eaId;
+        }
+      }
 
       console.log("Creating room with data:", insertData);
 
@@ -71,12 +78,16 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         return;
       }
 
-      const playerInsert = {
+      const playerInsert: any = {
         session_id: data.id,
         display_name: userData.username,
         user_id: authData.user.id,
         is_connected: true
       };
+
+      if (gameType === "futarena" && values.eaId) {
+        playerInsert.ea_id = values.eaId;
+      }
 
       console.log("Adding player to room:", playerInsert);
 

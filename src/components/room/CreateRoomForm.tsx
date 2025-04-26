@@ -136,7 +136,7 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
                     </div>
                     <FormControl>
                       <Switch
-                        checked={field.value}
+                        checked={field.value || false}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
@@ -154,7 +154,7 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
                     </div>
                     <FormControl>
                       <Switch
-                        checked={field.value}
+                        checked={field.value || false}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
@@ -168,7 +168,7 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Type d'équipes</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value?.toString() || "anyTeams"}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionner un type d'équipe" />

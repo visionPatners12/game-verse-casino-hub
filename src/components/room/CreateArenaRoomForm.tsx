@@ -24,6 +24,7 @@ export function CreateArenaRoomForm({ username, gameType, gameConfig }: CreateAr
     resolver: zodResolver(createRoomSchema),
     defaultValues: {
       bet: 0,
+      maxPlayers: 2,
       _gameType: gameType
     }
   });
