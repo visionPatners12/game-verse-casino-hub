@@ -102,7 +102,7 @@ const CreateRoom = () => {
               </div>
             ) : (
               isArenaGame ? (
-                <CreateArenaRoomForm 
+                <CreateEAFC25Form 
                   username={username} 
                   gameType={validGameType} 
                   gameConfig={gameConfig} 

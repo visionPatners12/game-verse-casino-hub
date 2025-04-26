@@ -12,7 +12,7 @@ const ArenaPlay = () => {
   const games = [
     {
       id: "fut-arenaplay",
-      name: "FUT - ArenaPlay Football",
+      name: "EA FC25",
       description: "2-4 players",
       type: "futarena" as GameCode,
       image: "https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=2940&auto=format&fit=crop",
