@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { CreateRoomForm } from "@/components/room/CreateRoomForm";
 import { CreateArenaRoomForm } from "@/components/room/CreateArenaRoomForm";
+import { CreateEAFC25Form } from "@/components/room/CreateEAFC25Form";  // Add this import
 import { toast } from "sonner";
 import { useRoomValidation } from "@/hooks/room/useRoomValidation";
 import { GameCode } from "@/lib/gameTypes";
@@ -123,3 +124,4 @@ const CreateRoom = () => {
 };
 
 export default CreateRoom;
+
