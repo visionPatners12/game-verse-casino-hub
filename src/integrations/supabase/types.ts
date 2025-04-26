@@ -1233,7 +1233,15 @@ export type Database = {
         | "checkgame"
       game_mode: "online_friendlies" | "fut"
       game_platform: "ps5" | "xbox_series" | "cross_play"
-      game_type: "Ludo" | "Checkers" | "TicTacToe" | "CheckGame" | "FUTArena"
+      game_type:
+        | "Ludo"
+        | "Checkers"
+        | "TicTacToe"
+        | "CheckGame"
+        | "FUTArena"
+        | "Madden24"
+        | "NBA2K24"
+        | "NHL24"
       game_variant:
         | "ludo"
         | "checkers"
@@ -1241,6 +1249,9 @@ export type Database = {
         | "checkgame"
         | "futarena"
         | "eafc25"
+        | "madden24"
+        | "nba2k24"
+        | "nhl24"
       kyc_status: "Pending" | "Approved" | "Rejected"
       room_type: "public" | "private"
       session_status: "Waiting" | "Active" | "Finished"
@@ -1386,7 +1397,16 @@ export const Constants = {
       ],
       game_mode: ["online_friendlies", "fut"],
       game_platform: ["ps5", "xbox_series", "cross_play"],
-      game_type: ["Ludo", "Checkers", "TicTacToe", "CheckGame", "FUTArena"],
+      game_type: [
+        "Ludo",
+        "Checkers",
+        "TicTacToe",
+        "CheckGame",
+        "FUTArena",
+        "Madden24",
+        "NBA2K24",
+        "NHL24",
+      ],
       game_variant: [
         "ludo",
         "checkers",
@@ -1394,6 +1414,9 @@ export const Constants = {
         "checkgame",
         "futarena",
         "eafc25",
+        "madden24",
+        "nba2k24",
+        "nhl24",
       ],
       kyc_status: ["Pending", "Approved", "Rejected"],
       room_type: ["public", "private"],

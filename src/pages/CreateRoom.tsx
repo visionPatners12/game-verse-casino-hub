@@ -19,7 +19,7 @@ const CreateRoom = () => {
   
   const isValidGame = useRoomValidation(gameType);
   const validGameType = isValidGame ? gameType as GameCode : null;
-  const isArenaGame = gameType === "futarena" || gameType === "eafc25";
+  const isArenaGame = ["futarena", "eafc25", "madden24", "nba2k24", "nhl24"].includes(gameType || "");
 
   useEffect(() => {
     const getUsername = async () => {
@@ -101,13 +101,7 @@ const CreateRoom = () => {
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : (
-              gameType === "eafc25" ? (
-                <CreateEAFC25Form 
-                  username={username} 
-                  gameType={validGameType} 
-                  gameConfig={gameConfig} 
-                />
-              ) : isArenaGame ? (
+              isArenaGame ? (
                 <CreateArenaRoomForm 
                   username={username} 
                   gameType={validGameType} 
