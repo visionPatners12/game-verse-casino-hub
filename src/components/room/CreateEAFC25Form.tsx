@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { createRoomSchema, type CreateRoomFormData } from "./schemas/createRoomSchema";
 import { BetAmountField } from "./components/BetAmountField";
 import { useCreateRoom } from "@/hooks/room/useCreateRoom";
-import { Timer, Gamepad } from "lucide-react";
+import { Timer } from "lucide-react";
 import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
 import { GameCode } from "@/lib/gameTypes";
 
@@ -45,165 +46,142 @@ export function CreateEAFC25Form({ username, gameType, gameConfig }: CreateEAFC2
   };
 
   return (
-    <div className="bg-gradient-to-br from-[#003791] to-[#0070CC] p-6 rounded-xl shadow-2xl">
-      <div className="flex items-center justify-center mb-6">
-        <Gamepad className="h-12 w-12 text-white mr-4" />
-        <h2 className="text-3xl font-bold text-white">EA FC25 Room Setup</h2>
-      </div>
-      
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <BetAmountField form={form} />
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <BetAmountField form={form} />
 
-          <FormField
-            control={form.control}
-            name="halfLengthMinutes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex items-center gap-2 text-white">
-                  <Timer className="h-5 w-5 text-white" />
-                  Half Length (Minutes)
-                </FormLabel>
+        <FormField
+          control={form.control}
+          name="halfLengthMinutes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center gap-2">
+                <Timer className="h-4 w-4" />
+                Durée mi-temps (minutes)
+              </FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  min={1}
+                  max={45}
+                  {...field}
+                  onChange={e => field.onChange(Number(e.target.value))}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="platform"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Plateforme</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={45}
-                    {...field}
-                    onChange={e => field.onChange(Number(e.target.value))}
-                    className="bg-white/10 text-white placeholder-white/50 border-white/30"
-                  />
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner une plateforme" />
+                  </SelectTrigger>
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                <SelectContent>
+                  <SelectItem value="ps5">PS5</SelectItem>
+                  <SelectItem value="xbox_series">Xbox Series X</SelectItem>
+                  <SelectItem value="cross_play">Cross-play</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="platform"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-white">Platform</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="bg-white/10 text-white border-white/30">
-                      <SelectValue placeholder="Select Platform" className="text-white" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="ps5" className="focus:bg-blue-600">
-                      <div className="flex items-center">
-                        <span>PS5</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="xbox_series" className="focus:bg-green-600">
-                      Xbox Series X
-                    </SelectItem>
-                    <SelectItem value="cross_play" className="focus:bg-purple-600">
-                      Cross-play
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={form.control}
+          name="mode"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Mode de jeu</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un mode" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="online_friendlies">Online Friendlies</SelectItem>
+                  <SelectItem value="fut">FUT</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="mode"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-white">Game Mode</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="bg-white/10 text-white border-white/30">
-                      <SelectValue placeholder="Select Mode" className="text-white" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="online_friendlies">Online Friendlies</SelectItem>
-                    <SelectItem value="fut">FUT</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={form.control}
+          name="teamType"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Type d'équipes</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un type d'équipe" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="any_teams">Any Teams</SelectItem>
+                  <SelectItem value="85_rated">85 Rated</SelectItem>
+                  <SelectItem value="country">National Only</SelectItem>
+                  <SelectItem value="fut_team">FUT Team</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="teamType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-white">Team Type</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="bg-white/10 text-white border-white/30">
-                      <SelectValue placeholder="Select Team Type" className="text-white" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="any_teams">Any Teams</SelectItem>
-                    <SelectItem value="85_rated">85 Rated</SelectItem>
-                    <SelectItem value="country">National Only</SelectItem>
-                    <SelectItem value="fut_team">FUT Team</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={form.control}
+          name="legacyDefending"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+              <div className="space-y-0.5">
+                <FormLabel>Legacy Defending</FormLabel>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
 
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="legacyDefending"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border border-white/30 p-3 bg-white/10">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-white">Legacy Defending</FormLabel>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      className="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-white/30"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+        <FormField
+          control={form.control}
+          name="customFormations"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+              <div className="space-y-0.5">
+                <FormLabel>Formations personnalisées</FormLabel>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
 
-            <FormField
-              control={form.control}
-              name="customFormations"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border border-white/30 p-3 bg-white/10">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-white">Custom Formations</FormLabel>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      className="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-white/30"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <Button 
-            type="submit" 
-            className="w-full bg-[#0070CC] hover:bg-[#005AB3] text-white transition-colors duration-300"
-          >
-            Create Room
-          </Button>
-        </form>
-      </Form>
-    </div>
+        <Button type="submit" className="w-full">
+          Create Room
+        </Button>
+      </form>
+    </Form>
   );
 }
