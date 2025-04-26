@@ -24,7 +24,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       }
 
       const safeGameType = gameType as GameCode;
-      const gameTypeEnum = safeGameType === "futarena" ? "FUTArena" : gameCodeToType[safeGameType];
+      const gameTypeEnum = gameCodeToType[safeGameType];
 
       // First create the base game session
       const baseInsertData = {
@@ -57,8 +57,9 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
 
       console.log("Room created:", data);
 
-      // If it's a futarena game, insert the specific settings into arena_game_sessions table
-      if (gameType === "futarena" || gameType === "eafc25") {
+      // If it's a futarena or eafc25 game, insert the specific settings into arena_game_sessions table
+      const isArenaGame = safeGameType === "futarena" || safeGameType === "eafc25";
+      if (isArenaGame) {
         const arenaInsertData = {
           id: data.id, // Use the same ID as the main game session
           platform: values.platform,
@@ -104,7 +105,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         is_connected: true
       };
 
-      if ((gameType === "futarena" || gameType === "eafc25") && values.eaId) {
+      if (isArenaGame && values.eaId) {
         playerInsert.ea_id = values.eaId;
       }
 
