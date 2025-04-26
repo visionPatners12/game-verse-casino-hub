@@ -6,6 +6,8 @@ import { GamepadIcon, Users, TrophyIcon, DicesIcon, Shield, CreditCard, Clock } 
 import placeholderBackground from "../assets/ludo-background.jpg";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { GameFeature } from "@/components/home/GameFeature";
+import { TrustFactor } from "@/components/home/TrustFactor";
 
 const Index = () => {
   const { session } = useAuth();
@@ -17,7 +19,6 @@ const Index = () => {
     }
   }, [session, navigate]);
 
-  // If the image import fails, we'll use a solid color as fallback
   const backgroundImage = placeholderBackground || "linear-gradient(to right, #4f46e5, #7c3aed)";
 
   return (
@@ -120,42 +121,6 @@ const Index = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
-};
-
-const GameFeature = ({ icon, title, description }: { 
-  icon: React.ReactNode; 
-  title: string; 
-  description: string;
-}) => {
-  return (
-    <div className="p-4 rounded-lg backdrop-blur-sm bg-card/60 border border-border/50 hover:bg-card/80 transition-colors">
-      <div className="flex items-start gap-4">
-        <div className="shrink-0">
-          {icon}
-        </div>
-        <div>
-          <h3 className="font-semibold text-lg mb-2">{title}</h3>
-          <p className="text-sm text-muted-foreground">{description}</p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const TrustFactor = ({ icon, title, description }: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) => {
-  return (
-    <div className="flex flex-col items-center text-center p-4 rounded-lg backdrop-blur-sm bg-card/60 border border-border/50">
-      <div className="mb-2">
-        {icon}
-      </div>
-      <h3 className="font-semibold mb-1">{title}</h3>
-      <p className="text-sm text-muted-foreground">{description}</p>
     </div>
   );
 };
