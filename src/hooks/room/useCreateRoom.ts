@@ -26,32 +26,22 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       const safeGameType = gameType as GameCode;
       const gameTypeEnum = safeGameType === "futarena" ? "FUTArena" : gameCodeToType[safeGameType];
 
-      const insertData: any = {
+      // First create the base game session
+      const baseInsertData = {
         game_type: gameTypeEnum,
         room_type: 'private' as 'private' | 'public',
         room_id: Math.random().toString(36).substring(2, 8).toUpperCase(),
         max_players: values.maxPlayers || 2,
         entry_fee: values.bet,
         commission_rate: 5,
+        half_length_minutes: values.halfLengthMinutes || 12,
       };
 
-      if (gameType === "futarena") {
-        insertData["half_length_minutes"] = values.halfLengthMinutes || 12;
-        if (values.eaId) {
-          insertData["ea_id"] = values.eaId;
-        }
-        insertData["platform"] = values.platform;
-        insertData["mode"] = values.mode;
-        insertData["team_type"] = values.teamType;
-        insertData["legacy_defending_allowed"] = values.legacyDefending;
-        insertData["custom_formations_allowed"] = values.customFormations;
-      }
-
-      console.log("Creating room with data:", insertData);
+      console.log("Creating room with data:", baseInsertData);
 
       const { data, error } = await supabase
         .from('game_sessions')
-        .insert(insertData)
+        .insert(baseInsertData)
         .select()
         .single();
 
@@ -66,6 +56,29 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       }
 
       console.log("Room created:", data);
+
+      // If it's a futarena game, insert the specific settings into arena_game_sessions table
+      if (gameType === "futarena") {
+        const arenaInsertData = {
+          id: data.id, // Use the same ID as the main game session
+          platform: values.platform,
+          mode: values.mode,
+          team_type: values.teamType,
+          legacy_defending_allowed: values.legacyDefending,
+          custom_formations_allowed: values.customFormations,
+        };
+
+        console.log("Adding arena specific settings:", arenaInsertData);
+        
+        const { error: arenaError } = await supabase
+          .from('arena_game_sessions')
+          .insert(arenaInsertData);
+
+        if (arenaError) {
+          toast.error("Error creating arena settings: " + arenaError.message);
+          throw arenaError;
+        }
+      }
 
       const { data: userData, error: userError } = await supabase
         .from('users')
@@ -83,7 +96,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         return;
       }
 
-      const playerInsert: any = {
+      const playerInsert = {
         session_id: data.id,
         display_name: userData.username,
         user_id: authData.user.id,
