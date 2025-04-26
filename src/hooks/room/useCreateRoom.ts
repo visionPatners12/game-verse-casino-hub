@@ -34,7 +34,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         max_players: values.maxPlayers || 2,
         entry_fee: values.bet,
         commission_rate: 5,
-        half_length_minutes: values.halfLengthMinutes || 12,
+        // Remove half_length_minutes from here since it belongs in arena_game_sessions
       };
 
       console.log("Creating room with data:", baseInsertData);
@@ -58,7 +58,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       console.log("Room created:", data);
 
       // If it's a futarena game, insert the specific settings into arena_game_sessions table
-      if (gameType === "futarena") {
+      if (gameType === "futarena" || gameType === "eafc25") {
         const arenaInsertData = {
           id: data.id, // Use the same ID as the main game session
           platform: values.platform,
@@ -66,6 +66,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
           team_type: values.teamType,
           legacy_defending_allowed: values.legacyDefending,
           custom_formations_allowed: values.customFormations,
+          half_length_minutes: values.halfLengthMinutes || 12,
         };
 
         console.log("Adding arena specific settings:", arenaInsertData);
@@ -96,14 +97,14 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         return;
       }
 
-      const playerInsert = {
+      const playerInsert: any = {
         session_id: data.id,
         display_name: userData.username,
         user_id: authData.user.id,
         is_connected: true
       };
 
-      if (gameType === "futarena" && values.eaId) {
+      if ((gameType === "futarena" || gameType === "eafc25") && values.eaId) {
         playerInsert.ea_id = values.eaId;
       }
 
