@@ -23,7 +23,7 @@ interface GameCardProps {
 
 const GameCard = ({
   id,
-  name,
+  name = id === "fut-arenaplay" ? "EA FC25" : name,
   description,
   image,
   type,
