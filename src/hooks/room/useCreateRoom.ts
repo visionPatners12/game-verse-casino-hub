@@ -28,7 +28,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
 
       const insertData = {
         game_type: gameTypeEnum,
-        room_type: 'private',
+        room_type: 'private' as 'private' | 'public',
         room_id: Math.random().toString(36).substring(2, 8).toUpperCase(),
         max_players: 2,
         entry_fee: values.bet,
