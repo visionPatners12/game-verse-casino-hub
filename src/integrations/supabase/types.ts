@@ -13,6 +13,7 @@ export type Database = {
         Row: {
           created_at: string | null
           custom_formations_allowed: boolean
+          half_length_minutes: number
           id: string
           legacy_defending_allowed: boolean
           mode: Database["public"]["Enums"]["game_mode"]
@@ -23,6 +24,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           custom_formations_allowed?: boolean
+          half_length_minutes?: number
           id: string
           legacy_defending_allowed?: boolean
           mode?: Database["public"]["Enums"]["game_mode"]
@@ -33,6 +35,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           custom_formations_allowed?: boolean
+          half_length_minutes?: number
           id?: string
           legacy_defending_allowed?: boolean
           mode?: Database["public"]["Enums"]["game_mode"]
@@ -1231,7 +1234,13 @@ export type Database = {
       game_mode: "online_friendlies" | "fut"
       game_platform: "ps5" | "xbox_series" | "cross_play"
       game_type: "Ludo" | "Checkers" | "TicTacToe" | "CheckGame" | "FUTArena"
-      game_variant: "ludo" | "checkers" | "tictactoe" | "checkgame" | "futarena"
+      game_variant:
+        | "ludo"
+        | "checkers"
+        | "tictactoe"
+        | "checkgame"
+        | "futarena"
+        | "eafc25"
       kyc_status: "Pending" | "Approved" | "Rejected"
       room_type: "public" | "private"
       session_status: "Waiting" | "Active" | "Finished"
@@ -1378,7 +1387,14 @@ export const Constants = {
       game_mode: ["online_friendlies", "fut"],
       game_platform: ["ps5", "xbox_series", "cross_play"],
       game_type: ["Ludo", "Checkers", "TicTacToe", "CheckGame", "FUTArena"],
-      game_variant: ["ludo", "checkers", "tictactoe", "checkgame", "futarena"],
+      game_variant: [
+        "ludo",
+        "checkers",
+        "tictactoe",
+        "checkgame",
+        "futarena",
+        "eafc25",
+      ],
       kyc_status: ["Pending", "Approved", "Rejected"],
       room_type: ["public", "private"],
       session_status: ["Waiting", "Active", "Finished"],

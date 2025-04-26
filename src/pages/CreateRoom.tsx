@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
@@ -8,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { CreateRoomForm } from "@/components/room/CreateRoomForm";
 import { CreateArenaRoomForm } from "@/components/room/CreateArenaRoomForm";
-import { CreateEAFC25Form } from "@/components/room/CreateEAFC25Form";  // Add this import
+import { CreateEAFC25Form } from "@/components/room/CreateEAFC25Form";
 import { toast } from "sonner";
 import { useRoomValidation } from "@/hooks/room/useRoomValidation";
 import { GameCode } from "@/lib/gameTypes";
@@ -20,7 +19,7 @@ const CreateRoom = () => {
   
   const isValidGame = useRoomValidation(gameType);
   const validGameType = isValidGame ? gameType as GameCode : null;
-  const isArenaGame = gameType === "futarena";
+  const isArenaGame = gameType === "futarena" || gameType === "eafc25";
 
   useEffect(() => {
     const getUsername = async () => {
@@ -102,8 +101,14 @@ const CreateRoom = () => {
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : (
-              isArenaGame ? (
+              gameType === "eafc25" ? (
                 <CreateEAFC25Form 
+                  username={username} 
+                  gameType={validGameType} 
+                  gameConfig={gameConfig} 
+                />
+              ) : isArenaGame ? (
+                <CreateArenaRoomForm 
                   username={username} 
                   gameType={validGameType} 
                   gameConfig={gameConfig} 
@@ -124,4 +129,3 @@ const CreateRoom = () => {
 };
 
 export default CreateRoom;
-
