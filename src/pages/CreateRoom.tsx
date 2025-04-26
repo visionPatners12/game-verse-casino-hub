@@ -18,7 +18,7 @@ const CreateRoom = () => {
   const navigate = useNavigate();
   
   const isValidGame = useRoomValidation(gameType);
-  const validGameType = isValidGame ? gameType : null;
+  const validGameType = isValidGame ? gameType as GameCode : null;
 
   useEffect(() => {
     const getUsername = async () => {
@@ -109,7 +109,7 @@ const CreateRoom = () => {
               ) : (
                 <CreateRoomForm 
                   username={username} 
-                  gameType={gameType as GameCode | undefined} 
+                  gameType={validGameType} 
                   gameConfig={gameConfig} 
                 />
               )}
