@@ -6,7 +6,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { createRoomSchema, type CreateRoomFormData } from "./schemas/createRoomSchema";
 import { BetAmountField } from "./components/BetAmountField";
 import { useCreateRoom } from "@/hooks/room/useCreateRoom";
-import { GameController } from "lucide-react";
+import { Gamepad } from "lucide-react";
 import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
 import { GameCode } from "@/lib/gameTypes";
 
@@ -40,7 +40,7 @@ export function CreateArenaRoomForm({ username, gameType, gameConfig }: CreateAr
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="flex items-center gap-2 text-primary">
-          <GameController className="h-5 w-5" />
+          <Gamepad className="h-5 w-5" />
           <span className="font-medium">Arena Room Creation</span>
         </div>
 
