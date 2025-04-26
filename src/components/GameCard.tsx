@@ -10,7 +10,7 @@ export type GameType = GameCode;
 
 interface GameCardProps {
   id: string;
-  name?: string;
+  name: string;
   description: string;
   image: string;
   type: GameType;
@@ -31,7 +31,6 @@ const GameCard = ({
   active = true,
 }: GameCardProps) => {
   const navigate = useNavigate();
-  const displayName = name || (id === "fut-arenaplay" ? "EA FC25" : id);
 
   const handlePublicRoomClick = () => {
     navigate(`/games/${type}/public`);
@@ -59,7 +58,7 @@ const GameCard = ({
       <div className="relative overflow-hidden">
         <img 
           src={image} 
-          alt={displayName} 
+          alt={name} 
           className="game-card-image group-hover:scale-105 transition-transform duration-300" 
         />
         <div className="absolute top-3 left-3">
@@ -76,7 +75,7 @@ const GameCard = ({
       </div>
       
       <div className="game-card-content">
-        <h3 className="text-lg font-semibold">{displayName}</h3>
+        <h3 className="text-lg font-semibold">{name}</h3>
         <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>
         
         <div className="mt-4 flex gap-2">
