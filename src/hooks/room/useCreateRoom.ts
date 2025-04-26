@@ -40,11 +40,15 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         if (values.eaId) {
           insertData["ea_id"] = values.eaId;
         }
+        insertData["platform"] = values.platform;
+        insertData["mode"] = values.mode;
+        insertData["team_type"] = values.teamType;
+        insertData["legacy_defending_allowed"] = values.legacyDefending;
+        insertData["custom_formations_allowed"] = values.customFormations;
       }
 
-      console.log("Creating game session with data:", insertData);
+      console.log("Creating room with data:", insertData);
 
-      // Step 1: Create the base game session first
       const { data, error } = await supabase
         .from('game_sessions')
         .insert(insertData)
@@ -61,34 +65,8 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         return;
       }
 
-      console.log("Game session created:", data);
+      console.log("Room created:", data);
 
-      // Step 2: If this is a futarena game, create the arena-specific settings
-      if (gameType === "futarena") {
-        const arenaInsertData = {
-          id: data.id,
-          platform: values.platform,
-          mode: values.mode,
-          team_type: values.teamType,
-          legacy_defending_allowed: values.legacyDefending,
-          custom_formations_allowed: values.customFormations
-        };
-
-        console.log("Creating arena game settings:", arenaInsertData);
-
-        const { error: arenaError } = await supabase
-          .from('arena_game_sessions')
-          .insert(arenaInsertData);
-
-        if (arenaError) {
-          toast.error("Error creating arena settings: " + arenaError.message);
-          throw arenaError;
-        }
-
-        console.log("Arena settings created successfully");
-      }
-
-      // Step 3: Add the player to the room
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('username')
