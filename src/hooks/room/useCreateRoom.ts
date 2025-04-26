@@ -24,22 +24,16 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       }
 
       const safeGameType = gameType as GameCode;
-      // Handle all game types properly
       const gameTypeEnum = gameCodeToType[safeGameType];
 
-      const insertData: any = {
+      const insertData = {
         game_type: gameTypeEnum,
         room_type: 'private',
         room_id: Math.random().toString(36).substring(2, 8).toUpperCase(),
-        max_players: values.maxPlayers,
+        max_players: 2,
         entry_fee: values.bet,
         commission_rate: 5,
       };
-
-      if (gameType === "futarena") {
-        insertData["match_duration"] = values.matchDuration || 12;
-        insertData["ea_id"] = values.eaId;
-      }
 
       console.log("Creating room with data:", insertData);
 
@@ -77,16 +71,12 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         return;
       }
 
-      const playerInsert: any = {
+      const playerInsert = {
         session_id: data.id,
         display_name: userData.username,
         user_id: authData.user.id,
         is_connected: true
       };
-
-      if (gameType === "futarena" && values.eaId) {
-        playerInsert.ea_id = values.eaId;
-      }
 
       console.log("Adding player to room:", playerInsert);
 
@@ -97,20 +87,6 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       if (playerError) {
         toast.error("Error joining room: " + playerError.message);
         throw playerError;
-      }
-
-      // Explicitly update the user's active_room_id - for redundancy with the trigger
-      console.log(`Setting active_room_id=${data.id} for user ${authData.user.id} explicitly`);
-      const { error: userUpdateError } = await supabase
-        .from('users')
-        .update({ active_room_id: data.id })
-        .eq('id', authData.user.id);
-        
-      if (userUpdateError) {
-        console.error("Error updating active_room_id:", userUpdateError);
-        // Continue even if this fails since the trigger should handle it
-      } else {
-        console.log(`Successfully updated active_room_id to ${data.id} for user ${authData.user.id}`);
       }
 
       toast.success("Room created successfully!");

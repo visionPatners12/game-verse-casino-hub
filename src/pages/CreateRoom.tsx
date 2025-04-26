@@ -1,5 +1,4 @@
 
-import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { CreateRoomForm } from "@/components/room/CreateRoomForm";
-import { GameRules } from "@/components/game/GameRules";
+import { CreateArenaRoomForm } from "@/components/room/CreateArenaRoomForm";
 import { toast } from "sonner";
 import { useRoomValidation } from "@/hooks/room/useRoomValidation";
 import { GameCode } from "@/lib/gameTypes";
@@ -19,6 +18,7 @@ const CreateRoom = () => {
   
   const isValidGame = useRoomValidation(gameType);
   const validGameType = isValidGame ? gameType as GameCode : null;
+  const isArenaGame = gameType === "futarena";
 
   useEffect(() => {
     const getUsername = async () => {
@@ -59,8 +59,6 @@ const CreateRoom = () => {
     queryFn: async () => {
       if (!validGameType) throw new Error("Game type not specified or invalid");
       
-      // Define classic game types that are stored in the database
-      // Note: Don't cast as a const array here to avoid type restriction
       const classicGameTypes = ['ludo', 'checkers', 'tictactoe', 'checkgame', 'futarena'];
       
       if (classicGameTypes.includes(validGameType)) {
@@ -87,35 +85,37 @@ const CreateRoom = () => {
 
   return (
     <Layout>
-      <div className="container grid lg:grid-cols-2 gap-6 mx-auto">
-        <div className="lg:order-1 order-2">
-          {gameType && <GameRules gameType={gameType} />}
-        </div>
-
-        <div className="lg:order-2 order-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                Create a Room 
-                {gameConfig && <span className="text-primary">- {gameConfig.name}</span>}
-              </CardTitle>
-            </CardHeader>
-            
-            <CardContent>
-              {isLoading ? (
-                <div className="flex justify-center">
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                </div>
+      <div className="container mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Create a Room 
+              {gameConfig && <span className="text-primary">- {gameConfig.name}</span>}
+            </CardTitle>
+          </CardHeader>
+          
+          <CardContent>
+            {isLoading ? (
+              <div className="flex justify-center">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : (
+              isArenaGame ? (
+                <CreateArenaRoomForm 
+                  username={username} 
+                  gameType={validGameType} 
+                  gameConfig={gameConfig} 
+                />
               ) : (
                 <CreateRoomForm 
                   username={username} 
                   gameType={validGameType} 
                   gameConfig={gameConfig} 
                 />
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              )
+            )}
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   );
