@@ -35,11 +35,16 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         commission_rate: 5,
       };
 
-      if (gameType === "futarena" && values.matchDuration) {
-        insertData["match_duration"] = values.matchDuration;
+      if (gameType === "futarena") {
+        insertData["half_length_minutes"] = values.halfLengthMinutes || 12;
         if (values.eaId) {
           insertData["ea_id"] = values.eaId;
         }
+        insertData["platform"] = values.platform;
+        insertData["mode"] = values.mode;
+        insertData["team_type"] = values.teamType;
+        insertData["legacy_defending_allowed"] = values.legacyDefending;
+        insertData["custom_formations_allowed"] = values.customFormations;
       }
 
       console.log("Creating room with data:", insertData);
