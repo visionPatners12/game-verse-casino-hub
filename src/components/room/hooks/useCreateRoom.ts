@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { GameCode, isValidGameType, gameCodeToType } from "@/lib/gameTypes";
@@ -30,14 +29,21 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         game_type: gameTypeEnum,
         room_type: 'private',
         room_id: Math.random().toString(36).substring(2, 8).toUpperCase(),
-        max_players: values.maxPlayers,
+        max_players: values.maxPlayers || 2,
         entry_fee: values.bet,
         commission_rate: 5,
       };
 
       if (gameType === "futarena") {
-        insertData["match_duration"] = values.matchDuration || 12;
-        insertData["ea_id"] = values.eaId;
+        insertData["half_length_minutes"] = values.halfLengthMinutes || 12;
+        if (values.eaId) {
+          insertData["ea_id"] = values.eaId;
+        }
+        insertData["platform"] = values.platform;
+        insertData["mode"] = values.mode;
+        insertData["team_type"] = values.teamType;
+        insertData["legacy_defending_allowed"] = values.legacyDefending;
+        insertData["custom_formations_allowed"] = values.customFormations;
       }
 
       console.log("Creating room with data:", insertData);

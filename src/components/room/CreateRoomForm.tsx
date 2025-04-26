@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -42,10 +41,12 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
       maxPlayers: gameConfig?.min_players || 2,
       winnerCount: 1,
       gridSize: 3,
-      matchDuration: 12,
+      halfLengthMinutes: 12,
+      platform: 'ps5',
+      mode: 'online_friendlies',
+      teamType: 'any_teams',
       legacyDefending: false,
       customFormations: false,
-      teamType: "anyTeams",
       _gameType: gameType
     }
   });
@@ -95,7 +96,7 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
                       EA ID (obligatoire)
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="Votre EA ID" {...field} value={field.value || ''} />
+                      <Input placeholder="Votre EA ID" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -104,7 +105,7 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
 
               <FormField
                 control={form.control}
-                name="matchDuration"
+                name="halfLengthMinutes"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">
@@ -115,12 +116,80 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
                       <Input
                         type="number"
                         min={1}
-                        max={60}
+                        max={45}
                         {...field}
                         onChange={e => field.onChange(Number(e.target.value))}
-                        value={field.value || 5}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="platform"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Plateforme</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner une plateforme" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="ps5">PS5</SelectItem>
+                        <SelectItem value="xbox_series">Xbox Series X</SelectItem>
+                        <SelectItem value="cross_play">Cross-play</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="mode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mode de jeu</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un mode" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="online_friendlies">Online Friendlies</SelectItem>
+                        <SelectItem value="fut">FUT</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="teamType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type d'équipes</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un type d'équipe" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="any_teams">Any Teams</SelectItem>
+                        <SelectItem value="85_rated">85 Rated</SelectItem>
+                        <SelectItem value="country">National Only</SelectItem>
+                        <SelectItem value="fut_team">FUT Team</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -136,7 +205,7 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
                     </div>
                     <FormControl>
                       <Switch
-                        checked={field.value || false}
+                        checked={field.value}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
@@ -154,35 +223,10 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
                     </div>
                     <FormControl>
                       <Switch
-                        checked={field.value || false}
+                        checked={field.value}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="teamType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Type d'équipes</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value?.toString() || "anyTeams"}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner un type d'équipe" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="anyTeams">Any Teams</SelectItem>
-                        <SelectItem value="clubOnly">Club Only</SelectItem>
-                        <SelectItem value="nationalOnly">National Only</SelectItem>
-                        <SelectItem value="85rated">85 Rated</SelectItem>
-                        <SelectItem value="futTeam">FUT Team</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
