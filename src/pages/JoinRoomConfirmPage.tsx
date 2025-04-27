@@ -64,7 +64,9 @@ export default function JoinRoomConfirmPage() {
         
         // S'il y a des joueurs dans la salle, le premier est probablement le créateur
         if (room.game_players && room.game_players.length > 0) {
-          setHostData(room.game_players[0]);
+          const host = room.game_players[0];
+          console.log("Host data:", host);
+          setHostData(host);
         }
         
         // Pour les jeux de type EAFC25/FutArena, récupérer les configurations supplémentaires
