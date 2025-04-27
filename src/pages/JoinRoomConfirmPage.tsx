@@ -26,6 +26,7 @@ export default function JoinRoomConfirmPage() {
       if (!roomId) return;
       
       try {
+        console.log("Fetching room data for:", roomId);
         // Vérifier si l'ID est un UUID ou un code de salle
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(roomId);
         
@@ -43,7 +44,7 @@ export default function JoinRoomConfirmPage() {
                 avatar_url
               )
             ),
-            arena_game_sessions(
+            arena_game_sessions!inner(
               platform,
               mode,
               team_type,
@@ -53,10 +54,18 @@ export default function JoinRoomConfirmPage() {
             )
           `);
         
+        let roomResult;
+        
         // Utiliser le champ approprié pour la recherche
-        const { data: room, error } = isUuid 
-          ? await query.eq('id', roomId).single()
-          : await query.eq('room_id', roomId).maybeSingle();
+        if (isUuid) {
+          console.log("Searching by id (UUID)");
+          roomResult = await query.eq('id', roomId);
+        } else {
+          console.log("Searching by room_id (short code)");
+          roomResult = await query.eq('room_id', roomId);
+        }
+        
+        const { data: rooms, error } = roomResult;
 
         if (error) {
           console.error('Error fetching room data:', error);
@@ -65,26 +74,36 @@ export default function JoinRoomConfirmPage() {
           return;
         }
 
-        if (!room) {
+        if (!rooms || rooms.length === 0) {
           toast.error("Salon introuvable");
           navigate('/games');
           return;
         }
 
-        console.log("Room data:", room);
+        const room = rooms[0];
+        console.log("Room data retrieved:", room);
+
+        // S'assurer que nous avons les données d'arena
+        if (!room.arena_game_sessions || room.arena_game_sessions.length === 0) {
+          console.error("No arena game session data found");
+          toast.error("Configuration de jeu invalide");
+          navigate('/games');
+          return;
+        }
 
         // Fusionner les données de la session de jeu et de la configuration d'arène
         const mergedRoomData = {
           ...room,
-          ...(room.arena_game_sessions && room.arena_game_sessions[0] ? room.arena_game_sessions[0] : {})
+          ...room.arena_game_sessions[0]
         };
         
+        console.log("Merged room data:", mergedRoomData);
         setRoomData(mergedRoomData);
 
         // Récupérer les données du créateur (premier joueur)
         if (room.game_players && room.game_players.length > 0) {
           const creator = room.game_players[0];
-          // Fix: Accéder correctement aux données utilisateur
+          // Accéder correctement aux données utilisateur
           const creatorData = {
             ...creator,
             username: creator.users?.username || "Joueur inconnu",
