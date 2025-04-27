@@ -11,37 +11,93 @@ import { Clock, GamepadIcon, Users, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { GameSettings } from "@/components/game/join-dialog/GameSettings";
+import { PlatformRules } from "@/components/game/join-dialog/PlatformRules";
+import { DisclaimerSection } from "@/components/game/join-dialog/DisclaimerSection";
+import { HostInfoCard } from "@/components/games/HostInfoCard";
+import { RoomInfo } from "@/components/game/join-dialog/RoomInfo";
 
 export default function JoinRoomConfirmPage() {
   const { gameType, roomId } = useParams();
   const navigate = useNavigate();
   const { joinRoom, isLoading } = useJoinRoom();
   const [roomData, setRoomData] = useState<any>(null);
+  const [hostData, setHostData] = useState<any>(null);
 
   useEffect(() => {
     const fetchRoomData = async () => {
       if (!roomId) return;
       
-      const { data: room, error } = await supabase
-        .from('game_sessions')
-        .select('*')
-        .eq('room_id', roomId.toUpperCase())
-        .maybeSingle();
+      try {
+        // Récupérer les données de la salle avec la requête JOIN pour le host
+        const { data: room, error } = await supabase
+          .from('game_sessions')
+          .select(`
+            *,
+            game_players!game_players_session_id_fkey (
+              id, 
+              user_id,
+              display_name,
+              ea_id,
+              users:user_id (
+                username,
+                avatar_url
+              )
+            )
+          `)
+          .eq('room_id', roomId.toUpperCase())
+          .single();
+          
+        if (error) {
+          console.error('Error fetching room data:', error);
+          toast.error("Erreur lors de la récupération des données de la salle");
+          navigate('/games');
+          return;
+        }
         
-      if (error) {
-        console.error('Error fetching room data:', error);
-        toast.error("Erreur lors de la récupération des données de la salle");
+        if (!room) {
+          toast.error("Salon introuvable");
+          navigate('/games');
+          return;
+        }
+
+        console.log("Données de la salle récupérées:", room);
+        setRoomData(room);
+        
+        // S'il y a des joueurs dans la salle, le premier est probablement le créateur
+        if (room.game_players && room.game_players.length > 0) {
+          setHostData(room.game_players[0]);
+        }
+        
+        // Pour les jeux de type EAFC25/FutArena, récupérer les configurations supplémentaires
+        if (room.game_type === 'EAFC25' || room.game_type === 'FutArena') {
+          const { data: arenaConfig, error: configError } = await supabase
+            .from('arena_game_sessions')
+            .select('*')
+            .eq('id', room.id)
+            .single();
+            
+          if (configError) {
+            console.error('Error fetching arena configuration:', configError);
+          } else if (arenaConfig) {
+            console.log("Configuration arène récupérée:", arenaConfig);
+            setRoomData(prev => ({
+              ...prev,
+              ...arenaConfig,
+              platform: arenaConfig.platform,
+              mode: arenaConfig.mode,
+              team_type: arenaConfig.team_type,
+              half_length_minutes: arenaConfig.half_length_minutes,
+              legacy_defending_allowed: arenaConfig.legacy_defending_allowed,
+              custom_formations_allowed: arenaConfig.custom_formations_allowed
+            }));
+          }
+        }
+      } catch (error: any) {
+        console.error('Error:', error);
+        toast.error("Une erreur s'est produite");
         navigate('/games');
-        return;
       }
-      
-      if (!room) {
-        toast.error("Salon introuvable");
-        navigate('/games');
-        return;
-      }
-      
-      setRoomData(room);
     };
 
     fetchRoomData();
@@ -63,139 +119,69 @@ export default function JoinRoomConfirmPage() {
     );
   }
 
+  const isFutArena = roomData.game_type?.toLowerCase() === "futarena" || roomData.game_type?.toLowerCase() === "eafc25";
+
   return (
     <Layout>
       <div className="container max-w-4xl mx-auto px-4 py-8">
-        <Card>
+        <Card className="bg-gradient-to-b from-background to-background/95 border-casino-accent/20">
           <CardHeader className="space-y-2">
             <div className="flex justify-between items-center">
               <div className="space-y-1">
-                <CardTitle className="text-2xl">👋 Règles des matchs</CardTitle>
+                <CardTitle className="text-2xl text-casino-accent">👋 Règles des matchs</CardTitle>
                 <p className="text-muted-foreground text-sm">
                   Veuillez lire et accepter les règles avant de participer
                 </p>
               </div>
-              <div className="flex gap-2">
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Users className="h-3 w-3" />
-                  {roomData.current_players}/{roomData.max_players} Joueurs
-                </Badge>
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <DollarSign className="h-3 w-3" />
-                  ${roomData.entry_fee}
-                </Badge>
-              </div>
+              <RoomInfo
+                currentPlayers={roomData.current_players}
+                maxPlayers={roomData.max_players}
+                entryFee={roomData.entry_fee}
+              />
             </div>
           </CardHeader>
 
           <CardContent className="space-y-6">
+            {isFutArena && hostData && hostData.users && (
+              <section>
+                <h3 className="font-semibold text-lg mb-4 text-casino-accent">Informations du créateur</h3>
+                <HostInfoCard 
+                  hostUsername={hostData.users.username}
+                  hostAvatar={hostData.users.avatar_url}
+                  gamerTag={hostData.ea_id || "Non spécifié"}
+                />
+                <p className="text-sm text-muted-foreground mt-2 italic">
+                  Envoyez l'invitation à ce Gamer Tag pour commencer le match
+                </p>
+              </section>
+            )}
+
+            <Separator className="bg-casino-accent/20" />
+
             <section>
-              <h3 className="text-lg font-semibold mb-4">Configuration du match</h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium mb-2 flex items-center gap-2">
-                      <Clock className="h-4 w-4" /> Paramètres de jeu
-                    </h4>
-                    <ul className="space-y-2 text-muted-foreground">
-                      <li>Durée mi-temps: {roomData.half_length_minutes} minutes</li>
-                      <li>Legacy Defending: {roomData.legacy_defending_allowed ? "Activé" : "Désactivé"}</li>
-                      <li>Formations personnalisées: {roomData.custom_formations_allowed ? "Autorisées" : "Non autorisées"}</li>
-                    </ul>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium mb-2 flex items-center gap-2">
-                      <GamepadIcon className="h-4 w-4" /> Configuration
-                    </h4>
-                    <ul className="space-y-2 text-muted-foreground">
-                      <li>Plateforme: {roomData.platform || "PS5"}</li>
-                      <li>Mode de jeu: {roomData.mode || "Online Friendlies"}</li>
-                      <li>Type d'équipes: {roomData.team_type || "Any Teams"}</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
+              <h3 className="text-lg font-semibold mb-4 text-casino-accent">Configuration du match</h3>
+              <GameSettings
+                halfLengthMinutes={roomData.half_length_minutes}
+                legacyDefendingAllowed={roomData.legacy_defending_allowed}
+                customFormationsAllowed={roomData.custom_formations_allowed}
+                platform={roomData.platform}
+                mode={roomData.mode}
+                teamType={roomData.team_type}
+              />
             </section>
 
-            <Separator />
+            <Separator className="bg-casino-accent/20" />
 
-            <section className="space-y-6 text-sm leading-relaxed">
-              <div>
-                <p className="mb-4">
-                  Si vous recevez une invitation sur votre console qui ne correspond pas aux règles énoncées sur cette page de match, 
-                  NE JOUEZ PAS le match. Si vous jouez le match, perdez et soumettez une contestation, les administrateurs de Katchicka 
-                  n'approuveront pas votre contestation. Chez Katchicka, nous privilégions le fair-play, avant de prendre toute décision, 
-                  nous examinerons et pencherons vers une décision équitable qui nous appartient strictement.
-                </p>
-                <p className="mb-4">
-                  Nous recommandons vivement d'enregistrer tous les résultats de match, déconnexions, règles enfreintes, etc.
-                </p>
-              </div>
+            <PlatformRules />
 
-              <div className="space-y-2">
-                <p>
-                  Si un joueur enfreint une règle lorsqu'il perd le match ou que le match est à égalité et que son adversaire 
-                  quitte immédiatement le match, le joueur qui a enfreint la règle perdra le match.
-                </p>
-                <p>
-                  Si un joueur enfreint une règle lorsqu'il mène et que son adversaire quitte immédiatement le match, 
-                  le match sera annulé et les deux joueurs seront remboursés de leurs frais d'inscription.
-                </p>
-              </div>
+            <Separator className="bg-casino-accent/20" />
 
-              <div className="bg-yellow-500/10 p-4 rounded-lg border border-yellow-500/20">
-                <p className="font-semibold mb-2">⚠️ Identifiants de jeu:</p>
-                <p>
-                  Ce match n'est valable que s'il est joué entre les identifiants listés ci-dessus. 
-                  Si vous acceptez de jouer tout le match et perdez, puis contestez - votre contestation 
-                  ne sera pas prise en considération.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <p className="font-medium">
-                  Score Auto-Confirmé Après 10 Minutes:
-                </p>
-                <p>
-                  Une fois qu'un score est rapporté, l'autre joueur dispose de 10 minutes pour confirmer 
-                  ou contester avant que le premier score rapporté ne soit automatiquement confirmé.
-                </p>
-              </div>
-
-              <div className="bg-red-500/10 p-4 rounded-lg border border-red-500/20">
-                <p className="font-semibold text-red-500 mb-2">⚠️ Avertissement:</p>
-                <p>
-                  La soumission de résultats faux ou falsifiés entraînera des pénalités financières immédiates.
-                </p>
-                <ul className="list-disc pl-4 mt-2 space-y-1">
-                  <li>1ère infraction = 5€</li>
-                  <li>2ème infraction = 25€</li>
-                  <li>3ème infraction = Suppression de 100% du solde + Bannissement</li>
-                </ul>
-              </div>
-
-              <p>
-                Tout match nécessitant plusieurs parties doit être prêt à jouer dans les 15 minutes 
-                suivant la dernière partie. Le non-respect de cette règle entraînera un forfait.
-              </p>
-
-              <p className="text-xs text-muted-foreground mt-4">
-                Katchicka n'est ni approuvé par, ni directement affilié à, ni maintenu ou sponsorisé 
-                par Apple Inc, Electronic Arts, Activision Blizzard, Take-Two Interactive, Microsoft, 
-                Xbox, Sony, Playstation ou Epic Games. Tous les contenus, titres de jeux, noms 
-                commerciaux et/ou habillages commerciaux, marques déposées, illustrations et images 
-                associées sont des marques déposées et/ou des documents protégés par le droit d'auteur 
-                de leurs propriétaires respectifs.
-              </p>
-            </section>
+            <DisclaimerSection />
 
             <div className="pt-4">
               <Button 
                 onClick={handleJoinConfirm} 
-                className="w-full"
+                className="w-full bg-casino-accent hover:bg-casino-accent/90"
                 disabled={isLoading}
               >
                 J'ai lu les règles et je rejoins la partie
