@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { GameCode, isValidGameType, gameCodeToType } from "@/lib/gameTypes";
@@ -36,9 +37,6 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
 
       if (gameType === "futarena") {
         insertData["half_length_minutes"] = values.halfLengthMinutes || 12;
-        if (values.eaId) {
-          insertData["ea_id"] = values.eaId;
-        }
         insertData["platform"] = values.platform;
         insertData["mode"] = values.mode;
         insertData["team_type"] = values.teamType;
@@ -88,10 +86,6 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         user_id: authData.user.id,
         is_connected: true
       };
-
-      if (gameType === "futarena" && values.eaId) {
-        playerInsert.ea_id = values.eaId;
-      }
 
       console.log("Adding player to room:", playerInsert);
 

@@ -60,7 +60,7 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
       {showGridSizeField && <GridSizeField form={form} />}
       {showFutArenaFields && (
         <>
-          <GameConfigFields form={form} showEAID />
+          <GameConfigFields form={form} />
           <PlatformField form={form} />
           <GameModeField form={form} />
           <TeamTypeField form={form} />
