@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { GameType } from "@/components/GameCard";
 import { useJoinRoom } from "@/hooks/room/useJoinRoom";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
@@ -26,72 +25,64 @@ export default function JoinRoomConfirmPage() {
       if (!roomId) return;
       
       try {
-        // Récupérer les données de la salle avec la requête JOIN pour le host
         const { data: room, error } = await supabase
           .from('game_sessions')
           .select(`
             *,
             game_players!game_players_session_id_fkey (
-              id, 
+              id,
               user_id,
               display_name,
               ea_id,
-              users:user_id (
+              users!game_players_user_id_fkey (
                 username,
                 avatar_url
               )
+            ),
+            arena_game_sessions!inner (
+              platform,
+              mode,
+              team_type,
+              half_length_minutes,
+              legacy_defending_allowed,
+              custom_formations_allowed
             )
           `)
-          .eq('room_id', roomId.toUpperCase())
+          .eq('id', roomId)
           .single();
-          
+
         if (error) {
           console.error('Error fetching room data:', error);
           toast.error("Erreur lors de la récupération des données de la salle");
           navigate('/games');
           return;
         }
-        
+
         if (!room) {
           toast.error("Salon introuvable");
           navigate('/games');
           return;
         }
 
-        console.log("Données de la salle récupérées:", room);
-        setRoomData(room);
-        
-        // S'il y a des joueurs dans la salle, le premier est probablement le créateur
+        console.log("Room data:", room);
+
+        setRoomData({
+          ...room,
+          ...room.arena_game_sessions
+        });
+
         if (room.game_players && room.game_players.length > 0) {
-          const host = room.game_players[0];
-          console.log("Host data:", host);
-          setHostData(host);
+          const creator = room.game_players[0];
+          const creatorData = {
+            ...creator,
+            username: creator.users?.username || "Joueur inconnu",
+            avatar_url: creator.users?.avatar_url,
+            ea_id: creator.ea_id
+          };
+          console.log("Creator data:", creatorData);
+          setHostData(creatorData);
         }
-        
-        // Pour les jeux de type EAFC25/FutArena, récupérer les configurations supplémentaires
-        if (room.game_type?.toLowerCase() === 'eafc25' || room.game_type?.toLowerCase() === 'futarena') {
-          const { data: arenaConfig, error: configError } = await supabase
-            .from('arena_game_sessions')
-            .select('*')
-            .eq('id', room.id)
-            .single();
-            
-          if (configError) {
-            console.error('Error fetching arena configuration:', configError);
-          } else if (arenaConfig) {
-            console.log("Configuration arène récupérée:", arenaConfig);
-            setRoomData(prev => ({
-              ...prev,
-              ...arenaConfig,
-              platform: arenaConfig.platform,
-              mode: arenaConfig.mode,
-              team_type: arenaConfig.team_type,
-              half_length_minutes: arenaConfig.half_length_minutes,
-              legacy_defending_allowed: arenaConfig.legacy_defending_allowed,
-              custom_formations_allowed: arenaConfig.custom_formations_allowed
-            }));
-          }
-        }
+
       } catch (error: any) {
         console.error('Error:', error);
         toast.error("Une erreur s'est produite");
@@ -118,7 +109,6 @@ export default function JoinRoomConfirmPage() {
     );
   }
 
-  // Check if the game type is related to FutArena using lowercase comparison for safety
   const isFutArena = roomData.game_type?.toLowerCase() === "futarena" || roomData.game_type?.toLowerCase() === "eafc25";
 
   return (
@@ -142,12 +132,12 @@ export default function JoinRoomConfirmPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {isFutArena && hostData && hostData.users && (
+            {isFutArena && hostData && (
               <section>
                 <h3 className="font-semibold text-lg mb-4 text-casino-accent">Informations du créateur</h3>
                 <HostInfoCard 
-                  hostUsername={hostData.users.username}
-                  hostAvatar={hostData.users.avatar_url}
+                  hostUsername={hostData.username}
+                  hostAvatar={hostData.avatar_url}
                   gamerTag={hostData.ea_id || "Non spécifié"}
                 />
                 <p className="text-sm text-muted-foreground mt-2 italic">
