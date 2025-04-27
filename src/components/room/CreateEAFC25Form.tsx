@@ -45,7 +45,7 @@ export function CreateEAFC25Form({ username, gameType, gameConfig }: CreateEAFC2
   };
 
   return (
-    <GameFormLayout form={form} onSubmit={onSubmit} showRulesDialog>
+    <GameFormLayout form={form} onSubmit={onSubmit} showRules>
       <BetAmountField form={form} />
       <GameConfigFields form={form} />
       <PlatformField form={form} />
