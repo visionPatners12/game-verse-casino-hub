@@ -1,4 +1,3 @@
-
 import { memo, useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { RoomData } from "../types";
@@ -15,8 +14,7 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, gameStatus }: 
   const isFutArena = roomData.game_type?.toLowerCase() === "futarena";
   
   // Only show FutArenaMatchFlow for pre-game setup
-  if (isFutArena && typeof roomData.match_duration === "number" && 
-     (gameStatus === "waiting" || (gameStatus === "starting" && !window.gameInitialized))) {
+  if (isFutArena && (gameStatus === "waiting" || (gameStatus === "starting" && !window.gameInitialized))) {
     return <FutArenaMatchFlow roomData={roomData} currentUserId={currentUserId} gameStatus={gameStatus} />;
   }
 
@@ -33,7 +31,6 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, gameStatus }: 
       display_name: player.display_name,
       user_id: player.user_id,
       current_score: player.current_score,
-      ea_id: player.ea_id,
     })) || [],
     gameParams: {
       gameType: roomData.game_type,
@@ -42,7 +39,6 @@ export const GameCanvasContent = memo(({ roomData, currentUserId, gameStatus }: 
       currentPlayers: roomData.current_players,
       roomId: roomData.room_id,
       totalPot: roomData.pot || 0,
-      matchDuration: roomData.match_duration,
     }
   };
 
