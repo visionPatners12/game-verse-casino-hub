@@ -3,10 +3,10 @@ import { useState, useEffect, useRef } from "react";
 import { Timer } from "lucide-react";
 
 interface GameTimerProps {
-  matchDuration: number;
+  matchDuration?: number;
 }
 
-export const GameTimer = ({ matchDuration }: GameTimerProps) => {
+export const GameTimer = ({ matchDuration = 15 }: GameTimerProps) => {
   const [remainingTime, setRemainingTime] = useState<number>(matchDuration * 60);
   const timerInterval = useRef<NodeJS.Timeout | null>(null);
 

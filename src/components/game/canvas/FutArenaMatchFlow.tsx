@@ -32,7 +32,6 @@ export const FutArenaMatchFlow = ({
   // Map joueur
   const futPlayers = useMemo(() => connectedPlayers.map((p) => ({
     user_id: p.user_id,
-    ea_id: p.ea_id || null,
     display_name: p.display_name,
     is_ready: p.is_ready || false,
   })), [connectedPlayers]);
@@ -45,33 +44,26 @@ export const FutArenaMatchFlow = ({
     const syncCurrentPlayerFutId = async () => {
       if (!currentUserId || !roomData?.id || !futId || futIdLoading) return;
       
-      // Vérifier si le FUT ID actuel est différent de celui dans la base de données
-      const currentPlayer = connectedPlayers.find(p => p.user_id === currentUserId);
-      
-      if (currentPlayer && currentPlayer.ea_id !== futId) {
-        console.log("Synchronising FUT ID in game_players:", { 
-          current: currentPlayer.ea_id, 
-          new: futId 
-        });
-        
-        try {
-          // Mettre à jour le ea_id dans la table game_players
-          const { error } = await supabase
-            .from('game_players')
-            .update({ ea_id: futId })
-            .eq('session_id', roomData.id)
-            .eq('user_id', currentUserId);
+      try {
+        // Mettre à jour le FUT ID pour ce joueur dans la base de données
+        // Nous n'utilisons plus ea_id dans game_players, mais le stockons dans fut_players
+        const { error } = await supabase
+          .from('fut_players')
+          .upsert({ 
+            user_id: currentUserId, 
+            fut_id: futId,
+            updated_at: new Date().toISOString() 
+          });
             
-          if (error) throw error;
-          console.log("FUT ID synchronized successfully");
-        } catch (error) {
-          console.error("Error synchronizing FUT ID:", error);
-        }
+        if (error) throw error;
+        console.log("FUT ID synchronized successfully in fut_players table");
+      } catch (error) {
+        console.error("Error synchronizing FUT ID:", error);
       }
     };
     
     syncCurrentPlayerFutId();
-  }, [currentUserId, roomData?.id, futId, futIdLoading, connectedPlayers]);
+  }, [currentUserId, roomData?.id, futId, futIdLoading]);
 
   const gameHasStarted = gameStatus === "playing" || 
                          (gameStatus === "starting" && window.gameInitialized) || 
@@ -93,12 +85,14 @@ export const FutArenaMatchFlow = ({
     try {
       console.log("Starting Get Ready process as", isHost ? "host" : "player");
 
-      // Synchroniser le FUT ID avant de se mettre ready
+      // Synchroniser le FUT ID dans la table fut_players avant de se mettre ready
       const { error: syncError } = await supabase
-        .from('game_players')
-        .update({ ea_id: futId })
-        .eq('session_id', roomData.id)
-        .eq('user_id', currentUserId);
+        .from('fut_players')
+        .upsert({ 
+          user_id: currentUserId, 
+          fut_id: futId,
+          updated_at: new Date().toISOString() 
+        });
         
       if (syncError) {
         console.error("Error updating FUT ID:", syncError);
@@ -175,7 +169,7 @@ export const FutArenaMatchFlow = ({
     return (
       <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-30">
         <div className="flex flex-col items-center animate-fade-in">
-          <GameTimer matchDuration={roomData.match_duration!} />
+          <GameTimer matchDuration={15} /> {/* Hardcoded default match duration */}
           <p className="mt-6 text-xl text-muted-foreground font-semibold">Match en cours</p>
         </div>
       </div>
@@ -190,8 +184,8 @@ export const FutArenaMatchFlow = ({
             <span className="font-bold text-lg text-primary mb-2">{`Joueur ${idx + 1}`}</span>
             <span className="text-2xl font-semibold text-foreground mb-1">FUT ID :</span>
             <span className="mb-4 text-xl text-muted-foreground">
-              {p.ea_id ? (
-                <span>{p.ea_id}</span>
+              {futId && p.user_id === currentUserId ? (
+                <span>{futId}</span>
               ) : (
                 <span className="italic text-red-500">Non défini</span>
               )}
@@ -202,7 +196,7 @@ export const FutArenaMatchFlow = ({
                 Prêt
               </div>
             )}
-            {!p.ea_id && p.user_id !== currentUserId && (
+            {!futId && p.user_id !== currentUserId && (
               <div className="text-sm text-red-500 italic mt-2">En attente que ce joueur renseigne son FUT ID…</div>
             )}
           </div>
