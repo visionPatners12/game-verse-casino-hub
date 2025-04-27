@@ -30,17 +30,7 @@ export const GameFormLayout = ({ form, onSubmit, showRules = false, children }: 
       <div className="space-y-8">
         {showRules && (
           <div className="space-y-4">
-            <GameRules 
-              gameType="futarena" 
-              matchSettings={{
-                halfLengthMinutes: form.getValues('halfLengthMinutes'),
-                legacyDefending: form.getValues('legacyDefending'),
-                customFormations: form.getValues('customFormations'),
-                platform: form.getValues('platform'),
-                mode: form.getValues('mode'),
-                teamType: form.getValues('teamType'),
-              }}
-            />
+            <GameRules gameType="futarena" />
             {!rulesAccepted && (
               <Button onClick={handleAcceptRules} className="w-full">
                 J'accepte les règles
@@ -92,17 +82,14 @@ export const GameFormLayout = ({ form, onSubmit, showRules = false, children }: 
               </p>
             </div>
 
-            <Alert className="bg-yellow-500/10 border-yellow-500/20">
-              <AlertTriangle className="h-4 w-4 text-yellow-500" />
-              <AlertDescription className="font-medium">
-                Identifiants de jeu:
-                <p className="font-normal mt-2">
-                  Ce match n'est valable que s'il est joué entre les identifiants listés ci-dessus. 
-                  Si vous acceptez de jouer tout le match et perdez, puis contestez - votre contestation 
-                  ne sera pas prise en considération.
-                </p>
-              </AlertDescription>
-            </Alert>
+            <div className="bg-yellow-500/10 p-4 rounded-lg border border-yellow-500/20">
+              <p className="font-semibold mb-2">⚠️ Identifiants de jeu:</p>
+              <p>
+                Ce match n'est valable que s'il est joué entre les identifiants listés ci-dessus. 
+                Si vous acceptez de jouer tout le match et perdez, puis contestez - votre contestation 
+                ne sera pas prise en considération.
+              </p>
+            </div>
 
             <div className="space-y-2">
               <p className="font-medium">
@@ -114,37 +101,31 @@ export const GameFormLayout = ({ form, onSubmit, showRules = false, children }: 
               </p>
             </div>
 
-            <Alert variant="destructive" className="bg-red-500/10 border-red-500/20">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <span className="font-medium">Avertissement:</span>
-                <p className="mt-2">
-                  La soumission de résultats faux ou falsifiés entraînera des pénalités financières immédiates.
-                </p>
-                <ul className="list-disc pl-4 mt-2 space-y-1">
-                  <li>1ère infraction = 5€</li>
-                  <li>2ème infraction = 25€</li>
-                  <li>3ème infraction = Suppression de 100% du solde + Bannissement</li>
-                </ul>
-              </AlertDescription>
-            </Alert>
+            <div className="bg-red-500/10 p-4 rounded-lg border border-red-500/20">
+              <p className="font-semibold text-red-500 mb-2">⚠️ Avertissement:</p>
+              <p>
+                La soumission de résultats faux ou falsifiés entraînera des pénalités financières immédiates.
+              </p>
+              <ul className="list-disc pl-4 mt-2 space-y-1">
+                <li>1ère infraction = 5€</li>
+                <li>2ème infraction = 25€</li>
+                <li>3ème infraction = Suppression de 100% du solde + Bannissement</li>
+              </ul>
+            </div>
 
             <p>
               Tout match nécessitant plusieurs parties doit être prêt à jouer dans les 15 minutes 
               suivant la dernière partie. Le non-respect de cette règle entraînera un forfait.
             </p>
 
-            <div className="text-xs text-muted-foreground mt-4">
-              <Separator className="my-4" />
-              <p>
-                Katchicka n'est ni approuvé par, ni directement affilié à, ni maintenu ou sponsorisé 
-                par Apple Inc, Electronic Arts, Activision Blizzard, Take-Two Interactive, Microsoft, 
-                Xbox, Sony, Playstation ou Epic Games. Tous les contenus, titres de jeux, noms 
-                commerciaux et/ou habillages commerciaux, marques déposées, illustrations et images 
-                associées sont des marques déposées et/ou des documents protégés par le droit d'auteur 
-                de leurs propriétaires respectifs.
-              </p>
-            </div>
+            <p className="text-xs text-muted-foreground mt-4">
+              Katchicka n'est ni approuvé par, ni directement affilié à, ni maintenu ou sponsorisé 
+              par Apple Inc, Electronic Arts, Activision Blizzard, Take-Two Interactive, Microsoft, 
+              Xbox, Sony, Playstation ou Epic Games. Tous les contenus, titres de jeux, noms 
+              commerciaux et/ou habillages commerciaux, marques déposées, illustrations et images 
+              associées sont des marques déposées et/ou des documents protégés par le droit d'auteur 
+              de leurs propriétaires respectifs.
+            </p>
           </div>
         </ScrollArea>
       </div>
