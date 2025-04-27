@@ -31,6 +31,10 @@ export const useAuth = () => {
     lastName: string;
     phone: string;
     country: string;
+    xbox_gamertag?: string;
+    psn_username?: string;
+    epic_username?: string;
+    activision_username?: string;
   }) => {
     setIsLoading(true);
     try {

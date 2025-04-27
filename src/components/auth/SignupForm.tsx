@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { Mail, Lock, User, Phone, Globe, Gamepad, Xbox, Play, Controller } from "lucide-react";
+import { Mail, Lock, User, Phone, Globe, Gamepad, Monitor, Play, Loader2 } from "lucide-react";
 
 export const SignupForm = () => {
   const { signUp } = useAuth();
@@ -133,7 +134,7 @@ export const SignupForm = () => {
         <div className="space-y-2">
           <Label htmlFor="xbox_gamertag">Xbox Live Gamertag</Label>
           <div className="relative">
-            <Xbox className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Monitor className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               id="xbox_gamertag"
               name="xbox_gamertag"
@@ -163,7 +164,7 @@ export const SignupForm = () => {
         <div className="space-y-2">
           <Label htmlFor="epic_username">Epic Games Username</Label>
           <div className="relative">
-            <Controller className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Gamepad className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               id="epic_username"
               name="epic_username"
