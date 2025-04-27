@@ -1,7 +1,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createRoomSchema, type CreateRoomFormData } from "./schemas/createRoomSchema";
+import { createClassicRoomSchema, type CreateClassicRoomFormData } from "./schemas/createClassicRoomSchema";
 import { BetAmountField } from "./components/BetAmountField";
 import { PlayersField } from "./components/PlayersField";
 import { WinnersField } from "./components/WinnersField";
@@ -25,24 +25,18 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
   const { createRoom } = useCreateRoom(username, gameType);
   const { checkBalance } = useWalletBalanceCheck();
 
-  const form = useForm<CreateRoomFormData>({
-    resolver: zodResolver(createRoomSchema),
+  const form = useForm<CreateClassicRoomFormData>({
+    resolver: zodResolver(createClassicRoomSchema),
     defaultValues: {
       bet: 0,
       maxPlayers: gameConfig?.min_players || 2,
       winnerCount: 1,
       gridSize: 3,
-      halfLengthMinutes: 12,
-      platform: 'ps5',
-      mode: 'online_friendlies',
-      teamType: 'any_teams',
-      legacyDefending: false,
-      customFormations: false,
       _gameType: gameType
     }
   });
 
-  const onSubmit = async (values: CreateRoomFormData) => {
+  const onSubmit = async (values: CreateClassicRoomFormData) => {
     const hasEnoughBalance = await checkBalance(values.bet);
     if (hasEnoughBalance) {
       createRoom(values);
@@ -50,22 +44,13 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
   };
 
   const showGridSizeField = gameType === "tictactoe";
-  const showFutArenaFields = gameType === "futarena";
 
   return (
-    <GameFormLayout form={form} onSubmit={onSubmit} showRules={gameType === "futarena"}>
+    <GameFormLayout form={form} onSubmit={onSubmit}>
       <BetAmountField form={form} />
       <PlayersField form={form} gameConfig={gameConfig} />
       <WinnersField form={form} />
       {showGridSizeField && <GridSizeField form={form} />}
-      {showFutArenaFields && (
-        <>
-          <GameConfigFields form={form} />
-          <PlatformField form={form} />
-          <GameModeField form={form} />
-          <TeamTypeField form={form} />
-        </>
-      )}
     </GameFormLayout>
   );
 }
