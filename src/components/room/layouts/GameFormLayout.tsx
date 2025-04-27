@@ -1,7 +1,5 @@
-
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { GameRules } from "@/components/game/GameRules";
 import { RulesAcceptedBlock } from "../components/RulesAcceptedBlock";
 import { UseFormReturn } from "react-hook-form";
 import { CreateRoomFormData } from "../schemas/createRoomSchema";
@@ -18,40 +16,18 @@ interface GameFormLayoutProps {
   children: React.ReactNode;
 }
 
-export const GameFormLayout = ({ form, onSubmit, showRules = false, children }: GameFormLayoutProps) => {
-  const [rulesAccepted, setRulesAccepted] = useState(false);
-
-  const handleAcceptRules = () => {
-    setRulesAccepted(true);
-  };
-
+export const GameFormLayout = ({ form, onSubmit, children }: GameFormLayoutProps) => {
   return (
     <div className="grid md:grid-cols-2 gap-8">
       <div className="space-y-8">
-        {showRules && (
-          <div className="space-y-4">
-            <GameRules gameType="futarena" />
-            {!rulesAccepted && (
-              <Button onClick={handleAcceptRules} className="w-full">
-                J'accepte les règles
-              </Button>
-            )}
-          </div>
-        )}
-
-        {(!showRules || rulesAccepted) && (
-          <>
-            {rulesAccepted && <RulesAcceptedBlock />}
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                {children}
-                <Button type="submit" className="w-full">
-                  Create Room
-                </Button>
-              </form>
-            </Form>
-          </>
-        )}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {children}
+            <Button type="submit" className="w-full">
+              Create Room
+            </Button>
+          </form>
+        </Form>
       </div>
 
       <div className="bg-muted/50 rounded-lg p-6 space-y-6">
