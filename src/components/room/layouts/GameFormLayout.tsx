@@ -64,10 +64,14 @@ export const GameFormLayout = ({ form, onSubmit, children }: GameFormLayoutProps
       updateData.xbox_gamertag = platformId;
     }
 
+    // Get the current user
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) return;
+
     const { error } = await supabase
       .from('users')
       .update(updateData)
-      .eq('id', profile.id);
+      .eq('id', authData.user.id);
 
     if (!error) {
       await refreshProfile();

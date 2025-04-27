@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createRoomSchema, type CreateRoomFormData } from "./schemas/createRoomSchema";
@@ -44,7 +45,7 @@ export function CreateArenaRoomForm({ username, gameType, gameConfig }: CreateAr
   };
 
   return (
-    <GameFormLayout form={form} onSubmit={onSubmit} showRules>
+    <GameFormLayout form={form} onSubmit={onSubmit}>
       <BetAmountField form={form} />
       <GameConfigFields form={form} />
       <PlatformField form={form} />
