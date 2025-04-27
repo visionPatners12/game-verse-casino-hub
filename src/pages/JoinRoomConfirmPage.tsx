@@ -53,7 +53,7 @@ export default function JoinRoomConfirmPage() {
                 avatar_url
               )
             ),
-            arena_game_sessions!inner(
+            arena_game_sessions(
               platform,
               mode,
               team_type,
@@ -104,25 +104,17 @@ export default function JoinRoomConfirmPage() {
         const arenaConfig = room.arena_game_sessions[0];
         console.log("Arena configuration:", arenaConfig);
         
-        // Configurer les paramètres du jeu
+        // Configurer les paramètres du jeu avec des valeurs par défaut si nécessaire
         setGameSettings({
-          halfLengthMinutes: arenaConfig.half_length_minutes || 12,
-          legacyDefendingAllowed: arenaConfig.legacy_defending_allowed || false,
-          customFormationsAllowed: arenaConfig.custom_formations_allowed || false,
-          platform: arenaConfig.platform as GamePlatform || 'ps5',
-          mode: arenaConfig.mode as GameMode || 'online_friendlies',
-          teamType: arenaConfig.team_type as TeamType || 'any_teams'
+          halfLengthMinutes: arenaConfig?.half_length_minutes || 12,
+          legacyDefendingAllowed: arenaConfig?.legacy_defending_allowed || false,
+          customFormationsAllowed: arenaConfig?.custom_formations_allowed || false,
+          platform: (arenaConfig?.platform as GamePlatform) || 'ps5',
+          mode: (arenaConfig?.mode as GameMode) || 'online_friendlies',
+          teamType: (arenaConfig?.team_type as TeamType) || 'any_teams'
         });
         
-        // Fusionner les données de la session de jeu et de la configuration d'arène
-        const mergedRoomData = {
-          ...room,
-          ...arenaConfig
-        };
-        
-        console.log("Merged room data:", mergedRoomData);
-        console.log("Game settings:", gameSettings);
-        setRoomData(mergedRoomData);
+        setRoomData(room);
 
         // Récupérer les données du créateur (premier joueur)
         if (room.game_players && room.game_players.length > 0) {
@@ -130,9 +122,9 @@ export default function JoinRoomConfirmPage() {
           // Accéder correctement aux données utilisateur
           const creatorData = {
             ...creator,
-            username: creator.users?.username || "Joueur inconnu",
+            username: creator.users?.username || creator.display_name || "Joueur inconnu",
             avatar_url: creator.users?.avatar_url || null,
-            ea_id: creator.ea_id
+            ea_id: creator.ea_id || "Non spécifié"
           };
           console.log("Creator data:", creatorData);
           setHostData(creatorData);
@@ -193,7 +185,7 @@ export default function JoinRoomConfirmPage() {
                 <HostInfoCard 
                   hostUsername={hostData.username}
                   hostAvatar={hostData.avatar_url}
-                  gamerTag={hostData.ea_id || "Non spécifié"}
+                  gamerTag={hostData.ea_id}
                 />
                 <p className="text-sm text-muted-foreground mt-2 italic">
                   Pour commencer le match, envoyez une invitation à l'ID EA du créateur
