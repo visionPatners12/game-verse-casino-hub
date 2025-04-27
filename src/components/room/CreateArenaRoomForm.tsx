@@ -1,7 +1,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createRoomSchema, type CreateRoomFormData } from "./schemas/createRoomSchema";
+import { createArenaRoomSchema, type CreateArenaRoomFormData } from "./schemas/createArenaRoomSchema";
 import { BetAmountField } from "./components/BetAmountField";
 import { GameFormLayout } from "./layouts/GameFormLayout";
 import { GameConfigFields } from "./fields/GameConfigFields";
@@ -27,8 +27,8 @@ export function CreateArenaRoomForm({ username, gameType, gameConfig }: CreateAr
   const { createRoom } = useCreateRoom(username, gameType);
   const { checkBalance } = useWalletBalanceCheck();
 
-  const form = useForm<CreateRoomFormData>({
-    resolver: zodResolver(createRoomSchema),
+  const form = useForm<CreateArenaRoomFormData>({
+    resolver: zodResolver(createArenaRoomSchema),
     defaultValues: {
       bet: 0,
       maxPlayers: 2,
@@ -43,7 +43,7 @@ export function CreateArenaRoomForm({ username, gameType, gameConfig }: CreateAr
     }
   });
 
-  const onSubmit = async (values: CreateRoomFormData) => {
+  const onSubmit = async (values: CreateArenaRoomFormData) => {
     if (!user) return;
 
     const hasEnoughBalance = await checkBalance(values.bet);

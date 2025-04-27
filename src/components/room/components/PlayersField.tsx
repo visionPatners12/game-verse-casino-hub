@@ -9,10 +9,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
-import { CreateRoomFormData } from "../schemas/createRoomSchema";
+import { CreateClassicRoomFormData } from "../schemas/createClassicRoomSchema";
+import { CreateArenaRoomFormData } from "../schemas/createArenaRoomSchema";
+
+type FormData = CreateClassicRoomFormData | CreateArenaRoomFormData;
 
 type PlayersFieldProps = {
-  form: UseFormReturn<CreateRoomFormData>;
+  form: UseFormReturn<FormData>;
   gameConfig: any;
 };
 

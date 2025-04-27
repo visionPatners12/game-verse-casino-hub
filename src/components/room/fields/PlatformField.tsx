@@ -2,10 +2,10 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
-import { CreateRoomFormData } from "../schemas/createRoomSchema";
+import { CreateArenaRoomFormData } from "../schemas/createArenaRoomSchema";
 
 interface PlatformFieldProps {
-  form: UseFormReturn<CreateRoomFormData>;
+  form: UseFormReturn<CreateArenaRoomFormData>;
 }
 
 export const PlatformField = ({ form }: PlatformFieldProps) => {

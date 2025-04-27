@@ -3,12 +3,12 @@ import { useEffect } from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
-import { CreateRoomFormData } from "../schemas/createRoomSchema";
+import { CreateArenaRoomFormData } from "../schemas/createArenaRoomSchema";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 interface GamerTagFieldProps {
-  form: UseFormReturn<CreateRoomFormData>;
+  form: UseFormReturn<CreateArenaRoomFormData>;
 }
 
 export const GamerTagField = ({ form }: GamerTagFieldProps) => {
@@ -67,4 +67,4 @@ export const GamerTagField = ({ form }: GamerTagFieldProps) => {
       )}
     />
   );
-};
+}

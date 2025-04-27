@@ -4,10 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Timer } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
-import { CreateRoomFormData } from "../schemas/createRoomSchema";
+import { CreateArenaRoomFormData } from "../schemas/createArenaRoomSchema";
 
 interface GameConfigFieldsProps {
-  form: UseFormReturn<CreateRoomFormData>;
+  form: UseFormReturn<CreateArenaRoomFormData>;
 }
 
 export const GameConfigFields = ({ form }: GameConfigFieldsProps) => {

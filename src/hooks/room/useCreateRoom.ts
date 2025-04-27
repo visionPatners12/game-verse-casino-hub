@@ -2,15 +2,18 @@
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { GameCode, isValidGameType, gameCodeToType } from "@/lib/gameTypes";
-import { CreateRoomFormData } from "@/components/room/schemas/createRoomSchema";
+import { CreateClassicRoomFormData } from "@/components/room/schemas/createClassicRoomSchema";
+import { CreateArenaRoomFormData } from "@/components/room/schemas/createArenaRoomSchema";
 import { toast } from "sonner";
 import { useWallet } from "@/hooks/useWallet";
+
+type RoomFormData = CreateClassicRoomFormData | CreateArenaRoomFormData;
 
 export function useCreateRoom(username: string, gameType: string | undefined) {
   const navigate = useNavigate();
   const { wallet } = useWallet({ enableTransactions: false });
 
-  const createRoom = async (values: CreateRoomFormData) => {
+  const createRoom = async (values: RoomFormData) => {
     try {
       const { data: authData } = await supabase.auth.getUser();
       if (!authData.user) {
@@ -58,15 +61,16 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
 
       // If it's an arena game, insert the specific settings into arena_game_sessions table
       const isArenaGame = ["futarena", "eafc25", "madden24", "nba2k24", "nhl24"].includes(safeGameType);
-      if (isArenaGame) {
+      if (isArenaGame && 'platform' in values) {
+        const arenaValues = values as CreateArenaRoomFormData;
         const arenaInsertData = {
           id: data.id, // Use the same ID as the main game session
-          platform: values.platform,
-          mode: values.mode,
-          team_type: values.teamType,
-          legacy_defending_allowed: values.legacyDefending,
-          custom_formations_allowed: values.customFormations,
-          half_length_minutes: values.halfLengthMinutes || 12,
+          platform: arenaValues.platform,
+          mode: arenaValues.mode,
+          team_type: arenaValues.teamType,
+          legacy_defending_allowed: arenaValues.legacyDefending,
+          custom_formations_allowed: arenaValues.customFormations,
+          half_length_minutes: arenaValues.halfLengthMinutes || 12,
         };
 
         console.log("Adding arena specific settings:", arenaInsertData);

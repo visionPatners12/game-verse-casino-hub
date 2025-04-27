@@ -1,7 +1,7 @@
 
 import { z } from "zod";
 
-export const createRoomSchema = z.object({
+export const createArenaRoomSchema = z.object({
   bet: z.number().min(0),
   maxPlayers: z.number().min(2),
   winnerCount: z.number().optional(),
@@ -16,4 +16,4 @@ export const createRoomSchema = z.object({
   gamerTag: z.string().min(1, "Gamer tag is required"),
 });
 
-export type CreateRoomFormData = z.infer<typeof createRoomSchema>;
+export type CreateArenaRoomFormData = z.infer<typeof createArenaRoomSchema>;

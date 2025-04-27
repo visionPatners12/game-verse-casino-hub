@@ -1,22 +1,26 @@
+
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { RulesAcceptedBlock } from "../components/RulesAcceptedBlock";
 import { UseFormReturn } from "react-hook-form";
-import { CreateRoomFormData } from "../schemas/createRoomSchema";
+import { CreateClassicRoomFormData } from "../schemas/createClassicRoomSchema";
+import { CreateArenaRoomFormData } from "../schemas/createArenaRoomSchema";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, AlertCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
+type FormData = CreateClassicRoomFormData | CreateArenaRoomFormData;
+
 interface GameFormLayoutProps {
-  form: UseFormReturn<CreateRoomFormData>;
-  onSubmit: (values: CreateRoomFormData) => void;
+  form: UseFormReturn<FormData>;
+  onSubmit: (values: FormData) => void;
   showRules?: boolean;
   children: React.ReactNode;
 }
 
-export const GameFormLayout = ({ form, onSubmit, children }: GameFormLayoutProps) => {
+export const GameFormLayout = ({ form, onSubmit, children, showRules }: GameFormLayoutProps) => {
   return (
     <div className="grid md:grid-cols-2 gap-8">
       <div className="space-y-8">
