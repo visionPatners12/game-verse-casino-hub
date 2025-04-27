@@ -8,7 +8,6 @@ export const createRoomSchema = z.object({
   winnerCount: z.number().optional(),
   gridSize: z.number().optional(),
   halfLengthMinutes: z.number().optional(),
-  eaId: z.string().optional(),
   platform: z.enum(['ps5', 'xbox_series', 'cross_play']).optional(),
   mode: z.enum(['online_friendlies', 'fut']).optional(),
   teamType: z.enum(['any_teams', '85_rated', 'country', 'fut_team']).optional(),

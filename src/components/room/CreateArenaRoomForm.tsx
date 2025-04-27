@@ -47,7 +47,7 @@ export function CreateArenaRoomForm({ username, gameType, gameConfig }: CreateAr
   return (
     <GameFormLayout form={form} onSubmit={onSubmit} showRulesDialog>
       <BetAmountField form={form} />
-      <GameConfigFields form={form} showEAID />
+      <GameConfigFields form={form} />
       <PlatformField form={form} />
       <GameModeField form={form} />
       <TeamTypeField form={form} />

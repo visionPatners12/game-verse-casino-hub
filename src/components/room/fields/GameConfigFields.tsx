@@ -2,37 +2,17 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Timer, Text } from "lucide-react";
+import { Timer } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { CreateRoomFormData } from "../schemas/createRoomSchema";
 
 interface GameConfigFieldsProps {
   form: UseFormReturn<CreateRoomFormData>;
-  showEAID?: boolean;
 }
 
-export const GameConfigFields = ({ form, showEAID = false }: GameConfigFieldsProps) => {
+export const GameConfigFields = ({ form }: GameConfigFieldsProps) => {
   return (
     <>
-      {showEAID && (
-        <FormField
-          control={form.control}
-          name="eaId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2">
-                <Text className="h-4 w-4" />
-                EA ID (obligatoire)
-              </FormLabel>
-              <FormControl>
-                <Input placeholder="Votre EA ID" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      )}
-
       <FormField
         control={form.control}
         name="halfLengthMinutes"
