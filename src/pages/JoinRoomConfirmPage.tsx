@@ -29,8 +29,7 @@ export default function JoinRoomConfirmPage() {
         // Vérifier si l'ID est un UUID ou un code de salle
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(roomId);
         
-        // Création de la requête pour récupérer les données du salon
-        let query = supabase
+        const query = supabase
           .from('game_sessions')
           .select(`
             *,
@@ -55,14 +54,9 @@ export default function JoinRoomConfirmPage() {
           `);
         
         // Utiliser le champ approprié pour la recherche
-        let result;
-        if (isUuid) {
-          result = await query.eq('id', roomId).single();
-        } else {
-          result = await query.eq('room_id', roomId).maybeSingle();
-        }
-        
-        const { data: room, error } = result;
+        const { data: room, error } = isUuid 
+          ? await query.eq('id', roomId).single()
+          : await query.eq('room_id', roomId).maybeSingle();
 
         if (error) {
           console.error('Error fetching room data:', error);
@@ -90,6 +84,7 @@ export default function JoinRoomConfirmPage() {
         // Récupérer les données du créateur (premier joueur)
         if (room.game_players && room.game_players.length > 0) {
           const creator = room.game_players[0];
+          // Fix: Accéder correctement aux données utilisateur
           const creatorData = {
             ...creator,
             username: creator.users?.username || "Joueur inconnu",
