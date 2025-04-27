@@ -1,3 +1,4 @@
+
 import { GameType } from "@/components/GameCard";
 import {
   AlertDialog,
@@ -9,13 +10,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Users, DollarSign, Trophy } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { GameRules } from "@/components/game/GameRules";
 import { HostInfoCard } from "./HostInfoCard";
+import { RoomInfo } from "@/components/game/join-dialog/RoomInfo";
+import { GameSettings } from "@/components/game/join-dialog/GameSettings";
+import { PlatformRules } from "@/components/game/join-dialog/PlatformRules";
+import { DisclaimerSection } from "@/components/game/join-dialog/DisclaimerSection";
 
 interface JoinRoomConfirmDialogProps {
   open: boolean;
@@ -80,66 +83,41 @@ export function JoinRoomConfirmDialog({
 
             <Separator className="bg-casino-accent/20" />
 
-            {/* Room Info Section */}
             <div className="space-y-4">
               <h3 className="font-semibold text-casino-accent">Informations de la salle</h3>
-              <div className="flex flex-wrap gap-3">
-                <Badge variant="outline" className="border-casino-accent bg-casino-dark/10">
-                  <Users className="h-3 w-3 mr-1" />
-                  {roomData.current_players}/{roomData.max_players} Joueurs
-                </Badge>
-                
-                <Badge variant="outline" className="border-casino-accent bg-casino-dark/10">
-                  <DollarSign className="h-3 w-3 mr-1" />
-                  ${roomData.entry_fee} Mise
-                </Badge>
-                
-                <Badge variant="outline" className="border-casino-accent bg-casino-dark/10">
-                  <Trophy className="h-3 w-3 mr-1" />
-                  ${totalPot.toFixed(2)} Cagnotte
-                </Badge>
-              </div>
+              <RoomInfo 
+                currentPlayers={roomData.current_players}
+                maxPlayers={roomData.max_players}
+                entryFee={roomData.entry_fee}
+              />
               
-              <div className="grid md:grid-cols-2 gap-4 text-sm text-muted-foreground">
-                <div className="space-y-2">
-                  <p>• Nombre de gagnants: {roomData.winner_count}</p>
-                  <p>• Commission: {roomData.commission_rate || 5}%</p>
-                  <p>• Type de jeu: {roomData.game_type}</p>
-                </div>
-                {isFutArena && (
-                  <div className="space-y-2">
-                    <p>• Durée mi-temps: {roomData.half_length_minutes} minutes</p>
-                    <p>• Legacy Defending: {roomData.legacy_defending_allowed ? "Autorisé" : "Non autorisé"}</p>
-                    <p>• Formations personnalisées: {roomData.custom_formations_allowed ? "Autorisées" : "Non autorisées"}</p>
-                    <p>• Plateforme: {roomData.platform}</p>
-                    <p>• Mode de jeu: {roomData.mode}</p>
-                    <p>• Type d'équipes: {roomData.team_type}</p>
-                  </div>
-                )}
-              </div>
+              {isFutArena && (
+                <GameSettings
+                  halfLengthMinutes={roomData.half_length_minutes}
+                  legacyDefendingAllowed={roomData.legacy_defending_allowed}
+                  customFormationsAllowed={roomData.custom_formations_allowed}
+                  platform={roomData.platform}
+                  mode={roomData.mode}
+                  teamType={roomData.team_type}
+                />
+              )}
             </div>
 
             <Separator className="bg-casino-accent/20" />
 
-            {/* Platform Rules */}
-            <div className="space-y-4">
-              <h3 className="font-semibold">Règles de la plateforme</h3>
-              <div className="text-sm text-muted-foreground space-y-2">
-                <p>• Soyez fair-play et respectueux envers les autres joueurs</p>
-                <p>• Toute forme de triche entraînera une exclusion définitive</p>
-                <p>• Les décisions des modérateurs sont définitives</p>
-                <p>• La mise est bloquée jusqu'à la fin de la partie</p>
-                <p>• En cas de déconnexion prolongée, la partie peut être annulée</p>
-              </div>
-            </div>
+            <PlatformRules />
 
             <Separator className="bg-casino-accent/20" />
 
-            {/* Game Rules */}
+            <DisclaimerSection />
+
             {isFutArena && (
-              <div className="space-y-4">
-                <GameRules gameType={roomData.game_type} />
-              </div>
+              <>
+                <Separator className="bg-casino-accent/20" />
+                <div className="space-y-4">
+                  <GameRules gameType={roomData.game_type} />
+                </div>
+              </>
             )}
           </div>
         </ScrollArea>
