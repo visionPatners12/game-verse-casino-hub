@@ -2,12 +2,15 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createRoomSchema, type CreateRoomFormData } from "./schemas/createRoomSchema";
+import { BetAmountField } from "./components/BetAmountField";
+import { PlayersField } from "./components/PlayersField";
+import { WinnersField } from "./components/WinnersField";
+import { GridSizeField } from "./components/GridSizeField";
 import { GameFormLayout } from "./layouts/GameFormLayout";
 import { GameConfigFields } from "./fields/GameConfigFields";
 import { PlatformField } from "./fields/PlatformField";
 import { GameModeField } from "./fields/GameModeField";
 import { TeamTypeField } from "./fields/TeamTypeField";
-import { BetAmountField } from "./components/BetAmountField";
 import { useCreateRoom } from "@/hooks/room/useCreateRoom";
 import { useWalletBalanceCheck } from "@/hooks/room/useWalletBalanceCheck";
 import { GameCode } from "@/lib/gameTypes";
@@ -46,18 +49,22 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
     }
   };
 
+  const showGridSizeField = gameType === "tictactoe";
   const showFutArenaFields = gameType === "futarena";
 
   return (
-    <GameFormLayout form={form} onSubmit={onSubmit}>
+    <GameFormLayout form={form} onSubmit={onSubmit} showRules={gameType === "futarena"}>
+      <BetAmountField form={form} />
+      <PlayersField form={form} gameConfig={gameConfig} />
+      <WinnersField form={form} />
+      {showGridSizeField && <GridSizeField form={form} />}
       {showFutArenaFields && (
-        <div className="space-y-6">
-          <PlatformField form={form} />
+        <>
           <GameConfigFields form={form} />
+          <PlatformField form={form} />
           <GameModeField form={form} />
           <TeamTypeField form={form} />
-          <BetAmountField form={form} />
-        </div>
+        </>
       )}
     </GameFormLayout>
   );
