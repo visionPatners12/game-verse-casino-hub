@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
@@ -5,9 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-import { CreateRoomForm } from "@/components/room/CreateRoomForm";
+import { CreateClassicRoomForm } from "@/components/room/CreateClassicRoomForm";
 import { CreateArenaRoomForm } from "@/components/room/CreateArenaRoomForm";
-import { CreateEAFC25Form } from "@/components/room/CreateEAFC25Form";
 import { toast } from "sonner";
 import { useRoomValidation } from "@/hooks/room/useRoomValidation";
 import { GameCode } from "@/lib/gameTypes";
@@ -60,26 +60,14 @@ const CreateRoom = () => {
     queryFn: async () => {
       if (!validGameType) throw new Error("Game type not specified or invalid");
       
-      const classicGameTypes = ['ludo', 'checkers', 'tictactoe', 'checkgame', 'futarena'];
+      const { data, error } = await supabase
+        .from('game_types')
+        .select('*')
+        .eq('code', validGameType)
+        .single();
       
-      if (classicGameTypes.includes(validGameType)) {
-        const { data, error } = await supabase
-          .from('game_types')
-          .select('*')
-          .eq('code', validGameType)
-          .single();
-        
-        if (error) throw error;
-        return data;
-      } else {
-        return {
-          code: validGameType,
-          name: validGameType.charAt(0).toUpperCase() + validGameType.slice(1),
-          min_players: 2,
-          max_players: 2,
-          is_configurable: false
-        };
-      }
+      if (error) throw error;
+      return data;
     },
     enabled: !!validGameType
   });
@@ -108,7 +96,7 @@ const CreateRoom = () => {
                   gameConfig={gameConfig} 
                 />
               ) : (
-                <CreateRoomForm 
+                <CreateClassicRoomForm 
                   username={username} 
                   gameType={validGameType} 
                   gameConfig={gameConfig} 

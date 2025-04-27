@@ -1,8 +1,7 @@
 
 // Export components
-export { CreateRoomForm } from './CreateRoomForm';
+export { CreateClassicRoomForm } from './CreateClassicRoomForm';
 export { CreateArenaRoomForm } from './CreateArenaRoomForm';
-export { CreateEAFC25Form } from './CreateEAFC25Form';
 export { BetAmountField } from './components/BetAmountField';
 export { PlayersField } from './components/PlayersField';
 export { WinnersField } from './components/WinnersField';
@@ -15,4 +14,5 @@ export { GameModeField } from './fields/GameModeField';
 export { TeamTypeField } from './fields/TeamTypeField';
 
 // Export schemas
-export { createRoomSchema, type CreateRoomFormData } from './schemas/createRoomSchema';
+export { createClassicRoomSchema, type CreateClassicRoomFormData } from './schemas/createClassicRoomSchema';
+export { createArenaRoomSchema, type CreateArenaRoomFormData } from './schemas/createArenaRoomSchema';
