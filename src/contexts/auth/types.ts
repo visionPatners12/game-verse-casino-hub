@@ -19,3 +19,4 @@ export type AuthContextType = {
   signOut: () => Promise<void>;
   isLoading: boolean;
 };
+
