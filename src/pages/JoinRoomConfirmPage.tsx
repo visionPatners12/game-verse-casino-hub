@@ -56,7 +56,7 @@ export default function JoinRoomConfirmPage() {
         // Utiliser le champ approprié pour la recherche
         const { data: room, error } = isUuid 
           ? await query.eq('id', roomId).single()
-          : await query.eq('room_id', roomId).single();
+          : await query.eq('room_id', roomId).maybeSingle();
 
         if (error) {
           console.error('Error fetching room data:', error);
@@ -84,10 +84,11 @@ export default function JoinRoomConfirmPage() {
         // Récupérer les données du créateur (premier joueur)
         if (room.game_players && room.game_players.length > 0) {
           const creator = room.game_players[0];
+          // Fix: Accéder correctement aux données utilisateur
           const creatorData = {
             ...creator,
-            username: creator.users && creator.users.length > 0 ? creator.users[0].username : "Joueur inconnu",
-            avatar_url: creator.users && creator.users.length > 0 ? creator.users[0].avatar_url : null,
+            username: creator.users?.username || "Joueur inconnu",
+            avatar_url: creator.users?.avatar_url || null,
             ea_id: creator.ea_id
           };
           console.log("Creator data:", creatorData);
