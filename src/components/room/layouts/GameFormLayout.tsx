@@ -80,18 +80,17 @@ export const GameFormLayout = ({ form, onSubmit, children }: GameFormLayoutProps
     }
   };
 
+  // Reversed the layout - configuration now on the left, rules on the right
   return (
     <div className="grid md:grid-cols-2 gap-8">
-      <div className="space-y-6">
-        <Form {...form}>
-          <form onSubmit={handleFormSubmit} className="space-y-6">
-            {children}
-            <Button type="submit" className="w-full">
-              Create Room
-            </Button>
-          </form>
-        </Form>
-      </div>
+      <Form {...form}>
+        <form onSubmit={handleFormSubmit} className="space-y-6">
+          {children}
+          <Button type="submit" className="w-full">
+            Create Room
+          </Button>
+        </form>
+      </Form>
 
       <div className="bg-muted/50 rounded-lg p-6 space-y-6">
         <ScrollArea className="h-[calc(100vh-12rem)]">
