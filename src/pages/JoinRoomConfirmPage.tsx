@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,21 +26,22 @@ export default function JoinRoomConfirmPage() {
       if (!roomId) return;
       
       try {
+        // Utilisation d'une requête plus simple avec moins de jointures et pas de références de clés étrangères explicites
         const { data: room, error } = await supabase
           .from('game_sessions')
           .select(`
             *,
-            game_players!game_players_session_id_fkey (
+            game_players(
               id,
               user_id,
               display_name,
               ea_id,
-              users!game_players_user_id_fkey (
+              users(
                 username,
                 avatar_url
               )
             ),
-            arena_game_sessions!inner (
+            arena_game_sessions(
               platform,
               mode,
               team_type,
@@ -66,17 +68,21 @@ export default function JoinRoomConfirmPage() {
 
         console.log("Room data:", room);
 
-        setRoomData({
+        // Fusionner les données de la session de jeu et de la configuration d'arène
+        const mergedRoomData = {
           ...room,
-          ...room.arena_game_sessions
-        });
+          ...(room.arena_game_sessions && room.arena_game_sessions[0] ? room.arena_game_sessions[0] : {})
+        };
+        
+        setRoomData(mergedRoomData);
 
+        // Récupérer les données du créateur (premier joueur)
         if (room.game_players && room.game_players.length > 0) {
           const creator = room.game_players[0];
           const creatorData = {
             ...creator,
-            username: creator.users?.username || "Joueur inconnu",
-            avatar_url: creator.users?.avatar_url,
+            username: creator.users && creator.users[0] ? creator.users[0].username : "Joueur inconnu",
+            avatar_url: creator.users && creator.users[0] ? creator.users[0].avatar_url : null,
             ea_id: creator.ea_id
           };
           console.log("Creator data:", creatorData);
