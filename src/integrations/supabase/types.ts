@@ -13,6 +13,8 @@ export type Database = {
         Row: {
           created_at: string | null
           custom_formations_allowed: boolean
+          gamer_tag_1: string | null
+          gamer_tag_2: string | null
           half_length_minutes: number
           id: string
           legacy_defending_allowed: boolean
@@ -24,6 +26,8 @@ export type Database = {
         Insert: {
           created_at?: string | null
           custom_formations_allowed?: boolean
+          gamer_tag_1?: string | null
+          gamer_tag_2?: string | null
           half_length_minutes?: number
           id: string
           legacy_defending_allowed?: boolean
@@ -35,6 +39,8 @@ export type Database = {
         Update: {
           created_at?: string | null
           custom_formations_allowed?: boolean
+          gamer_tag_1?: string | null
+          gamer_tag_2?: string | null
           half_length_minutes?: number
           id?: string
           legacy_defending_allowed?: boolean
@@ -1048,6 +1054,7 @@ export type Database = {
           avatar_url: string | null
           country: string | null
           created_at: string | null
+          ea_id: string | null
           email: string
           epic_username: string | null
           equipped_avatar_id: string | null
@@ -1070,6 +1077,7 @@ export type Database = {
           avatar_url?: string | null
           country?: string | null
           created_at?: string | null
+          ea_id?: string | null
           email: string
           epic_username?: string | null
           equipped_avatar_id?: string | null
@@ -1092,6 +1100,7 @@ export type Database = {
           avatar_url?: string | null
           country?: string | null
           created_at?: string | null
+          ea_id?: string | null
           email?: string
           epic_username?: string | null
           equipped_avatar_id?: string | null
