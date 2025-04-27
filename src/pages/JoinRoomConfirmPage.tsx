@@ -7,8 +7,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { GameType } from "@/components/GameCard";
 import { useJoinRoom } from "@/hooks/room/useJoinRoom";
-import { Clock, GamepadIcon, Users, DollarSign } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { GameSettings } from "@/components/game/join-dialog/GameSettings";
@@ -70,7 +68,7 @@ export default function JoinRoomConfirmPage() {
         }
         
         // Pour les jeux de type EAFC25/FutArena, récupérer les configurations supplémentaires
-        if (room.game_type === 'EAFC25' || room.game_type === 'FutArena') {
+        if (room.game_type?.toLowerCase() === 'eafc25' || room.game_type?.toLowerCase() === 'futarena') {
           const { data: arenaConfig, error: configError } = await supabase
             .from('arena_game_sessions')
             .select('*')
@@ -119,6 +117,7 @@ export default function JoinRoomConfirmPage() {
     );
   }
 
+  // Check if the game type is related to FutArena using lowercase comparison for safety
   const isFutArena = roomData.game_type?.toLowerCase() === "futarena" || roomData.game_type?.toLowerCase() === "eafc25";
 
   return (
