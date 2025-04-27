@@ -142,4 +142,3 @@ export function JoinRoomConfirmDialog({
     </AlertDialog>
   );
 }
-

@@ -74,31 +74,9 @@ export const GameRules = ({ gameType, matchSettings }: GameRulesProps) => {
                 <li className="text-red-500">Interdits: Club Only, National Only, 85 Rated</li>
               </ul>
             </section>
-
-            <Separator />
-
-            <section>
-              <h3 className="font-semibold mb-2">⚠️ Message important</h3>
-              <div className="text-sm text-muted-foreground space-y-2 bg-yellow-500/10 p-4 rounded-lg border border-yellow-500/20">
-                <p className="font-medium">Avant de commencer le match, vérifiez :</p>
-                <ul className="list-disc pl-4 space-y-1">
-                  <li>Mode Online Squads activé</li>
-                  <li>Legacy Defending correctement configuré</li>
-                  <li>Aucune Custom Squad/joueurs modifiés</li>
-                  <li>Formations personnalisées selon le règlement</li>
-                  <li>Durée mi-temps correcte</li>
-                  <li>Type d'équipe conforme</li>
-                </ul>
-                <p className="mt-2 italic">
-                  En cas de non-conformité, ne commencez pas le match et prenez
-                  immédiatement une capture d'écran.
-                </p>
-              </div>
-            </section>
           </div>
         </ScrollArea>
       </CardContent>
     </Card>
   );
 };
-
