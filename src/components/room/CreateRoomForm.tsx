@@ -53,7 +53,7 @@ export function CreateRoomForm({ username, gameType, gameConfig }: CreateRoomFor
   const showFutArenaFields = gameType === "futarena";
 
   return (
-    <GameFormLayout form={form} onSubmit={onSubmit} showRulesDialog={gameType === "futarena"}>
+    <GameFormLayout form={form} onSubmit={onSubmit} showRules={gameType === "futarena"}>
       <BetAmountField form={form} />
       <PlayersField form={form} gameConfig={gameConfig} />
       <WinnersField form={form} />
