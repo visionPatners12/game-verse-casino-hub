@@ -4,14 +4,22 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { GameCode } from "@/lib/gameTypes";
-import { FileText } from "lucide-react";
+import { FileText, Clock, Users, Gamepad } from "lucide-react";
 
 interface GameRulesProps {
   gameType: string;
+  matchSettings?: {
+    halfLengthMinutes?: number;
+    legacyDefending?: boolean;
+    customFormations?: boolean;
+    platform?: string;
+    mode?: string;
+    teamType?: string;
+  };
 }
 
-export const GameRules = ({ gameType }: GameRulesProps) => {
-  if (gameType !== "futarena") {
+export const GameRules = ({ gameType, matchSettings }: GameRulesProps) => {
+  if (gameType !== "futarena" && gameType !== "eafc25") {
     return null;
   }
 
@@ -26,62 +34,63 @@ export const GameRules = ({ gameType }: GameRulesProps) => {
       <CardContent>
         <ScrollArea className="h-[calc(100vh-16rem)] rounded-md pr-4">
           <div className="space-y-4">
+            {matchSettings && (
+              <>
+                <section>
+                  <h3 className="font-semibold mb-2 flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Configuration du match
+                  </h3>
+                  <ul className="text-sm text-muted-foreground space-y-2">
+                    <li>• Durée mi-temps : {matchSettings.halfLengthMinutes} minutes</li>
+                    <li>• Legacy Defending : {matchSettings.legacyDefending ? "Activé" : "Désactivé"}</li>
+                    <li>• Formations personnalisées : {matchSettings.customFormations ? "Autorisées" : "Non autorisées"}</li>
+                  </ul>
+                </section>
+
+                <Separator />
+
+                <section>
+                  <h3 className="font-semibold mb-2 flex items-center gap-2">
+                    <Gamepad className="h-4 w-4" />
+                    Mode de jeu
+                  </h3>
+                  <ul className="text-sm text-muted-foreground space-y-2">
+                    <li>• Plateforme : {matchSettings.platform}</li>
+                    <li>• Mode : {matchSettings.mode}</li>
+                    <li>• Type d'équipes : {matchSettings.teamType}</li>
+                  </ul>
+                </section>
+
+                <Separator />
+              </>
+            )}
+
             <section>
-              <h3 className="font-semibold mb-2">🎮 Mode de jeu</h3>
-              <p className="text-sm text-muted-foreground">
-                Online Squads uniquement. L'utilisation de Custom Squads ou de joueurs modifiés 
-                entraînera la perte automatique du match.
-              </p>
-            </section>
-            
-            <Separator />
-            
-            <section>
-              <h3 className="font-semibold mb-2">⚔️ Configuration du match</h3>
+              <h3 className="font-semibold mb-2">⚔️ Règles de jeu</h3>
               <ul className="text-sm text-muted-foreground space-y-2">
-                <li>• Durée mi-temps : 5 minutes</li>
-                <li>• Legacy Defending : Désactivé</li>
-                <li>• Formations personnalisées : Non autorisées (sauf accord)</li>
-                <li>• Type d'équipes : Any Teams</li>
+                <li>• Online Squads uniquement</li>
+                <li>• L'utilisation de Custom Squads ou de joueurs modifiés entraînera la perte automatique du match</li>
                 <li className="text-red-500">Interdits: Club Only, National Only, 85 Rated</li>
               </ul>
             </section>
-            
+
             <Separator />
-            
+
             <section>
-              <h3 className="font-semibold mb-2">🌍 Plateforme</h3>
-              <p className="text-sm text-muted-foreground">
-                Next-Gen Cross-play (PS5 / Xbox Series X|S) uniquement
-              </p>
-            </section>
-            
-            <Separator />
-            
-            <section>
-              <h3 className="font-semibold mb-2">⚠️ Validation des scores</h3>
-              <p className="text-sm text-muted-foreground">
-                La confirmation manuelle du score est requise. En cas de litige, 
-                des captures d'écran ou vidéos des paramètres et du score seront nécessaires.
-              </p>
-            </section>
-            
-            <Separator />
-            
-            <section>
-              <h3 className="font-semibold mb-2 text-yellow-500">⚠️ Message important</h3>
+              <h3 className="font-semibold mb-2">⚠️ Message important</h3>
               <div className="text-sm text-muted-foreground space-y-2 bg-yellow-500/10 p-4 rounded-lg border border-yellow-500/20">
                 <p className="font-medium">Avant de commencer le match, vérifiez :</p>
                 <ul className="list-disc pl-4 space-y-1">
                   <li>Mode Online Squads activé</li>
-                  <li>Legacy Defending désactivé</li>
+                  <li>Legacy Defending correctement configuré</li>
                   <li>Aucune Custom Squad/joueurs modifiés</li>
-                  <li>Formations personnalisées non utilisées</li>
-                  <li>Durée : 5 minutes par mi-temps</li>
-                  <li>Type d'équipe : Any Teams</li>
+                  <li>Formations personnalisées selon le règlement</li>
+                  <li>Durée mi-temps correcte</li>
+                  <li>Type d'équipe conforme</li>
                 </ul>
                 <p className="mt-2 italic">
-                  En cas de non-conformité, ne commencez pas le match et prenez 
+                  En cas de non-conformité, ne commencez pas le match et prenez
                   immédiatement une capture d'écran.
                 </p>
               </div>
@@ -92,3 +101,4 @@ export const GameRules = ({ gameType }: GameRulesProps) => {
     </Card>
   );
 };
+

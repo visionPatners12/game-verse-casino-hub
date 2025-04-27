@@ -29,6 +29,12 @@ interface JoinRoomConfirmDialogProps {
     current_players: number;
     winner_count: number;
     commission_rate?: number;
+    half_length_minutes?: number;
+    legacy_defending_allowed?: boolean;
+    custom_formations_allowed?: boolean;
+    platform?: string;
+    mode?: string;
+    team_type?: string;
   };
 }
 
@@ -40,7 +46,16 @@ export function JoinRoomConfirmDialog({
   roomData,
 }: JoinRoomConfirmDialogProps) {
   const totalPot = roomData.entry_fee * roomData.current_players * (1 - (roomData.commission_rate || 5)/100);
-  const isFutArena = roomData.game_type?.toLowerCase() === "futarena";
+  const isFutArena = roomData.game_type?.toLowerCase() === "futarena" || roomData.game_type?.toLowerCase() === "eafc25";
+
+  const matchSettings = {
+    halfLengthMinutes: roomData.half_length_minutes,
+    legacyDefending: roomData.legacy_defending_allowed,
+    customFormations: roomData.custom_formations_allowed,
+    platform: roomData.platform,
+    mode: roomData.mode,
+    teamType: roomData.team_type,
+  };
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -100,7 +115,7 @@ export function JoinRoomConfirmDialog({
             {/* Game Rules */}
             {isFutArena && (
               <div className="space-y-4">
-                <GameRules gameType={roomData.game_type} />
+                <GameRules gameType={roomData.game_type} matchSettings={matchSettings} />
               </div>
             )}
           </div>
@@ -127,3 +142,4 @@ export function JoinRoomConfirmDialog({
     </AlertDialog>
   );
 }
+
