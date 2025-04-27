@@ -1,14 +1,45 @@
 
 import { Clock, GamepadIcon } from "lucide-react";
+import { GamePlatform, GameMode, TeamType } from "@/types/futarena";
 
 interface GameSettingsProps {
   halfLengthMinutes?: number;
   legacyDefendingAllowed?: boolean;
   customFormationsAllowed?: boolean;
-  platform?: string;
-  mode?: string;
-  teamType?: string;
+  platform?: GamePlatform | string;
+  mode?: GameMode | string;
+  teamType?: TeamType | string;
 }
+
+// Helper function to format platform display
+const formatPlatform = (platform?: string): string => {
+  switch (platform) {
+    case 'ps5': return 'PlayStation 5';
+    case 'xbox_series': return 'Xbox Series X/S';
+    case 'cross_play': return 'Cross-play';
+    default: return platform || 'Non spécifié';
+  }
+};
+
+// Helper function to format mode display
+const formatMode = (mode?: string): string => {
+  switch (mode) {
+    case 'online_friendlies': return 'Matchs amicaux en ligne';
+    case 'fut': return 'FUT (Ultimate Team)';
+    default: return mode || 'Non spécifié';
+  }
+};
+
+// Helper function to format team type display
+const formatTeamType = (teamType?: string): string => {
+  switch (teamType) {
+    case 'any_teams': return 'Toutes équipes';
+    case '85_rated': return 'Équipes 85 OVR';
+    case 'country': return 'Équipes nationales';
+    case 'fut_team': return 'Équipe FUT';
+    default: return teamType || 'Non spécifié';
+  }
+};
 
 export function GameSettings({
   halfLengthMinutes,
@@ -26,7 +57,7 @@ export function GameSettings({
             <Clock className="h-4 w-4" /> Paramètres de jeu
           </h4>
           <ul className="space-y-2 text-muted-foreground">
-            <li>Durée mi-temps: {halfLengthMinutes} minutes</li>
+            <li>Durée mi-temps: {halfLengthMinutes || 0} minutes</li>
             <li>Legacy Defending: {legacyDefendingAllowed ? "Activé" : "Désactivé"}</li>
             <li>Formations personnalisées: {customFormationsAllowed ? "Autorisées" : "Non autorisées"}</li>
           </ul>
@@ -39,9 +70,9 @@ export function GameSettings({
             <GamepadIcon className="h-4 w-4" /> Configuration
           </h4>
           <ul className="space-y-2 text-muted-foreground">
-            <li>Plateforme: {platform || "PS5"}</li>
-            <li>Mode de jeu: {mode || "Online Friendlies"}</li>
-            <li>Type d'équipes: {teamType || "Any Teams"}</li>
+            <li>Plateforme: {formatPlatform(platform)}</li>
+            <li>Mode de jeu: {formatMode(mode)}</li>
+            <li>Type d'équipes: {formatTeamType(teamType)}</li>
           </ul>
         </div>
       </div>

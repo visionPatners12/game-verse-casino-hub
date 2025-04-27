@@ -13,6 +13,7 @@ import { PlatformRules } from "@/components/game/join-dialog/PlatformRules";
 import { DisclaimerSection } from "@/components/game/join-dialog/DisclaimerSection";
 import { HostInfoCard } from "@/components/games/HostInfoCard";
 import { RoomInfo } from "@/components/game/join-dialog/RoomInfo";
+import { GamePlatform, GameMode, TeamType } from "@/types/futarena";
 
 export default function JoinRoomConfirmPage() {
   const { gameType, roomId } = useParams();
@@ -20,6 +21,14 @@ export default function JoinRoomConfirmPage() {
   const { joinRoom, isLoading } = useJoinRoom();
   const [roomData, setRoomData] = useState<any>(null);
   const [hostData, setHostData] = useState<any>(null);
+  const [gameSettings, setGameSettings] = useState<{
+    halfLengthMinutes: number;
+    legacyDefendingAllowed: boolean;
+    customFormationsAllowed: boolean;
+    platform: GamePlatform;
+    mode: GameMode;
+    teamType: TeamType;
+  } | null>(null);
 
   useEffect(() => {
     const fetchRoomData = async () => {
@@ -91,13 +100,28 @@ export default function JoinRoomConfirmPage() {
           return;
         }
 
+        // Extraire les données de configuration de l'arène
+        const arenaConfig = room.arena_game_sessions[0];
+        console.log("Arena configuration:", arenaConfig);
+        
+        // Configurer les paramètres du jeu
+        setGameSettings({
+          halfLengthMinutes: arenaConfig.half_length_minutes || 12,
+          legacyDefendingAllowed: arenaConfig.legacy_defending_allowed || false,
+          customFormationsAllowed: arenaConfig.custom_formations_allowed || false,
+          platform: arenaConfig.platform as GamePlatform || 'ps5',
+          mode: arenaConfig.mode as GameMode || 'online_friendlies',
+          teamType: arenaConfig.team_type as TeamType || 'any_teams'
+        });
+        
         // Fusionner les données de la session de jeu et de la configuration d'arène
         const mergedRoomData = {
           ...room,
-          ...room.arena_game_sessions[0]
+          ...arenaConfig
         };
         
         console.log("Merged room data:", mergedRoomData);
+        console.log("Game settings:", gameSettings);
         setRoomData(mergedRoomData);
 
         // Récupérer les données du créateur (premier joueur)
@@ -181,14 +205,16 @@ export default function JoinRoomConfirmPage() {
 
             <section>
               <h3 className="text-lg font-semibold mb-4 text-casino-accent">Configuration du match</h3>
-              <GameSettings
-                halfLengthMinutes={roomData.half_length_minutes}
-                legacyDefendingAllowed={roomData.legacy_defending_allowed}
-                customFormationsAllowed={roomData.custom_formations_allowed}
-                platform={roomData.platform}
-                mode={roomData.mode}
-                teamType={roomData.team_type}
-              />
+              {gameSettings && (
+                <GameSettings
+                  halfLengthMinutes={gameSettings.halfLengthMinutes}
+                  legacyDefendingAllowed={gameSettings.legacyDefendingAllowed}
+                  customFormationsAllowed={gameSettings.customFormationsAllowed}
+                  platform={gameSettings.platform}
+                  mode={gameSettings.mode}
+                  teamType={gameSettings.teamType}
+                />
+              )}
             </section>
 
             <Separator className="bg-casino-accent/20" />
