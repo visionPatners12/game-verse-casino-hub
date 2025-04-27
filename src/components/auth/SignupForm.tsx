@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { Mail, Lock, User, Phone, Globe, Loader2 } from "lucide-react";
+import { Mail, Lock, User, Phone, Globe, Gamepad, Xbox, Play, Controller } from "lucide-react";
 
 export const SignupForm = () => {
   const { signUp } = useAuth();
@@ -24,6 +23,10 @@ export const SignupForm = () => {
         lastName: formData.get('lastName') as string,
         phone: formData.get('phone') as string,
         country: formData.get('country') as string,
+        xbox_gamertag: formData.get('xbox_gamertag') as string,
+        psn_username: formData.get('psn_username') as string,
+        epic_username: formData.get('epic_username') as string,
+        activision_username: formData.get('activision_username') as string,
       });
     } finally {
       setIsLoading(false);
@@ -123,6 +126,66 @@ export const SignupForm = () => {
             className="pl-10"
             required
           />
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="xbox_gamertag">Xbox Live Gamertag</Label>
+          <div className="relative">
+            <Xbox className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="xbox_gamertag"
+              name="xbox_gamertag"
+              type="text"
+              placeholder="Xbox Gamertag"
+              className="pl-10"
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="psn_username">PSN Username</Label>
+          <div className="relative">
+            <Play className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="psn_username"
+              name="psn_username"
+              type="text"
+              placeholder="PlayStation Network Username"
+              className="pl-10"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="epic_username">Epic Games Username</Label>
+          <div className="relative">
+            <Controller className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="epic_username"
+              name="epic_username"
+              type="text"
+              placeholder="Epic Games Username"
+              className="pl-10"
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="activision_username">Activision Username</Label>
+          <div className="relative">
+            <Gamepad className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="activision_username"
+              name="activision_username"
+              type="text"
+              placeholder="Activision Username"
+              className="pl-10"
+            />
+          </div>
         </div>
       </div>
       

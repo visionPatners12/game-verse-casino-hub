@@ -1044,57 +1044,69 @@ export type Database = {
       users: {
         Row: {
           active_room_id: string | null
+          activision_username: string | null
           avatar_url: string | null
           country: string | null
           created_at: string | null
           email: string
+          epic_username: string | null
           equipped_avatar_id: string | null
           first_name: string
           id: string
           is_connected: boolean | null
           last_name: string
           phone: string | null
+          psn_username: string | null
           referral_code: string | null
           referred_by: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string | null
           username: string
+          xbox_gamertag: string | null
         }
         Insert: {
           active_room_id?: string | null
+          activision_username?: string | null
           avatar_url?: string | null
           country?: string | null
           created_at?: string | null
           email: string
+          epic_username?: string | null
           equipped_avatar_id?: string | null
           first_name: string
           id?: string
           is_connected?: boolean | null
           last_name: string
           phone?: string | null
+          psn_username?: string | null
           referral_code?: string | null
           referred_by?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
           username: string
+          xbox_gamertag?: string | null
         }
         Update: {
           active_room_id?: string | null
+          activision_username?: string | null
           avatar_url?: string | null
           country?: string | null
           created_at?: string | null
           email?: string
+          epic_username?: string | null
           equipped_avatar_id?: string | null
           first_name?: string
           id?: string
           is_connected?: boolean | null
           last_name?: string
           phone?: string | null
+          psn_username?: string | null
           referral_code?: string | null
           referred_by?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
           username?: string
+          xbox_gamertag?: string | null
         }
         Relationships: [
           {
