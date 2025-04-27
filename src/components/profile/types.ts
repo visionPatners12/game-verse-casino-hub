@@ -7,4 +7,9 @@ export type ProfileData = {
   country: string;
   username: string;
   avatar_url?: string | null;
+  xbox_gamertag?: string;
+  psn_username?: string;
+  epic_username?: string;
+  activision_username?: string;
 };
+

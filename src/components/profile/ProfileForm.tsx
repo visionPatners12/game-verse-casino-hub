@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ProfileData } from "./types";
@@ -74,6 +73,53 @@ export const ProfileForm = ({ profile, loading, onSubmit, onChange }: ProfileFor
           />
         </div>
       </div>
+
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold border-b pb-2">Identifiants de jeu</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label htmlFor="xbox_gamertag" className="text-sm font-medium">Xbox Live Gamertag</label>
+            <Input
+              id="xbox_gamertag"
+              type="text"
+              value={profile?.xbox_gamertag || ''}
+              onChange={(e) => onChange('xbox_gamertag', e.target.value)}
+              placeholder="Votre Xbox Gamertag"
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="psn_username" className="text-sm font-medium">PSN Username</label>
+            <Input
+              id="psn_username"
+              type="text"
+              value={profile?.psn_username || ''}
+              onChange={(e) => onChange('psn_username', e.target.value)}
+              placeholder="Votre PSN Username"
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="epic_username" className="text-sm font-medium">Epic Games Username</label>
+            <Input
+              id="epic_username"
+              type="text"
+              value={profile?.epic_username || ''}
+              onChange={(e) => onChange('epic_username', e.target.value)}
+              placeholder="Votre Epic Games Username"
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="activision_username" className="text-sm font-medium">Activision Username</label>
+            <Input
+              id="activision_username"
+              type="text"
+              value={profile?.activision_username || ''}
+              onChange={(e) => onChange('activision_username', e.target.value)}
+              placeholder="Votre Activision Username"
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="flex justify-end">
         <Button type="submit" disabled={loading} className="flex items-center gap-2">
           {loading ? (
