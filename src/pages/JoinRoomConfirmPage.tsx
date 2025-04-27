@@ -26,8 +26,10 @@ export default function JoinRoomConfirmPage() {
       if (!roomId) return;
       
       try {
-        // Utilisation d'une requête plus simple avec moins de jointures et pas de références de clés étrangères explicites
-        const { data: room, error } = await supabase
+        // Vérifier si l'ID est un UUID ou un code de salle
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(roomId);
+        
+        const query = supabase
           .from('game_sessions')
           .select(`
             *,
@@ -49,9 +51,12 @@ export default function JoinRoomConfirmPage() {
               legacy_defending_allowed,
               custom_formations_allowed
             )
-          `)
-          .eq('id', roomId)
-          .single();
+          `);
+        
+        // Utiliser le champ approprié pour la recherche
+        const { data: room, error } = isUuid 
+          ? await query.eq('id', roomId).single()
+          : await query.eq('room_id', roomId).single();
 
         if (error) {
           console.error('Error fetching room data:', error);
@@ -81,8 +86,8 @@ export default function JoinRoomConfirmPage() {
           const creator = room.game_players[0];
           const creatorData = {
             ...creator,
-            username: creator.users && creator.users[0] ? creator.users[0].username : "Joueur inconnu",
-            avatar_url: creator.users && creator.users[0] ? creator.users[0].avatar_url : null,
+            username: creator.users && creator.users.length > 0 ? creator.users[0].username : "Joueur inconnu",
+            avatar_url: creator.users && creator.users.length > 0 ? creator.users[0].avatar_url : null,
             ea_id: creator.ea_id
           };
           console.log("Creator data:", creatorData);
