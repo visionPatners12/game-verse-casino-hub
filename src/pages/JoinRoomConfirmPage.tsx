@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -152,7 +151,7 @@ export default function JoinRoomConfirmPage() {
                   gamerTag={hostData.ea_id || "Non spécifié"}
                 />
                 <p className="text-sm text-muted-foreground mt-2 italic">
-                  Envoyez l'invitation à ce Gamer Tag pour commencer le match
+                  Pour commencer le match, envoyez une invitation à l'ID EA du créateur
                 </p>
               </section>
             )}
