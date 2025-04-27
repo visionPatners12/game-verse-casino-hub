@@ -19,6 +19,7 @@ import Auth from "./pages/Auth";
 import Support from "./pages/Support";
 import DuoBets from "./pages/DuoBets";
 import ArenaPlay from "./pages/ArenaPlay";
+import JoinRoomConfirmPage from "./pages/JoinRoomConfirmPage";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/games" element={<Games />} />
             <Route path="/arenaplay" element={<ArenaPlay />} />
+            <Route path="/games/:gameType/confirm-join/:roomId" element={<JoinRoomConfirmPage />} />
             <Route path="/games/:gameType/room/:roomId" element={<GameRoom />} />
             <Route path="/games/:gameType/create" element={<CreateRoom />} />
             <Route path="/games/:gameType/public" element={<PublicRooms />} />
