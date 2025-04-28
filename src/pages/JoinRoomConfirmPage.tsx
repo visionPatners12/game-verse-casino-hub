@@ -9,7 +9,7 @@ import { JoinRoomCard } from "@/components/game/join-dialog/JoinRoomCard";
 export default function JoinRoomConfirmPage() {
   const { roomId } = useParams();
   const { joinRoom, isLoading } = useJoinRoom();
-  const { roomData, isRoomLoading } = useJoinRoomConfirmData(roomId);
+  const { roomData, hostData, isRoomLoading } = useJoinRoomConfirmData(roomId);
 
   const handleJoinConfirm = async () => {
     if (roomId) {
@@ -36,6 +36,7 @@ export default function JoinRoomConfirmPage() {
       <div className="container max-w-4xl mx-auto px-4 py-8">
         <JoinRoomCard 
           roomData={roomData}
+          hostData={hostData}
           isLoading={isLoading}
           onJoinConfirm={handleJoinConfirm}
         />

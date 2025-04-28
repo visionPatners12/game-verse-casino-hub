@@ -7,6 +7,8 @@ import { RoomInfo } from "@/components/game/join-dialog/RoomInfo";
 import { RoomSettings } from "@/components/game/join-dialog/RoomSettings";
 import { PlatformRules } from "@/components/game/join-dialog/PlatformRules";
 import { DisclaimerSection } from "@/components/game/join-dialog/DisclaimerSection";
+import { HostInfoCard } from "@/components/games/HostInfoCard";
+import { GamePlatform } from "@/types/futarena";
 
 interface JoinRoomCardProps {
   roomData: {
@@ -14,18 +16,29 @@ interface JoinRoomCardProps {
     max_players: number;
     entry_fee: number;
     game_type?: string;
+    platform?: GamePlatform;
     half_length_minutes?: number;
     legacy_defending_allowed?: boolean;
     custom_formations_allowed?: boolean;
-    platform?: string;
     mode?: string;
     team_type?: string;
+  };
+  hostData?: {
+    display_name: string;
+    users: {
+      username: string;
+      avatar_url?: string;
+      psn_username?: string;
+      xbox_gamertag?: string;
+      ea_id?: string;
+    };
+    ea_id?: string;
   };
   isLoading: boolean;
   onJoinConfirm: () => void;
 }
 
-export function JoinRoomCard({ roomData, isLoading, onJoinConfirm }: JoinRoomCardProps) {
+export function JoinRoomCard({ roomData, hostData, isLoading, onJoinConfirm }: JoinRoomCardProps) {
   const isFutArena = roomData?.game_type?.toLowerCase() === "futarena" || roomData?.game_type?.toLowerCase() === "eafc25";
 
   return (
@@ -48,6 +61,20 @@ export function JoinRoomCard({ roomData, isLoading, onJoinConfirm }: JoinRoomCar
 
       <CardContent className="space-y-6">
         <Separator className="bg-casino-accent/20" />
+
+        {isFutArena && hostData && (
+          <>
+            <HostInfoCard
+              hostUsername={hostData.users.username}
+              hostAvatar={hostData.users.avatar_url}
+              platform={roomData.platform || 'ps5'}
+              psn={hostData.users.psn_username}
+              xboxId={hostData.users.xbox_gamertag}
+              eaId={hostData.users.ea_id || hostData.ea_id}
+            />
+            <Separator className="bg-casino-accent/20" />
+          </>
+        )}
 
         {isFutArena && (
           <>
