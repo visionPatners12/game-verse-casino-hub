@@ -10,6 +10,7 @@ import { useMatchState } from "@/hooks/room/match/useMatchState";
 import { useMatchSubmissions } from "@/hooks/room/match/useMatchSubmissions";
 import { usePlayerReadyStatus } from "@/hooks/arena/usePlayerReadyStatus";
 import { arenaRoomService } from "@/services/arena/ArenaRoomWebSocketService";
+import { supabase } from "@/integrations/supabase/client"; // Proper import instead of require
 
 export function EAFC25GameRoom() {
   useActiveRoomGuard();
@@ -158,9 +159,6 @@ export function EAFC25GameRoom() {
       });
     }
   }, [matchEnded]);
-
-  // Import supabase
-  const { supabase } = require('@/integrations/supabase/client');
 
   return (
     <Layout>
