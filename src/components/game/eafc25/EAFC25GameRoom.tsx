@@ -9,7 +9,6 @@ import { EAFC25RoomLayout } from "./EAFC25RoomLayout";
 
 export function EAFC25GameRoom() {
   useActiveRoomGuard();
-  
   const { roomId } = useParams<{ roomId: string }>();
   const [showMatchInstructions, setShowMatchInstructions] = useState(true);
   
