@@ -21,7 +21,10 @@ export const useJoinRoomConfirmData = (roomId: string | undefined) => {
         // First fetch the basic room data
         const { data: room, error } = await supabase
           .from('game_sessions')
-          .select('*')
+          .select(`
+            *,
+            game_players (*)
+          `)
           .eq('room_id', roomId.toUpperCase())
           .single();
           
@@ -38,51 +41,47 @@ export const useJoinRoomConfirmData = (roomId: string | undefined) => {
           return;
         }
 
-        console.log("Données de la salle récupérées:", room);
+        console.log("Room data retrieved:", room);
         
-        // Now fetch players for this room in a separate query
-        const { data: players, error: playersError } = await supabase
-          .from('game_players')
-          .select('*')
-          .eq('session_id', room.id);
+        // If we have players, fetch all their arena data at once
+        if (room.game_players && room.game_players.length > 0) {
+          const playerIds = room.game_players.map((p: any) => p.user_id);
           
-        if (playersError) {
-          console.error('Error fetching players:', playersError);
-        } else {
-          console.log("Players data:", players);
-          
-          // Add players to room data
-          setRoomData({
-            ...room,
-            game_players: players
-          });
-          
-          // If we have players, fetch host data from arena_players
-          if (players && players.length > 0) {
-            const hostPlayer = players[0];
-            console.log("Host player:", hostPlayer);
+          // Fetch all arena players data in one query
+          const { data: arenaPlayers, error: playersError } = await supabase
+            .from('arena_players')
+            .select('*')
+            .in('user_id', playerIds);
             
-            // Fetch host data from arena_players
-            const { data: hostArenaData, error: hostError } = await supabase
-              .from('arena_players')
-              .select('*')
-              .eq('user_id', hostPlayer.user_id)
-              .maybeSingle();
-              
-            if (hostError) {
-              console.error('Error fetching host arena data:', hostError);
-            }
+          if (playersError) {
+            console.error('Error fetching arena players:', playersError);
+          } else {
+            console.log("Arena players data:", arenaPlayers);
             
-            setHostData({
-              ...hostPlayer,
-              users: {
-                username: hostArenaData?.display_name || hostPlayer.display_name || 'Host',
-                avatar_url: hostArenaData?.avatar_url || null,
-                psn_username: hostArenaData?.psn_username || null,
-                xbox_gamertag: hostArenaData?.xbox_gamertag || null,
-                ea_id: hostArenaData?.ea_id || hostPlayer.ea_id || null
-              }
+            // Map arena data to players
+            const enrichedPlayers = room.game_players.map((player: any) => {
+              const arenaData = arenaPlayers?.find(ap => ap.user_id === player.user_id);
+              return {
+                ...player,
+                users: {
+                  username: arenaData?.display_name || player.display_name || 'Player',
+                  avatar_url: arenaData?.avatar_url || null,
+                  psn_username: arenaData?.psn_username || null,
+                  xbox_gamertag: arenaData?.xbox_gamertag || null,
+                  ea_id: arenaData?.ea_id || player.ea_id || null
+                }
+              };
             });
+            
+            setRoomData({
+              ...room,
+              game_players: enrichedPlayers
+            });
+            
+            // Set host data (first player)
+            if (enrichedPlayers.length > 0) {
+              setHostData(enrichedPlayers[0]);
+            }
           }
         }
         
@@ -97,7 +96,7 @@ export const useJoinRoomConfirmData = (roomId: string | undefined) => {
           if (configError) {
             console.error('Error fetching arena configuration:', configError);
           } else if (arenaConfig) {
-            console.log("Configuration arène récupérée:", arenaConfig);
+            console.log("Arena configuration retrieved:", arenaConfig);
             setRoomData(prev => ({
               ...prev,
               ...arenaConfig

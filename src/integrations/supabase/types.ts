@@ -20,6 +20,7 @@ export type Database = {
           legacy_defending_allowed: boolean
           mode: Database["public"]["Enums"]["game_mode"]
           platform: Database["public"]["Enums"]["game_platform"]
+          players: string[] | null
           team_type: Database["public"]["Enums"]["team_type"]
           updated_at: string | null
         }
@@ -33,6 +34,7 @@ export type Database = {
           legacy_defending_allowed?: boolean
           mode?: Database["public"]["Enums"]["game_mode"]
           platform?: Database["public"]["Enums"]["game_platform"]
+          players?: string[] | null
           team_type?: Database["public"]["Enums"]["team_type"]
           updated_at?: string | null
         }
@@ -46,6 +48,7 @@ export type Database = {
           legacy_defending_allowed?: boolean
           mode?: Database["public"]["Enums"]["game_mode"]
           platform?: Database["public"]["Enums"]["game_platform"]
+          players?: string[] | null
           team_type?: Database["public"]["Enums"]["team_type"]
           updated_at?: string | null
         }
