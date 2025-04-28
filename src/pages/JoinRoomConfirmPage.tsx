@@ -15,7 +15,6 @@ import { HostInfoCard } from "@/components/games/HostInfoCard";
 import { RoomInfo } from "@/components/game/join-dialog/RoomInfo";
 import { Loader2 } from "lucide-react";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
-import { GamePlatform } from "@/types/futarena";
 
 interface RoomPlayer {
   id: string;
@@ -172,7 +171,7 @@ export default function JoinRoomConfirmPage() {
                 <HostInfoCard 
                   hostUsername={hostData.users.username}
                   hostAvatar={hostData.users.avatar_url}
-                  platform={(roomData.platform || 'ps5') as GamePlatform}
+                  platform={roomData.platform || 'ps5'}
                   psn={hostData.users.psn_username}
                   xboxId={hostData.users.xbox_gamertag}
                   eaId={hostData.users.ea_id || hostData.ea_id}
