@@ -62,31 +62,35 @@ export const useJoinRoomConfirmData = (roomId: string | undefined) => {
             const hostPlayer = players[0];
             console.log("Host player:", hostPlayer);
             
-            // Get the host user information - use maybeSingle() instead of single()
-            const { data: hostUserData, error: hostError } = await supabase
-              .from('users')
-              .select('*')
-              .eq('id', hostPlayer.user_id)
-              .maybeSingle();
-              
-            if (hostError) {
-              console.error('Error fetching host user data:', hostError);
-            } else {
-              console.log("Host user data:", hostUserData);
-              // Only set host data if we actually found user data
-              if (hostUserData) {
-                setHostData({
-                  ...hostPlayer,
-                  users: hostUserData
-                });
+            try {
+              // Get the host user information - use maybeSingle() to handle potential missing data
+              const { data: hostUserData, error: hostError } = await supabase
+                .from('users')
+                .select('username, avatar_url, psn_username, xbox_gamertag, ea_id')
+                .eq('id', hostPlayer.user_id)
+                .maybeSingle();
+                
+              if (hostError) {
+                console.error('Error fetching host user data:', hostError);
               } else {
-                console.log("No host user data found for ID:", hostPlayer.user_id);
-                // Still set basic host data without user details
-                setHostData({
-                  ...hostPlayer,
-                  users: null
-                });
+                console.log("Host user data:", hostUserData);
+                // Only set host data if we actually found user data
+                if (hostUserData) {
+                  setHostData({
+                    ...hostPlayer,
+                    users: hostUserData
+                  });
+                } else {
+                  console.log("No host user data found for ID:", hostPlayer.user_id);
+                  // Still set basic host data without user details
+                  setHostData({
+                    ...hostPlayer,
+                    users: null
+                  });
+                }
               }
+            } catch (err) {
+              console.error('Exception when fetching host user data:', err);
             }
           }
         }
