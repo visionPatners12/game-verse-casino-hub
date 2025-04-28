@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useEAFC25Match } from "@/hooks/room/useEAFC25Match";
 import { useActiveRoomGuard } from "@/hooks/useActiveRoomGuard";
-import { RenewedEAFC25Room } from "./RenewedEAFC25Room";
+import { EAFC25RoomLayout } from "./EAFC25RoomLayout";
 
 export function EAFC25GameRoom() {
   useActiveRoomGuard();
@@ -53,7 +53,6 @@ export function EAFC25GameRoom() {
     }
   }, [matchEnded]);
 
-  // Skip loading state to avoid flashing
   if (isLoading) {
     return (
       <Layout>
@@ -69,7 +68,7 @@ export function EAFC25GameRoom() {
 
   return (
     <Layout>
-      <RenewedEAFC25Room
+      <EAFC25RoomLayout
         roomData={roomData}
         currentUserId={currentUserId}
         gameStatus={gameStatus}
@@ -81,10 +80,9 @@ export function EAFC25GameRoom() {
         matchDuration={matchDuration}
         matchEnded={matchEnded}
         setMatchEnded={setMatchEnded}
+        gameName="EA FC 25"
         scoreSubmitted={scoreSubmitted}
         proofSubmitted={proofSubmitted}
-        onScoreSubmit={submitScore}
-        onProofSubmit={submitProof}
       />
     </Layout>
   );

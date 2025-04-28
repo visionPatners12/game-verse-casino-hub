@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +10,6 @@ export default function EAFC25Room() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const { session, isLoading } = useAuth();
-  const [isValidRoom, setIsValidRoom] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!isLoading && !session) {

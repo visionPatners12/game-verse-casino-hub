@@ -47,7 +47,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/support" element={<Support />} />
             <Route path="/duo-bets" element={<DuoBets />} />
-            <Route path="/eafc25-room/:roomId" element={<EAFC25Room />} />
+            <Route path="/games/eafc25/room/:roomId" element={<EAFC25Room />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

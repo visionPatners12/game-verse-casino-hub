@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout";
 import { GameRoomLayout } from "@/components/game/GameRoomLayout";
 import { useParams, useNavigate } from "react-router-dom";
@@ -16,7 +15,7 @@ const GameRoom = () => {
   
   const navigate = useNavigate();
   const { session, isLoading: authLoading } = useAuth();
-  const { roomId } = useParams<{ roomId: string }>();
+  const { roomId, gameType } = useParams<{ roomId: string; gameType: string }>();
   
   const { wallet } = useWallet({ enableTransactions: false });
   
@@ -50,7 +49,7 @@ const GameRoom = () => {
   useEffect(() => {
     if (!loading && roomData && roomData.game_type?.toLowerCase() === "eafc25") {
       console.log("Redirecting to EAFC25 specialized room");
-      navigate(`/eafc25-room/${roomId}`);
+      navigate(`/games/eafc25/room/${roomId}`);
     }
   }, [loading, roomData, roomId, navigate]);
 
