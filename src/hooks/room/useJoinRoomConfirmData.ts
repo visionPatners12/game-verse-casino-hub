@@ -18,6 +18,7 @@ export const useJoinRoomConfirmData = (roomId: string | undefined) => {
         setIsRoomLoading(true);
         console.log("Fetching room data for roomId:", roomId);
         
+        // Fetch room data and player information in a single query
         const { data: room, error } = await supabase
           .from('game_sessions')
           .select(`
@@ -27,15 +28,6 @@ export const useJoinRoomConfirmData = (roomId: string | undefined) => {
               user_id,
               display_name,
               ea_id
-            ),
-            game_players (
-              users:user_id (
-                username,
-                avatar_url,
-                psn_username,
-                xbox_gamertag,
-                ea_id
-              )
             )
           `)
           .eq('room_id', roomId.toUpperCase())
@@ -57,12 +49,30 @@ export const useJoinRoomConfirmData = (roomId: string | undefined) => {
         console.log("Données de la salle récupérées:", room);
         setRoomData(room);
         
+        // If we have players, fetch host data
         if (room.game_players && room.game_players.length > 0) {
-          const host = room.game_players[0];
-          console.log("Host data:", host);
-          setHostData(host);
+          const hostPlayer = room.game_players[0];
+          console.log("Host player:", hostPlayer);
+          
+          // Get the host user information
+          const { data: hostUserData, error: hostError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', hostPlayer.user_id)
+            .single();
+            
+          if (hostError) {
+            console.error('Error fetching host user data:', hostError);
+          } else {
+            console.log("Host user data:", hostUserData);
+            setHostData({
+              ...hostPlayer,
+              users: hostUserData
+            });
+          }
         }
         
+        // Fetch additional game configuration if it's a FIFA/EA game
         if (room.game_type?.toLowerCase() === 'eafc25' || room.game_type?.toLowerCase() === 'futarena') {
           const { data: arenaConfig, error: configError } = await supabase
             .from('arena_game_sessions')
