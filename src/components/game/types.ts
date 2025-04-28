@@ -1,3 +1,4 @@
+
 export interface RoomData {
   id: string;
   game_type: string;
@@ -11,6 +12,13 @@ export interface RoomData {
   status: string;
   created_at: string;
   connected_players: string[];
+  // EAFC25 specific fields
+  platform?: string;
+  mode?: string;
+  half_length_minutes?: number;
+  legacy_defending_allowed?: boolean;
+  custom_formations_allowed?: boolean;
+  team_type?: string;
   game_players: {
     id: string;
     display_name: string;
@@ -18,9 +26,14 @@ export interface RoomData {
     current_score: number;
     is_connected: boolean;
     is_ready: boolean;
+    ea_id?: string;
+    has_forfeited?: boolean;
     users?: {
       username: string;
       avatar_url?: string;
+      psn_username?: string;
+      xbox_gamertag?: string;
+      ea_id?: string;
     };
   }[];
 }

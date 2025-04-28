@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import GameChat from "@/components/GameChat";
@@ -64,7 +63,6 @@ export function EAFC25RoomLayout({
   const canStartGame = allPlayersReady && enoughPlayers && gameStatus === 'waiting';
   const isPlaying = gameStatus === 'playing' || gameStatus === 'starting';
 
-  // Update match phase based on game status and timer
   useEffect(() => {
     if (gameStatus === 'waiting') {
       setMatchPhase('pre-match');
@@ -75,7 +73,6 @@ export function EAFC25RoomLayout({
     }
   }, [gameStatus, matchEnded]);
 
-  // Create player info objects
   const players = roomData?.game_players || [];
   const currentPlayer = players.find(player => player.user_id === currentUserId);
   const opponentPlayer = players.find(player => player.user_id !== currentUserId);
@@ -171,7 +168,6 @@ export function EAFC25RoomLayout({
                 ) : (
                   roomData && (
                     <div className="space-y-6">
-                      {/* Match timer */}
                       {isPlaying && (
                         <EAFC25MatchTimer 
                           startTime={matchStartTime}
@@ -180,13 +176,12 @@ export function EAFC25RoomLayout({
                         />
                       )}
                       
-                      {/* Players information */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {currentPlayer && (
                           <EAFC25PlayerInfo 
                             player={currentPlayer}
                             isCurrentUser={true}
-                            platform={roomData.platform}
+                            platform={roomData?.platform || "ps5"}
                           />
                         )}
                         
@@ -194,22 +189,19 @@ export function EAFC25RoomLayout({
                           <EAFC25PlayerInfo 
                             player={opponentPlayer}
                             isCurrentUser={false}
-                            platform={roomData.platform}
+                            platform={roomData?.platform || "ps5"}
                           />
                         )}
                       </div>
                       
-                      {/* Match details (settings, rules) */}
                       <EAFC25MatchDetails roomData={roomData} />
                       
-                      {/* Standard players list */}
                       <PlayersList 
                         players={players}
                         maxPlayers={roomData.max_players}
                         currentUserId={currentUserId}
                       />
                       
-                      {/* Score submission */}
                       {matchPhase === 'score-submission' && (
                         <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
                           <div className="flex items-center justify-between">

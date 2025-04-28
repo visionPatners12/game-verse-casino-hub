@@ -91,7 +91,8 @@ const EAFC25GameRoom = () => {
     return <Layout><div className="flex items-center justify-center min-h-screen">Verifying room connection...</div></Layout>;
   }
 
-  const platform = roomData?.platform as GamePlatform || "ps5";
+  // Get properties with defaults if they don't exist
+  const platform = (roomData?.platform || "ps5") as GamePlatform;
   const halfLengthMinutes = roomData?.half_length_minutes || 12;
   const matchDuration = (halfLengthMinutes * 2) + 5; // Game time + 5 min margin
 

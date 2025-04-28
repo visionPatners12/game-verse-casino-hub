@@ -2,7 +2,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { GamePlatform } from "@/types/futarena";
-import { Playstation, Xbox } from "lucide-react";
+import { Gamepad2, MonitorPlay, Globe } from "lucide-react";
 
 interface Player {
   id: string;
@@ -30,9 +30,9 @@ interface EAFC25PlayerInfoProps {
 
 export function EAFC25PlayerInfo({ player, isCurrentUser, platform }: EAFC25PlayerInfoProps) {
   const platformIcon = platform === "ps5" ? (
-    <Playstation className="h-4 w-4 text-blue-500" />
+    <MonitorPlay className="h-4 w-4 text-blue-500" />
   ) : platform === "xbox_series" ? (
-    <Xbox className="h-4 w-4 text-green-500" />
+    <Gamepad2 className="h-4 w-4 text-green-500" />
   ) : null;
 
   const displayName = player.users?.username || player.display_name;

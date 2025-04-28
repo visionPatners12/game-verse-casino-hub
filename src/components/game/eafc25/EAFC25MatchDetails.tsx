@@ -2,7 +2,7 @@
 import { RoomData } from "@/components/game/types"; 
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Playstation, Xbox, Globe, Clock, ListChecks } from "lucide-react";
+import { MonitorPlay, Gamepad2, Globe, Clock, ListChecks } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 interface EAFC25MatchDetailsProps {
@@ -18,8 +18,8 @@ export function EAFC25MatchDetails({ roomData }: EAFC25MatchDetailsProps) {
   const teamType = roomData.team_type || "any_teams";
 
   const platformInfo = {
-    icon: platform === "ps5" ? <Playstation className="h-4 w-4" /> : 
-          platform === "xbox_series" ? <Xbox className="h-4 w-4" /> : 
+    icon: platform === "ps5" ? <MonitorPlay className="h-4 w-4" /> : 
+          platform === "xbox_series" ? <Gamepad2 className="h-4 w-4" /> : 
           <Globe className="h-4 w-4" />,
     label: platform === "ps5" ? "PlayStation 5" : 
            platform === "xbox_series" ? "Xbox Series X|S" : 
