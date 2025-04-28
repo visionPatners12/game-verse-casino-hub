@@ -2,7 +2,9 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { GamePlatform } from "@/types/futarena";
-import { MonitorPlay, Gamepad2, Globe } from "lucide-react";
+import { MonitorPlay, Gamepad2, Globe, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface Player {
   id: string;
@@ -44,7 +46,13 @@ export function EAFC25PlayerInfo({ player, isCurrentUser, platform }: EAFC25Play
     : (player.users?.xbox_gamertag || "Xbox Gamertag Not Set");
 
   return (
-    <Card className={isCurrentUser ? "border-primary/50" : "border-muted"}>
+    <Card 
+      className={cn(
+        isCurrentUser ? "border-primary/50" : "border-muted",
+        player.is_ready ? "bg-green-500/10 border-green-500/50" : "",
+        "transition-colors duration-200"
+      )}
+    >
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <Avatar className="h-12 w-12">
@@ -60,6 +68,12 @@ export function EAFC25PlayerInfo({ player, isCurrentUser, platform }: EAFC25Play
             <div className="flex items-center gap-2">
               <span className="font-medium">{displayName}</span>
               {isCurrentUser && <span className="text-xs text-muted-foreground">(You)</span>}
+              {player.is_ready && (
+                <Badge variant="success" className="flex items-center gap-1">
+                  <Check className="h-3 w-3" />
+                  Ready
+                </Badge>
+              )}
             </div>
             
             <div className="text-sm flex items-center gap-1 mt-1">
