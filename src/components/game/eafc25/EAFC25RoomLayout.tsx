@@ -1,34 +1,28 @@
 
+import { RoomData } from "@/components/game/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import GameChat from "@/components/GameChat";
-import { RoomData } from "@/components/game/types";
-import RoomHeader from "@/components/game/RoomHeader";
-import LoadingState from "@/components/game/LoadingState";
-import PlayersList from "@/components/game/PlayersList";
-import { useFullScreenHandle } from "react-full-screen";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { EAFC25MatchTimer } from "./EAFC25MatchTimer";
 import { EAFC25PlayerInfo } from "./EAFC25PlayerInfo";
 import { EAFC25MatchDetails } from "./EAFC25MatchDetails";
 import { GameControls } from "./room-layout/GameControls";
 import { MatchStatus } from "./room-layout/MatchStatus";
 import { MatchInstructions } from "./room-layout/MatchInstructions";
-import { useEffect, useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface EAFC25RoomLayoutProps {
   loading?: boolean;
   roomData: RoomData | null;
   currentUserId: string | null;
-  gameName: string;
-  isReady: boolean;
   gameStatus: 'waiting' | 'starting' | 'playing' | 'ended';
+  isReady: boolean;
   onToggleReady: () => void;
   onStartGame: () => void;
   onForfeit: () => void;
-  matchEnded: boolean;
-  setMatchEnded: (ended: boolean) => void;
   matchStartTime: Date | null;
   matchDuration: number;
+  matchEnded: boolean;
+  setMatchEnded: (ended: boolean) => void;
   scoreSubmitted: boolean;
   proofSubmitted: boolean;
 }
@@ -37,7 +31,6 @@ export function EAFC25RoomLayout({
   loading = false,
   roomData,
   currentUserId,
-  gameName,
   isReady,
   gameStatus,
   onToggleReady,
@@ -50,53 +43,19 @@ export function EAFC25RoomLayout({
   scoreSubmitted,
   proofSubmitted
 }: EAFC25RoomLayoutProps) {
-  const fullscreenHandle = useFullScreenHandle();
   const isMobile = useIsMobile();
-  const [matchPhase, setMatchPhase] = useState<'pre-match' | 'in-progress' | 'score-submission' | 'dispute'>('pre-match');
-  
-  const allPlayersReady = roomData?.game_players?.every(player => player.is_ready || !player.is_connected);
-  const enoughPlayers = roomData?.game_players?.filter(player => player.is_connected).length >= 2;
-  const canStartGame = allPlayersReady && enoughPlayers && gameStatus === 'waiting';
   
   const players = roomData?.game_players || [];
   const currentPlayer = players.find(player => player.user_id === currentUserId);
   const opponentPlayer = players.find(player => player.user_id !== currentUserId);
-
-  useEffect(() => {
-    if (gameStatus === 'waiting') {
-      setMatchPhase('pre-match');
-    } else if (gameStatus === 'playing' && !matchEnded) {
-      setMatchPhase('in-progress');
-    } else if (matchEnded) {
-      setMatchPhase('score-submission');
-    }
-  }, [gameStatus, matchEnded]);
-
-  // Handlers that need to return Promises to match the expected types
-  const handleScoreSubmit = async (myScore: number, opponentScore: number): Promise<boolean> => {
-    try {
-      // Forward the call to any actual submission logic you have
-      return Promise.resolve(true);
-    } catch (error) {
-      console.error("Error in score submission:", error);
-      return Promise.resolve(false);
-    }
-  };
-
-  const handleProofSubmit = async (file: File): Promise<boolean> => {
-    try {
-      // Forward the call to any actual submission logic you have
-      return Promise.resolve(true);
-    } catch (error) {
-      console.error("Error in proof submission:", error);
-      return Promise.resolve(false);
-    }
-  };
+  const allPlayersReady = players.every(player => player.is_ready || !player.is_connected);
+  const enoughPlayers = players.filter(player => player.is_connected).length >= 2;
+  const canStartGame = allPlayersReady && enoughPlayers && gameStatus === 'waiting';
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <LoadingState />
+        <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>
     );
   }
@@ -110,12 +69,8 @@ export function EAFC25RoomLayout({
               <CardHeader className="pb-3 px-3 sm:px-6">
                 {roomData && (
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <CardTitle>
-                      <RoomHeader 
-                        gameName={gameName} 
-                        roomId={roomData.room_id}
-                        fullscreenHandle={fullscreenHandle}
-                      />
+                    <CardTitle className="text-xl">
+                      EA FC 25 Match Room
                     </CardTitle>
                     
                     <GameControls 
@@ -161,18 +116,12 @@ export function EAFC25RoomLayout({
                     
                     <EAFC25MatchDetails roomData={roomData} />
                     
-                    <PlayersList 
-                      players={players}
-                      maxPlayers={roomData.max_players}
-                      currentUserId={currentUserId}
-                    />
-                    
                     <MatchStatus 
                       matchEnded={matchEnded}
                       scoreSubmitted={scoreSubmitted}
                       proofSubmitted={proofSubmitted}
-                      onScoreSubmit={handleScoreSubmit}
-                      onProofSubmit={handleProofSubmit}
+                      onScoreSubmit={async () => true}
+                      onProofSubmit={async () => true}
                     />
                     
                     {gameStatus === 'waiting' && <MatchInstructions />}

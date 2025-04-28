@@ -27,16 +27,11 @@ export function EAFC25GameRoom() {
     setMatchEnded,
     scoreSubmitted,
     proofSubmitted,
-    submitScore,
-    submitProof,
   } = useEAFC25Match(roomId);
 
-  // Properties with fallback defaults
-  const platform = roomData?.platform || "ps5";
   const halfLengthMinutes = roomData?.half_length_minutes || 12;
-  const matchDuration = (halfLengthMinutes * 2) + 5; // Game time + 5 min margin
+  const matchDuration = (halfLengthMinutes * 2) + 5;
   
-  // Show instructions when match starts
   useEffect(() => {
     if (gameStatus === 'playing' && showMatchInstructions) {
       toast.info("Match has started! Play fair and remember to take a screenshot of the final score screen.");
@@ -44,7 +39,6 @@ export function EAFC25GameRoom() {
     }
   }, [gameStatus, showMatchInstructions]);
 
-  // Show proof reminder when match is about to end
   useEffect(() => {
     if (matchEnded) {
       toast.warning("Match time ended! Please submit your final score and upload proof.", {
@@ -52,19 +46,6 @@ export function EAFC25GameRoom() {
       });
     }
   }, [matchEnded]);
-
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center space-y-4">
-            <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
-            <p className="text-xl font-medium">Loading match room...</p>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
 
   return (
     <Layout>
@@ -81,7 +62,6 @@ export function EAFC25GameRoom() {
         matchDuration={matchDuration}
         matchEnded={matchEnded}
         setMatchEnded={setMatchEnded}
-        gameName="EA FC 25"
         scoreSubmitted={scoreSubmitted}
         proofSubmitted={proofSubmitted}
       />
