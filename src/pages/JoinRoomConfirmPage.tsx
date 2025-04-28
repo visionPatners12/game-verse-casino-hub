@@ -28,6 +28,7 @@ export default function JoinRoomConfirmPage() {
     platform: GamePlatform;
     mode: GameMode;
     teamType: TeamType;
+    gamerTag?: string;
   } | null>(null);
 
   useEffect(() => {
@@ -50,7 +51,10 @@ export default function JoinRoomConfirmPage() {
               ea_id,
               users(
                 username,
-                avatar_url
+                avatar_url,
+                psn_username,
+                xbox_gamertag,
+                ea_id
               )
             ),
             arena_game_sessions(
@@ -59,7 +63,8 @@ export default function JoinRoomConfirmPage() {
               team_type,
               half_length_minutes,
               legacy_defending_allowed,
-              custom_formations_allowed
+              custom_formations_allowed,
+              gamer_tag_1
             )
           `);
         
@@ -111,7 +116,8 @@ export default function JoinRoomConfirmPage() {
           customFormationsAllowed: arenaConfig?.custom_formations_allowed || false,
           platform: (arenaConfig?.platform as GamePlatform) || 'ps5',
           mode: (arenaConfig?.mode as GameMode) || 'online_friendlies',
-          teamType: (arenaConfig?.team_type as TeamType) || 'any_teams'
+          teamType: (arenaConfig?.team_type as TeamType) || 'any_teams',
+          gamerTag: arenaConfig?.gamer_tag_1 || null
         });
         
         setRoomData(room);
@@ -119,13 +125,30 @@ export default function JoinRoomConfirmPage() {
         // Récupérer les données du créateur (premier joueur)
         if (room.game_players && room.game_players.length > 0) {
           const creator = room.game_players[0];
+          
+          // Déterminer le type de gamer tag à afficher en fonction de la plateforme
+          let gamerTag = creator.ea_id || "Non spécifié";
+          let gamerTagType = "EA ID";
+          
+          if (arenaConfig?.platform === 'ps5' && creator.users?.psn_username) {
+            gamerTag = creator.users.psn_username;
+            gamerTagType = "PSN Username";
+          } else if (arenaConfig?.platform === 'xbox_series' && creator.users?.xbox_gamertag) {
+            gamerTag = creator.users.xbox_gamertag;
+            gamerTagType = "Xbox Gamertag";
+          } else if (creator.users?.ea_id) {
+            gamerTag = creator.users.ea_id;
+          }
+          
           // Accéder correctement aux données utilisateur
           const creatorData = {
             ...creator,
             username: creator.users?.username || creator.display_name || "Joueur inconnu",
             avatar_url: creator.users?.avatar_url || null,
-            ea_id: creator.ea_id || "Non spécifié"
+            gamer_tag: gamerTag,
+            gamer_tag_type: gamerTagType
           };
+          
           console.log("Creator data:", creatorData);
           setHostData(creatorData);
         }
@@ -185,10 +208,11 @@ export default function JoinRoomConfirmPage() {
                 <HostInfoCard 
                   hostUsername={hostData.username}
                   hostAvatar={hostData.avatar_url}
-                  gamerTag={hostData.ea_id}
+                  gamerTag={hostData.gamer_tag}
+                  gamerTagType={hostData.gamer_tag_type}
                 />
                 <p className="text-sm text-muted-foreground mt-2 italic">
-                  Pour commencer le match, envoyez une invitation à l'ID EA du créateur
+                  Pour commencer le match, envoyez une invitation à l'ID {hostData.gamer_tag_type} du créateur
                 </p>
               </section>
             )}
@@ -205,6 +229,7 @@ export default function JoinRoomConfirmPage() {
                   platform={gameSettings.platform}
                   mode={gameSettings.mode}
                   teamType={gameSettings.teamType}
+                  gamerTag={gameSettings.gamerTag}
                 />
               )}
             </section>

@@ -42,6 +42,7 @@ interface JoinRoomConfirmDialogProps {
       username: string;
       avatar_url?: string;
       gamer_tag?: string;
+      gamer_tag_type?: string;
     };
   };
 }
@@ -77,6 +78,7 @@ export function JoinRoomConfirmDialog({
                   hostUsername={roomData.host.username}
                   hostAvatar={roomData.host.avatar_url}
                   gamerTag={roomData.host.gamer_tag || "Non spécifié"}
+                  gamerTagType={roomData.host.gamer_tag_type || "EA ID"}
                 />
               </div>
             )}

@@ -9,6 +9,7 @@ interface GameSettingsProps {
   platform?: GamePlatform | string;
   mode?: GameMode | string;
   teamType?: TeamType | string;
+  gamerTag?: string;
 }
 
 // Helper function to format platform display
@@ -41,14 +42,27 @@ const formatTeamType = (teamType?: string): string => {
   }
 };
 
+// Helper function to determine gamer tag type label based on platform
+const getGamerTagTypeLabel = (platform?: string): string => {
+  switch (platform) {
+    case 'ps5': return 'PSN Username';
+    case 'xbox_series': return 'Xbox Gamertag';
+    case 'cross_play': 
+    default: return 'EA ID';
+  }
+};
+
 export function GameSettings({
   halfLengthMinutes,
   legacyDefendingAllowed,
   customFormationsAllowed,
   platform,
   mode,
-  teamType
+  teamType,
+  gamerTag,
 }: GameSettingsProps) {
+  const gamerTagType = getGamerTagTypeLabel(platform as string);
+  
   return (
     <div className="grid md:grid-cols-2 gap-6">
       <div className="space-y-4">
@@ -73,6 +87,7 @@ export function GameSettings({
             <li>Plateforme: {formatPlatform(platform)}</li>
             <li>Mode de jeu: {formatMode(mode)}</li>
             <li>Type d'équipes: {formatTeamType(teamType)}</li>
+            {gamerTag && <li>{gamerTagType}: <span className="font-mono">{gamerTag}</span></li>}
           </ul>
         </div>
       </div>
