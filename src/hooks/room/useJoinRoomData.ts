@@ -41,11 +41,10 @@ export function useJoinRoomData(roomId: string | undefined): {
           .from('game_sessions')
           .select(`
             *,
-            game_players:game_players(
+            game_players:game_players!game_players_session_id_fkey(
               id,
               user_id,
               display_name,
-              ea_id,
               users:users(
                 username,
                 avatar_url,
@@ -86,7 +85,6 @@ export function useJoinRoomData(roomId: string | undefined): {
             platform: arenaConfig.platform || 'ps5',
             mode: arenaConfig.mode || 'online_friendlies',
             teamType: arenaConfig.team_type || 'any_teams',
-            gamerTag: arenaConfig.gamer_tag_1 || null
           };
         }
         
@@ -104,9 +102,12 @@ export function useJoinRoomData(roomId: string | undefined): {
             gamerTag = userData.xbox_gamertag;
             gamerTagType = "Xbox Gamertag";
           }
+
+          if (gameSettings) {
+            gameSettings.gamerTag = gamerTag;
+          }
           
           hostData = {
-            ...creator,
             username: userData?.username || creator.display_name || "Joueur inconnu",
             avatar_url: userData?.avatar_url || null,
             gamer_tag: gamerTag,
