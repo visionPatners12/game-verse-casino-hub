@@ -82,8 +82,18 @@ export function EAFC25PlayerInfo({ player, isCurrentUser, platform }: EAFC25Play
   // Get the console ID from arena_players first, then from player.users, or fallback
   const psnId = arenaPlayerData?.psn_username || player.users?.psn_username || "PSN ID Not Set";
   const xboxId = arenaPlayerData?.xbox_gamertag || player.users?.xbox_gamertag || "Xbox Gamertag Not Set";
+
+  // Determine primary ID to display based on platform
+  let primaryIdLabel = "EA ID:";
+  let primaryIdValue = eaId;
   
-  const consoleId = platform === "ps5" ? psnId : xboxId;
+  if (platform === "ps5") {
+    primaryIdLabel = "PSN ID:";
+    primaryIdValue = psnId;
+  } else if (platform === "xbox_series") {
+    primaryIdLabel = "Xbox Gamertag:";
+    primaryIdValue = xboxId;
+  }
 
   return (
     <Card 
@@ -127,16 +137,15 @@ export function EAFC25PlayerInfo({ player, isCurrentUser, platform }: EAFC25Play
         
         <div className="mt-3 space-y-1">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">EA ID:</span>
-            <span className="font-mono">{eaId}</span>
+            <span className="text-muted-foreground">{primaryIdLabel}</span>
+            <span className="font-mono">{primaryIdValue}</span>
           </div>
           
+          {/* Only show secondary ID if it's not already shown as primary */}
           {platform !== "cross_play" && (
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">
-                {platform === "ps5" ? "PSN ID:" : "Xbox Gamertag:"}
-              </span>
-              <span className="font-mono">{consoleId}</span>
+              <span className="text-muted-foreground">EA ID:</span>
+              <span className="font-mono">{eaId}</span>
             </div>
           )}
         </div>

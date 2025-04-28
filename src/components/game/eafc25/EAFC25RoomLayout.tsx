@@ -12,6 +12,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { EAFC25ReadyCountdown } from "./EAFC25ReadyCountdown";
 
 interface EAFC25RoomLayoutProps {
   loading?: boolean;
@@ -28,6 +29,11 @@ interface EAFC25RoomLayoutProps {
   setMatchEnded: (ended: boolean) => void;
   scoreSubmitted: boolean;
   proofSubmitted: boolean;
+  readyCountdownActive: boolean;
+  readyCountdownEndTime: Date | null;
+  onScoreSubmit: (myScore: number, opponentScore: number) => Promise<boolean>;
+  onProofSubmit: (file: File) => Promise<boolean>;
+  showMatchInstructions: boolean;
 }
 
 export function EAFC25RoomLayout({
@@ -44,7 +50,12 @@ export function EAFC25RoomLayout({
   matchStartTime,
   matchDuration,
   scoreSubmitted,
-  proofSubmitted
+  proofSubmitted,
+  readyCountdownActive,
+  readyCountdownEndTime,
+  onScoreSubmit,
+  onProofSubmit,
+  showMatchInstructions
 }: EAFC25RoomLayoutProps) {
   const isMobile = useIsMobile();
   
@@ -52,8 +63,10 @@ export function EAFC25RoomLayout({
   const currentPlayer = players.find(player => player.user_id === currentUserId);
   const opponentPlayer = players.find(player => player.user_id !== currentUserId);
   const allPlayersReady = players.every(player => player.is_ready || !player.is_connected);
-  const enoughPlayers = players.filter(player => player.is_connected).length >= 2;
+  const connectedPlayers = players.filter(player => player.is_connected).length;
+  const enoughPlayers = connectedPlayers >= 2;
   const canStartGame = allPlayersReady && enoughPlayers && gameStatus === 'waiting';
+  const showGetReady = enoughPlayers && gameStatus === 'waiting';
 
   const copyRoomCode = () => {
     if (roomData?.room_id) {
@@ -105,6 +118,7 @@ export function EAFC25RoomLayout({
                       onToggleReady={onToggleReady}
                       onStartGame={onStartGame}
                       onForfeit={onForfeit}
+                      showGetReady={showGetReady}
                     />
                   </div>
                 )}
@@ -113,6 +127,13 @@ export function EAFC25RoomLayout({
               <CardContent className="p-3 sm:p-6">
                 {roomData && (
                   <div className="space-y-6">
+                    {/* Ready countdown timer */}
+                    <EAFC25ReadyCountdown 
+                      endTime={readyCountdownEndTime} 
+                      isActive={readyCountdownActive} 
+                    />
+                    
+                    {/* Main match timer */}
                     {gameStatus === 'playing' && (
                       <EAFC25MatchTimer 
                         startTime={matchStartTime}
@@ -145,11 +166,11 @@ export function EAFC25RoomLayout({
                       matchEnded={matchEnded}
                       scoreSubmitted={scoreSubmitted}
                       proofSubmitted={proofSubmitted}
-                      onScoreSubmit={async () => true}
-                      onProofSubmit={async () => true}
+                      onScoreSubmit={onScoreSubmit}
+                      onProofSubmit={onProofSubmit}
                     />
                     
-                    {gameStatus === 'waiting' && <MatchInstructions />}
+                    {gameStatus === 'waiting' && showMatchInstructions && <MatchInstructions />}
                   </div>
                 )}
               </CardContent>

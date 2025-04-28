@@ -27,8 +27,10 @@ export interface RoomData {
     current_score: number;
     is_connected: boolean;
     is_ready: boolean;
-    ea_id?: string;
     has_forfeited?: boolean;
+    proof_submitted?: boolean;
+    proof_path?: string;
+    ea_id?: string;
     users?: {
       username: string;
       avatar_url?: string;

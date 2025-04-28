@@ -1,7 +1,7 @@
 
 import { useParams } from "react-router-dom";
 import { Layout } from "@/components/Layout";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { useEAFC25Match } from "@/hooks/room/useEAFC25Match";
 import { useActiveRoomGuard } from "@/hooks/useActiveRoomGuard";
@@ -10,7 +10,6 @@ import { EAFC25RoomLayout } from "./EAFC25RoomLayout";
 export function EAFC25GameRoom() {
   useActiveRoomGuard();
   const { roomId } = useParams<{ roomId: string }>();
-  const [showMatchInstructions, setShowMatchInstructions] = useState(true);
   
   const {
     roomData,
@@ -26,6 +25,12 @@ export function EAFC25GameRoom() {
     setMatchEnded,
     scoreSubmitted,
     proofSubmitted,
+    readyCountdownActive,
+    readyCountdownEndTime,
+    submitScore,
+    submitProof,
+    showMatchInstructions,
+    setShowMatchInstructions
   } = useEAFC25Match(roomId);
 
   const halfLengthMinutes = roomData?.half_length_minutes || 12;
@@ -33,10 +38,12 @@ export function EAFC25GameRoom() {
   
   useEffect(() => {
     if (gameStatus === 'playing' && showMatchInstructions) {
-      toast.info("Match has started! Play fair and remember to take a screenshot of the final score screen.");
+      toast.info("Match has started! Play fair and remember to take a screenshot of the final score screen.", {
+        duration: 10000,
+      });
       setShowMatchInstructions(false);
     }
-  }, [gameStatus, showMatchInstructions]);
+  }, [gameStatus, showMatchInstructions, setShowMatchInstructions]);
 
   useEffect(() => {
     if (matchEnded) {
@@ -63,6 +70,11 @@ export function EAFC25GameRoom() {
         setMatchEnded={setMatchEnded}
         scoreSubmitted={scoreSubmitted}
         proofSubmitted={proofSubmitted}
+        readyCountdownActive={readyCountdownActive}
+        readyCountdownEndTime={readyCountdownEndTime}
+        onScoreSubmit={submitScore}
+        onProofSubmit={submitProof}
+        showMatchInstructions={showMatchInstructions}
       />
     </Layout>
   );
