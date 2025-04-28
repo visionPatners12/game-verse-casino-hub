@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,7 +45,25 @@ export const useGamerTagCheck = () => {
     
     setIsSaving(true);
     try {
-      // First, get the user's current information
+      // Update the user's profile first
+      const userUpdateData: any = {};
+      if (platform === 'ps5') {
+        userUpdateData.psn_username = gamerTag;
+      } else if (platform === 'xbox_series') {
+        userUpdateData.xbox_gamertag = gamerTag;
+      } else {
+        userUpdateData.ea_id = gamerTag;
+      }
+
+      // Update user profile
+      const { error: userError } = await supabase
+        .from('users')
+        .update(userUpdateData)
+        .eq('id', user.id);
+
+      if (userError) throw userError;
+
+      // Get user's current information
       const { data: userData } = await supabase
         .from('users')
         .select('username')
@@ -57,59 +74,33 @@ export const useGamerTagCheck = () => {
         throw new Error("User data not found");
       }
 
-      // Check if arena player already exists
+      // Check if arena player exists
       const { data: existingPlayer } = await supabase
         .from('arena_players')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
       
-      let result;
-      
-      if (existingPlayer) {
-        // Update existing player
-        const updateData: any = {};
-        
-        if (platform === 'ps5') {
-          updateData.psn_username = gamerTag;
-        } else if (platform === 'xbox_series') {
-          updateData.xbox_gamertag = gamerTag;
-        } else {
-          updateData.ea_id = gamerTag;
-        }
-        
-        result = await supabase
-          .from('arena_players')
-          .update(updateData)
-          .eq('user_id', user.id);
-      } else {
-        // Create new player
-        const insertData: any = { 
-          user_id: user.id,
-          display_name: userData.username
-        };
-        
-        if (platform === 'ps5') {
-          insertData.psn_username = gamerTag;
-        } else if (platform === 'xbox_series') {
-          insertData.xbox_gamertag = gamerTag;
-        } else {
-          insertData.ea_id = gamerTag;
-        }
-        
-        result = await supabase
-          .from('arena_players')
-          .insert(insertData);
-      }
+      // Prepare arena player data
+      const playerData: any = {
+        display_name: userData.username,
+        user_id: user.id,
+        ...userUpdateData
+      };
 
-      if (result.error) throw result.error;
+      // Update or create arena player
+      const { error: playerError } = await supabase
+        .from('arena_players')
+        .upsert(playerData, { onConflict: 'user_id' });
+
+      if (playerError) throw playerError;
       
       toast.success("Gamer tag sauvegardé avec succès");
       return true;
     } catch (error) {
       console.error('Error saving gamer tag:', error);
       toast.error("Erreur lors de la sauvegarde du gamer tag");
-      throw error; // Rethrow to let the component handle it
+      throw error;
     } finally {
       setIsSaving(false);
     }

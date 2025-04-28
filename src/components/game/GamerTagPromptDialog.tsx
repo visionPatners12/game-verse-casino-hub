@@ -38,21 +38,12 @@ export function GamerTagPromptDialog({
     try {
       setIsSubmitting(true);
       await onSave(trimmedGamerTag);
-      // Reset form state after successful save
       setGamerTag("");
     } catch (error) {
       console.error("Error saving gamer tag:", error);
       setError("Une erreur s'est produite lors de l'enregistrement");
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  // Prevent dialog from being closed if it's required
-  const handleOpenChange = (isOpen: boolean) => {
-    // Only allow closing if we're opening it
-    if (isOpen) {
-      onOpenChange(isOpen);
     }
   };
 
@@ -70,13 +61,13 @@ export function GamerTagPromptDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Configuration requise</DialogTitle>
             <DialogDescription>
-              Pour rejoindre cette salle, vous devez configurer votre {getPlatformLabel()}.
+              Pour accéder à cette salle, vous devez configurer votre {getPlatformLabel()}.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
