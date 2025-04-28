@@ -1,7 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { GameCode, isValidGameType, gameCodeToType } from "@/lib/gameTypes";
+import { GameCode, isValidGameType } from "@/lib/gameTypes";
 import { CreateClassicRoomFormData } from "@/components/room/schemas/createClassicRoomSchema";
 import { CreateArenaRoomFormData } from "@/components/room/schemas/createArenaRoomSchema";
 import { toast } from "sonner";
@@ -27,11 +27,10 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       }
 
       const safeGameType = gameType as GameCode;
-      const gameTypeEnum = gameCodeToType[safeGameType];
 
       // First create the base game session
       const baseInsertData = {
-        game_type: gameTypeEnum as unknown as string, // Cast to string to avoid type error
+        game_type: safeGameType.toUpperCase(), // Convert to uppercase string value
         room_type: 'private' as 'private' | 'public',
         room_id: Math.random().toString(36).substring(2, 8).toUpperCase(),
         max_players: values.maxPlayers || 2,
@@ -101,7 +100,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         return;
       }
 
-      const playerInsert: any = {
+      const playerInsert = {
         session_id: data.id,
         display_name: userData.username,
         user_id: authData.user.id,

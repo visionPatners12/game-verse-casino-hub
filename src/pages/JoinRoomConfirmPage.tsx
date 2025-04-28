@@ -8,6 +8,7 @@ import { JoinRoomCard } from "@/components/game/join-dialog/JoinRoomCard";
 import { GamerTagPromptDialog } from "@/components/game/GamerTagPromptDialog";
 import { useState, useEffect } from "react";
 import { GamePlatform } from "@/types/futarena";
+import { useGamerTagCheck } from "@/hooks/room/useGamerTagCheck";
 
 export default function JoinRoomConfirmPage() {
   const { roomId } = useParams();
