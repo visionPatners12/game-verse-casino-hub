@@ -1,8 +1,8 @@
+
 import { useCallback } from "react";
 import { roomService } from "@/services/room";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useRoomDisconnect } from "./useRoomDisconnect";
 
 interface RoomActionsProps {
   roomId: string | undefined;
@@ -20,93 +20,92 @@ export function useRoomActions({
   setGameStatus,
 }: RoomActionsProps) {
   const toggleReady = useCallback(async () => {
-    if (!roomId || !currentUserId) return;
+    if (!roomId || !currentUserId) return false;
 
     try {
       const newReadyState = !isReady;
+      
+      // Directly update the database for immediate server-side effect
+      const { error } = await supabase
+        .from('game_players')
+        .update({ is_ready: newReadyState })
+        .eq('session_id', roomId)
+        .eq('user_id', currentUserId);
+        
+      if (error) throw error;
+      
+      // Still call the roomService for any other side effects it might handle
       await roomService.markPlayerReady(roomId, currentUserId, newReadyState);
-      setIsReady(newReadyState);
+      
+      // Return success
+      return true;
     } catch (error) {
       console.error("Failed to toggle ready state:", error);
       toast.error("Failed to update ready status. Please try again.");
+      return false;
     }
-  }, [roomId, currentUserId, isReady, setIsReady]);
+  }, [roomId, currentUserId, isReady]);
 
   const startGame = useCallback(async () => {
-    if (!roomId) return;
+    if (!roomId) return false;
 
     try {
+      // Directly update the room status in the database
+      const { error } = await supabase
+        .from('game_sessions')
+        .update({ 
+          status: 'Active', 
+          start_time: new Date().toISOString() 
+        })
+        .eq('id', roomId);
+        
+      if (error) throw error;
+      
+      // Also call the roomService for any other side effects
       await roomService.startGame(roomId);
+      
       setGameStatus('starting');
+      
+      setTimeout(() => {
+        setGameStatus('playing');
+      }, 1000);
+      
+      return true;
     } catch (error) {
       console.error("Failed to start game:", error);
-      toast.error("Failed to start the game. Please try again.");
-    }
-  }, [roomId, setGameStatus]);
-
-  const broadcastMove = useCallback((moveData: any) => {
-    if (!roomId) return;
-    roomService.broadcastMove(roomId, moveData);
-  }, [roomId]);
-
-  const endGame = useCallback(async (results: any) => {
-    if (!roomId) return;
-
-    try {
-      await roomService.endGame(roomId, results);
-      setGameStatus('ended');
-    } catch (error) {
-      console.error("Failed to end game:", error);
-      toast.error("Failed to end the game. Please try again.");
+      toast.error('Failed to start the game');
+      return false;
     }
   }, [roomId, setGameStatus]);
 
   const forfeitGame = useCallback(async () => {
-    const { disconnectFromRoom } = useRoomDisconnect(roomId, currentUserId, setGameStatus);
-    await disconnectFromRoom();
+    if (!roomId || !currentUserId) return false;
+
+    try {
+      // Mark player as forfeited in database
+      const { error } = await supabase
+        .from('game_players')
+        .update({ has_forfeited: true, is_ready: false })
+        .eq('session_id', roomId)
+        .eq('user_id', currentUserId);
+        
+      if (error) throw error;
+      
+      // Call roomService for disconnection and other side effects
+      await roomService.disconnectFromRoom(roomId, currentUserId);
+      
+      setGameStatus('ended');
+      return true;
+    } catch (error) {
+      console.error("Failed to forfeit game:", error);
+      toast.error('Failed to leave the match');
+      return false;
+    }
   }, [roomId, currentUserId, setGameStatus]);
 
-  const updateRoomPot = async (shouldLog: boolean = false) => {
-    if (!roomId) return;
-    
-    try {
-      const { data: roomData, error } = await supabase
-        .from('game_sessions')
-        .select('id, entry_fee, max_players, commission_rate')
-        .eq('id', roomId)
-        .single();
-  
-      if (error) throw error;
-
-      const { data: players, error: playersError } = await supabase
-        .from('game_players')
-        .select('id')
-        .eq('session_id', roomId)
-        .eq('is_connected', true);
-      
-      if (playersError) throw playersError;
-      
-      const connectedPlayers = players?.length || 0;
-      const potAmount = roomData.entry_fee * roomData.max_players * (1 - roomData.commission_rate/100);
-
-      const { error: updateError } = await supabase
-        .from('game_sessions')
-        .update({ 
-          current_players: connectedPlayers,
-          pot: potAmount
-        })
-        .eq('id', roomId);
-      
-      if (updateError) throw updateError;
-      
-      if (shouldLog) {
-        console.log(`Pot calculated for room ${roomId}: ${potAmount}`);
-        console.log(`Room ${roomId} updated: ${connectedPlayers} players, pot recalculated`);
-      }
-    } catch (error) {
-      console.error('Error updating room pot:', error);
-    }
+  return { 
+    toggleReady, 
+    startGame, 
+    forfeitGame 
   };
-
-  return { toggleReady, startGame, broadcastMove, endGame, forfeitGame, updateRoomPot };
 }

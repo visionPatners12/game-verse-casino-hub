@@ -83,7 +83,7 @@ export function EAFC25PlayerInfo({ player, isCurrentUser, platform }: EAFC25Play
   const psnId = arenaPlayerData?.psn_username || player.users?.psn_username || "PSN ID Not Set";
   const xboxId = arenaPlayerData?.xbox_gamertag || player.users?.xbox_gamertag || "Xbox Gamertag Not Set";
 
-  // Determine primary ID to display based on platform
+  // Only show the primary ID based on platform (with clear labeling)
   let primaryIdLabel = "EA ID:";
   let primaryIdValue = eaId;
   
@@ -141,8 +141,8 @@ export function EAFC25PlayerInfo({ player, isCurrentUser, platform }: EAFC25Play
             <span className="font-mono">{primaryIdValue}</span>
           </div>
           
-          {/* Only show secondary ID if it's not already shown as primary */}
-          {platform !== "cross_play" && (
+          {/* Only show EA ID if it's not already shown as primary */}
+          {(platform === "ps5" || platform === "xbox_series") && (
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">EA ID:</span>
               <span className="font-mono">{eaId}</span>

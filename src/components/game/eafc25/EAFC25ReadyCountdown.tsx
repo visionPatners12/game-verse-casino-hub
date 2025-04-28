@@ -32,6 +32,8 @@ export function EAFC25ReadyCountdown({
       // Set warning when less than 20% of time remains
       if (remaining < totalSeconds * 0.2) {
         setIsAlmostOver(true);
+      } else {
+        setIsAlmostOver(false);
       }
       
       // End countdown when timer reaches zero
@@ -50,6 +52,7 @@ export function EAFC25ReadyCountdown({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Don't render anything if not active
   if (!isActive) {
     return null;
   }
