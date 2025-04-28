@@ -7,7 +7,7 @@ import { JoinRoomLoading } from "@/components/game/join-dialog/JoinRoomLoading";
 import { JoinRoomCard } from "@/components/game/join-dialog/JoinRoomCard";
 import { GamerTagPromptDialog } from "@/components/game/GamerTagPromptDialog";
 import { useGamerTagCheck } from "@/hooks/room/useGamerTagCheck";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { GamePlatform } from "@/types/futarena";
 
 export default function JoinRoomConfirmPage() {
@@ -16,20 +16,38 @@ export default function JoinRoomConfirmPage() {
   const { roomData, hostData, isRoomLoading } = useJoinRoomConfirmData(roomId);
   const { checkRequiredGamerTag, saveGamerTag, isChecking } = useGamerTagCheck();
   const [showGamerTagPrompt, setShowGamerTagPrompt] = useState(false);
+  const [showRoomCard, setShowRoomCard] = useState(false);
+
+  // Check for required gamer tag when room data loads
+  useEffect(() => {
+    const checkGamerTag = async () => {
+      if (roomData?.platform) {
+        const platform = roomData.platform as GamePlatform;
+        const isFutArena = roomData.game_type?.toLowerCase() === "futarena" || 
+                          roomData.game_type?.toLowerCase() === "eafc25";
+        
+        if (isFutArena) {
+          const hasGamerTag = await checkRequiredGamerTag(platform);
+          
+          if (!hasGamerTag) {
+            setShowGamerTagPrompt(true);
+            setShowRoomCard(false);
+          } else {
+            setShowRoomCard(true);
+          }
+        } else {
+          setShowRoomCard(true);
+        }
+      }
+    };
+    
+    if (roomData && !isRoomLoading) {
+      checkGamerTag();
+    }
+  }, [roomData, isRoomLoading, checkRequiredGamerTag]);
 
   const handleJoinConfirm = async () => {
     if (!roomData) return;
-
-    const isFutArena = roomData.game_type?.toLowerCase() === "futarena" || roomData.game_type?.toLowerCase() === "eafc25";
-    const platform = roomData.platform as GamePlatform;
-    
-    if (isFutArena && platform) {
-      const hasGamerTag = await checkRequiredGamerTag(platform);
-      if (!hasGamerTag) {
-        setShowGamerTagPrompt(true);
-        return;
-      }
-    }
 
     if (roomId) {
       await joinRoom(roomId);
@@ -42,9 +60,7 @@ export default function JoinRoomConfirmPage() {
     const success = await saveGamerTag(roomData.platform as GamePlatform, gamerTag);
     if (success) {
       setShowGamerTagPrompt(false);
-      if (roomId) {
-        await joinRoom(roomId);
-      }
+      setShowRoomCard(true);
     }
   };
 
@@ -65,12 +81,14 @@ export default function JoinRoomConfirmPage() {
   return (
     <Layout>
       <div className="container max-w-4xl mx-auto px-4 py-8">
-        <JoinRoomCard 
-          roomData={roomData}
-          hostData={hostData}
-          isLoading={isLoading}
-          onJoinConfirm={handleJoinConfirm}
-        />
+        {showRoomCard && (
+          <JoinRoomCard 
+            roomData={roomData}
+            hostData={hostData}
+            isLoading={isLoading}
+            onJoinConfirm={handleJoinConfirm}
+          />
+        )}
         {roomData.platform && (
           <GamerTagPromptDialog
             open={showGamerTagPrompt}

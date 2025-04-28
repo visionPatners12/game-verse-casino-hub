@@ -76,6 +76,7 @@ export const useGamerTagCheck = () => {
 
       if (error) throw error;
       
+      toast.success("Gamer tag sauvegardé avec succès");
       return true;
     } catch (error) {
       console.error('Error saving gamer tag:', error);
