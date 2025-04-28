@@ -1,3 +1,4 @@
+
 export interface RoomData {
   id: string;
   game_type: string;

@@ -43,9 +43,15 @@ export function useMatchSubmissions(roomId: string | undefined, currentUserId: s
         
       if (uploadError) throw uploadError;
       
+      // Use type assertion to inform TypeScript that these properties exist
+      const updateData: any = {
+        proof_submitted: true,
+        proof_path: filePath
+      };
+      
       const { error: updateError } = await supabase
         .from('game_players')
-        .update({ proof_submitted: true, proof_path: filePath })
+        .update(updateData)
         .eq('session_id', roomId)
         .eq('user_id', currentUserId);
         
