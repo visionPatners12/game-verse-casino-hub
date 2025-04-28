@@ -16,7 +16,7 @@ export const useGamerTagCheck = () => {
     try {
       const { data: arenaPlayer } = await supabase
         .from('arena_players')
-        .select('psn_username, xbox_gamertag, ea_id')
+        .select('psn_username, xbox_gamertag, ea_id, display_name')
         .eq('user_id', user.id)
         .single();
 
@@ -44,18 +44,35 @@ export const useGamerTagCheck = () => {
     if (!user) return false;
 
     try {
-      const updateData = platform === 'ps5' 
-        ? { psn_username: gamerTag }
-        : platform === 'xbox_series'
-        ? { xbox_gamertag: gamerTag }
-        : { ea_id: gamerTag };
+      // First, get the user's current information (including display_name)
+      const { data: userData } = await supabase
+        .from('users')
+        .select('username')
+        .eq('id', user.id)
+        .single();
+      
+      if (!userData) {
+        throw new Error("User data not found");
+      }
+      
+      // Prepare the update data with display_name included
+      const updateData: any = { 
+        user_id: user.id,
+        display_name: userData.username // Adding the required display_name field
+      };
+      
+      // Add the appropriate gamer tag based on platform
+      if (platform === 'ps5') {
+        updateData.psn_username = gamerTag;
+      } else if (platform === 'xbox_series') {
+        updateData.xbox_gamertag = gamerTag;
+      } else {
+        updateData.ea_id = gamerTag;
+      }
 
       const { error } = await supabase
         .from('arena_players')
-        .upsert({
-          user_id: user.id,
-          ...updateData
-        });
+        .upsert(updateData);
 
       if (error) throw error;
       
