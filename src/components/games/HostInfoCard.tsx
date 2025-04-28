@@ -7,10 +7,9 @@ interface HostInfoCardProps {
   hostUsername: string;
   hostAvatar?: string;
   gamerTag: string;
-  gamerTagType?: string;
 }
 
-export function HostInfoCard({ hostUsername, hostAvatar, gamerTag, gamerTagType = "EA ID" }: HostInfoCardProps) {
+export function HostInfoCard({ hostUsername, hostAvatar, gamerTag }: HostInfoCardProps) {
   return (
     <Card className="bg-casino-dark/5 backdrop-blur-sm border-casino-accent/20">
       <CardContent className="p-6">
@@ -24,10 +23,10 @@ export function HostInfoCard({ hostUsername, hostAvatar, gamerTag, gamerTagType 
           <div className="space-y-1">
             <h3 className="font-semibold text-lg">{hostUsername}</h3>
             <p className="text-sm text-muted-foreground">
-              {gamerTagType}: <span className="font-mono text-casino-accent">{gamerTag}</span>
+              Gamer Tag: <span className="font-mono text-casino-accent">{gamerTag}</span>
             </p>
             <p className="text-xs text-muted-foreground italic">
-              Envoyez l'invitation à ce {gamerTagType} pour commencer le match
+              Envoyez l'invitation à ce Gamer Tag pour commencer le match
             </p>
           </div>
         </div>

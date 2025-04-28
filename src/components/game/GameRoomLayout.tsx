@@ -47,7 +47,7 @@ export function GameRoomLayout({
   onToggleReady,
   onStartGame,
   onForfeit
-}: GameRoomLayoutProps) {
+}) {
   const gameCanvasRef = useRef<HTMLDivElement | null>(null);
   const fullscreenHandle = useFullScreenHandle();
   const isMobile = useIsMobile();
@@ -140,9 +140,7 @@ export function GameRoomLayout({
                                 className="bg-destructive text-destructive-foreground"
                                 onClick={() => {
                                   setShowLeaveDialog(false);
-                                  if (onForfeit) {
-                                    onForfeit();
-                                  }
+                                  onForfeit && onForfeit();
                                 }}
                               >
                                 Oui, je quitte et j'abandonne
@@ -194,6 +192,8 @@ export function GameRoomLayout({
           </div>
         </div>
       </main>
+
+      {/* Remove this duplicate leave room button */}
     </div>
   );
 }
