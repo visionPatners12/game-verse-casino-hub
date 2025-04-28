@@ -26,7 +26,9 @@ export const useJoinRoomConfirmData = (roomId: string | undefined) => {
               id, 
               user_id,
               display_name,
-              ea_id,
+              ea_id
+            ),
+            game_players (
               users:user_id (
                 username,
                 avatar_url,
