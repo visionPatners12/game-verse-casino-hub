@@ -31,8 +31,9 @@ interface JoinRoomCardProps {
       psn_username?: string;
       xbox_gamertag?: string;
       ea_id?: string;
-    };
+    } | null;
     ea_id?: string;
+    user_id?: string;
   };
   isLoading: boolean;
   onJoinConfirm: () => void;
@@ -65,12 +66,12 @@ export function JoinRoomCard({ roomData, hostData, isLoading, onJoinConfirm }: J
         {isFutArena && hostData && (
           <>
             <HostInfoCard
-              hostUsername={hostData.users.username}
-              hostAvatar={hostData.users.avatar_url}
+              hostUsername={hostData.users?.username || hostData.display_name || "Hôte"}
+              hostAvatar={hostData.users?.avatar_url}
               platform={roomData.platform || 'ps5'}
-              psn={hostData.users.psn_username}
-              xboxId={hostData.users.xbox_gamertag}
-              eaId={hostData.users.ea_id || hostData.ea_id}
+              psn={hostData.users?.psn_username}
+              xboxId={hostData.users?.xbox_gamertag}
+              eaId={hostData.users?.ea_id || hostData.ea_id}
             />
             <Separator className="bg-casino-accent/20" />
           </>
