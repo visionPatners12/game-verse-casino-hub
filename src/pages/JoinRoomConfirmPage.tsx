@@ -38,7 +38,10 @@ export default function JoinRoomConfirmPage() {
               ea_id,
               users:user_id (
                 username,
-                avatar_url
+                avatar_url,
+                psn_username,
+                xbox_gamertag,
+                ea_id
               )
             )
           `)
@@ -82,13 +85,7 @@ export default function JoinRoomConfirmPage() {
             console.log("Configuration arène récupérée:", arenaConfig);
             setRoomData(prev => ({
               ...prev,
-              ...arenaConfig,
-              platform: arenaConfig.platform,
-              mode: arenaConfig.mode,
-              team_type: arenaConfig.team_type,
-              half_length_minutes: arenaConfig.half_length_minutes,
-              legacy_defending_allowed: arenaConfig.legacy_defending_allowed,
-              custom_formations_allowed: arenaConfig.custom_formations_allowed
+              ...arenaConfig
             }));
           }
         }
@@ -148,11 +145,11 @@ export default function JoinRoomConfirmPage() {
                 <HostInfoCard 
                   hostUsername={hostData.users.username}
                   hostAvatar={hostData.users.avatar_url}
-                  gamerTag={hostData.ea_id || "Non spécifié"}
+                  platform={roomData.platform || 'ps5'}
+                  psn={hostData.users.psn_username}
+                  xboxId={hostData.users.xbox_gamertag}
+                  eaId={hostData.users.ea_id}
                 />
-                <p className="text-sm text-muted-foreground mt-2 italic">
-                  Pour commencer le match, envoyez une invitation à l'ID EA du créateur
-                </p>
               </section>
             )}
 
