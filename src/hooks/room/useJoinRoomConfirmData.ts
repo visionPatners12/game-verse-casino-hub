@@ -62,21 +62,31 @@ export const useJoinRoomConfirmData = (roomId: string | undefined) => {
             const hostPlayer = players[0];
             console.log("Host player:", hostPlayer);
             
-            // Get the host user information
+            // Get the host user information - use maybeSingle() instead of single()
             const { data: hostUserData, error: hostError } = await supabase
               .from('users')
               .select('*')
               .eq('id', hostPlayer.user_id)
-              .single();
+              .maybeSingle();
               
             if (hostError) {
               console.error('Error fetching host user data:', hostError);
             } else {
               console.log("Host user data:", hostUserData);
-              setHostData({
-                ...hostPlayer,
-                users: hostUserData
-              });
+              // Only set host data if we actually found user data
+              if (hostUserData) {
+                setHostData({
+                  ...hostPlayer,
+                  users: hostUserData
+                });
+              } else {
+                console.log("No host user data found for ID:", hostPlayer.user_id);
+                // Still set basic host data without user details
+                setHostData({
+                  ...hostPlayer,
+                  users: null
+                });
+              }
             }
           }
         }
@@ -87,7 +97,7 @@ export const useJoinRoomConfirmData = (roomId: string | undefined) => {
             .from('arena_game_sessions')
             .select('*')
             .eq('id', room.id)
-            .single();
+            .maybeSingle();
             
           if (configError) {
             console.error('Error fetching arena configuration:', configError);
