@@ -19,6 +19,7 @@ import { RoomInfo } from "@/components/game/join-dialog/RoomInfo";
 import { GameSettings } from "@/components/game/join-dialog/GameSettings";
 import { PlatformRules } from "@/components/game/join-dialog/PlatformRules";
 import { DisclaimerSection } from "@/components/game/join-dialog/DisclaimerSection";
+import { GamePlatform } from "@/types/futarena";
 
 interface JoinRoomConfirmDialogProps {
   open: boolean;
@@ -35,13 +36,15 @@ interface JoinRoomConfirmDialogProps {
     half_length_minutes?: number;
     legacy_defending_allowed?: boolean;
     custom_formations_allowed?: boolean;
-    platform?: string;
+    platform?: GamePlatform;
     mode?: string;
     team_type?: string;
     host?: {
       username: string;
       avatar_url?: string;
-      gamer_tag?: string;
+      psn_username?: string;
+      xbox_gamertag?: string;
+      ea_id?: string;
     };
   };
 }
@@ -76,7 +79,10 @@ export function JoinRoomConfirmDialog({
                 <HostInfoCard 
                   hostUsername={roomData.host.username}
                   hostAvatar={roomData.host.avatar_url}
-                  gamerTag={roomData.host.gamer_tag || "Non spécifié"}
+                  platform={roomData.platform || 'ps5'}
+                  psn={roomData.host.psn_username}
+                  xboxId={roomData.host.xbox_gamertag}
+                  eaId={roomData.host.ea_id}
                 />
               </div>
             )}
