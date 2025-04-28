@@ -69,6 +69,7 @@ export function EAFC25GameRoom() {
   return (
     <Layout>
       <EAFC25RoomLayout
+        loading={isLoading}
         roomData={roomData}
         currentUserId={currentUserId}
         gameStatus={gameStatus}

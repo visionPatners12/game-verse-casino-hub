@@ -20,7 +20,7 @@ import { EAFC25ScoreSubmission } from "./EAFC25ScoreSubmission";
 import { EAFC25ProofUpload } from "./EAFC25ProofUpload";
 
 interface EAFC25RoomLayoutProps {
-  loading: boolean;
+  loading?: boolean;
   roomData: RoomData | null;
   currentUserId: string | null;
   gameName: string;
@@ -33,10 +33,12 @@ interface EAFC25RoomLayoutProps {
   setMatchEnded: (ended: boolean) => void;
   matchStartTime: Date | null;
   matchDuration: number; // in minutes
+  scoreSubmitted: boolean;
+  proofSubmitted: boolean;
 }
 
 export function EAFC25RoomLayout({
-  loading,
+  loading = false,
   roomData,
   currentUserId,
   gameName,
@@ -48,7 +50,9 @@ export function EAFC25RoomLayout({
   matchEnded,
   setMatchEnded,
   matchStartTime,
-  matchDuration
+  matchDuration,
+  scoreSubmitted,
+  proofSubmitted
 }: EAFC25RoomLayoutProps) {
   const fullscreenHandle = useFullScreenHandle();
   const isMobile = useIsMobile();
@@ -56,8 +60,6 @@ export function EAFC25RoomLayout({
   const totalPot = roomData?.pot || 0;
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [matchPhase, setMatchPhase] = useState<'pre-match' | 'in-progress' | 'score-submission' | 'dispute'>('pre-match');
-  const [scoreSubmitted, setScoreSubmitted] = useState(false);
-  const [proofSubmitted, setProofSubmitted] = useState(false);
   
   const allPlayersReady = roomData?.game_players?.every(player => player.is_ready || !player.is_connected);
   const enoughPlayers = roomData?.game_players?.filter(player => player.is_connected).length >= 2;
