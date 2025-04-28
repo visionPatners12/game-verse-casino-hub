@@ -97,54 +97,50 @@ export default function JoinRoomConfirmPage() {
         const room = rooms[0];
         console.log("Room data retrieved:", room);
 
-        // S'assurer que nous avons les données d'arena
-        if (!room.arena_game_sessions || room.arena_game_sessions.length === 0) {
-          console.error("No arena game session data found");
-          toast.error("Configuration de jeu invalide");
-          navigate('/games');
-          return;
-        }
-
-        // Extraire les données de configuration de l'arène
-        const arenaConfig = room.arena_game_sessions[0];
+        setRoomData(room);
+        
+        // Correction: arena_game_sessions est un objet, pas un tableau
+        const arenaConfig = room.arena_game_sessions && room.arena_game_sessions[0];
         console.log("Arena configuration:", arenaConfig);
         
-        // Configurer les paramètres du jeu avec des valeurs par défaut si nécessaire
-        setGameSettings({
-          halfLengthMinutes: arenaConfig?.half_length_minutes || 12,
-          legacyDefendingAllowed: arenaConfig?.legacy_defending_allowed || false,
-          customFormationsAllowed: arenaConfig?.custom_formations_allowed || false,
-          platform: (arenaConfig?.platform as GamePlatform) || 'ps5',
-          mode: (arenaConfig?.mode as GameMode) || 'online_friendlies',
-          teamType: (arenaConfig?.team_type as TeamType) || 'any_teams',
-          gamerTag: arenaConfig?.gamer_tag_1 || null
-        });
+        if (arenaConfig) {
+          // Configurer les paramètres du jeu avec des valeurs par défaut si nécessaire
+          setGameSettings({
+            halfLengthMinutes: arenaConfig.half_length_minutes || 12,
+            legacyDefendingAllowed: arenaConfig.legacy_defending_allowed || false,
+            customFormationsAllowed: arenaConfig.custom_formations_allowed || false,
+            platform: arenaConfig.platform || 'ps5',
+            mode: arenaConfig.mode || 'online_friendlies',
+            teamType: arenaConfig.team_type || 'any_teams',
+            gamerTag: arenaConfig.gamer_tag_1 || null
+          });
+        }
         
-        setRoomData(room);
-
         // Récupérer les données du créateur (premier joueur)
         if (room.game_players && room.game_players.length > 0) {
           const creator = room.game_players[0];
           
+          // Accéder aux données utilisateur si disponibles
+          const userData = creator.users;
+          
           // Déterminer le type de gamer tag à afficher en fonction de la plateforme
-          let gamerTag = creator.ea_id || "Non spécifié";
+          let gamerTag = creator.ea_id || (userData?.ea_id) || "Non spécifié";
           let gamerTagType = "EA ID";
           
-          if (arenaConfig?.platform === 'ps5' && creator.users?.psn_username) {
-            gamerTag = creator.users.psn_username;
+          if (arenaConfig && arenaConfig.platform === 'ps5' && userData?.psn_username) {
+            gamerTag = userData.psn_username;
             gamerTagType = "PSN Username";
-          } else if (arenaConfig?.platform === 'xbox_series' && creator.users?.xbox_gamertag) {
-            gamerTag = creator.users.xbox_gamertag;
+          } else if (arenaConfig && arenaConfig.platform === 'xbox_series' && userData?.xbox_gamertag) {
+            gamerTag = userData.xbox_gamertag;
             gamerTagType = "Xbox Gamertag";
-          } else if (creator.users?.ea_id) {
-            gamerTag = creator.users.ea_id;
+          } else if (userData?.ea_id) {
+            gamerTag = userData.ea_id;
           }
           
-          // Accéder correctement aux données utilisateur
           const creatorData = {
             ...creator,
-            username: creator.users?.username || creator.display_name || "Joueur inconnu",
-            avatar_url: creator.users?.avatar_url || null,
+            username: userData?.username || creator.display_name || "Joueur inconnu",
+            avatar_url: userData?.avatar_url || null,
             gamer_tag: gamerTag,
             gamer_tag_type: gamerTagType
           };
