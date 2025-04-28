@@ -1,3 +1,4 @@
+
 export interface RoomData {
   id: string;
   game_type: string;
@@ -12,7 +13,7 @@ export interface RoomData {
   created_at: string;
   connected_players: string[];
   // EAFC25 specific fields
-  platform?: GamePlatform;
+  platform?: string; // Changed from GamePlatform to string
   mode?: string;
   half_length_minutes?: number;
   legacy_defending_allowed?: boolean;
