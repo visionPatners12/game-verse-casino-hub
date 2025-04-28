@@ -92,7 +92,7 @@ export function useJoinRoomData(roomId: string | undefined): {
           const creator = roomData.game_players[0];
           const userData = creator.users;
           
-          let gamerTag = creator.ea_id || (userData?.ea_id) || "Non spécifié";
+          let gamerTag = userData?.ea_id || "Non spécifié";
           let gamerTagType = "EA ID";
           
           if (arenaConfig?.platform === 'ps5' && userData?.psn_username) {
