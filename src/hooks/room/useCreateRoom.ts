@@ -29,8 +29,15 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       const safeGameType = gameType as GameCode;
 
       // First create the base game session
-      const baseInsertData = {
-        game_type: safeGameType.toUpperCase(), // Convert to uppercase string value
+      const baseInsertData: {
+        game_type: "LUDO" | "CHECKERS" | "TICTACTOE" | "CHECKGAME" | "EAFC25" | "MADDEN24" | "NBA2K24" | "NHL24";
+        room_type: 'private' | 'public';
+        room_id: string;
+        max_players: number;
+        entry_fee: number;
+        commission_rate: number;
+      } = {
+        game_type: safeGameType.toUpperCase() as "LUDO" | "CHECKERS" | "TICTACTOE" | "CHECKGAME" | "EAFC25" | "MADDEN24" | "NBA2K24" | "NHL24",
         room_type: 'private' as 'private' | 'public',
         room_id: Math.random().toString(36).substring(2, 8).toUpperCase(),
         max_players: values.maxPlayers || 2,
