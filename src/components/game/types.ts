@@ -1,4 +1,3 @@
-
 export interface RoomData {
   id: string;
   game_type: string;
@@ -12,9 +11,9 @@ export interface RoomData {
   status: string;
   created_at: string;
   connected_players: string[];
-  start_time?: string; // Added this property
+  start_time?: string;
   // EAFC25 specific fields
-  platform?: string; // Changed from GamePlatform to string
+  platform?: string;
   mode?: string;
   half_length_minutes?: number;
   legacy_defending_allowed?: boolean;

@@ -190,12 +190,12 @@ export function useEAFC25Match(roomId: string | undefined) {
         
       if (uploadError) throw uploadError;
       
-      // Update player record to indicate proof submitted
+      // Update player record with proof submitted state
       const { error: updateError } = await supabase
         .from('game_players')
         .update({ 
           proof_submitted: true,
-          proof_path: filePath
+          proof_path: filePath 
         })
         .eq('session_id', roomId)
         .eq('user_id', currentUserId);
