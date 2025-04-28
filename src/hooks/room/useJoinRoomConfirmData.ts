@@ -57,22 +57,30 @@ export const useJoinRoomConfirmData = (roomId: string | undefined) => {
             game_players: players
           });
           
-          // If we have players, process host data (first player is considered the host)
+          // If we have players, fetch host data from arena_players
           if (players && players.length > 0) {
             const hostPlayer = players[0];
             console.log("Host player:", hostPlayer);
             
-            // Instead of trying to fetch user data directly (which may be restricted by RLS),
-            // we'll simply use the display_name and other fields already available in the player data
+            // Fetch host data from arena_players
+            const { data: hostArenaData, error: hostError } = await supabase
+              .from('arena_players')
+              .select('*')
+              .eq('user_id', hostPlayer.user_id)
+              .maybeSingle();
+              
+            if (hostError) {
+              console.error('Error fetching host arena data:', hostError);
+            }
+            
             setHostData({
               ...hostPlayer,
               users: {
-                username: hostPlayer.display_name || 'Host',
-                avatar_url: null,
-                // We'll use whatever game IDs are available in the player record
-                psn_username: null,
-                xbox_gamertag: null,
-                ea_id: hostPlayer.ea_id || null
+                username: hostArenaData?.display_name || hostPlayer.display_name || 'Host',
+                avatar_url: hostArenaData?.avatar_url || null,
+                psn_username: hostArenaData?.psn_username || null,
+                xbox_gamertag: hostArenaData?.xbox_gamertag || null,
+                ea_id: hostArenaData?.ea_id || hostPlayer.ea_id || null
               }
             });
           }

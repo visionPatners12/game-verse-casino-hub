@@ -59,6 +59,42 @@ export type Database = {
           },
         ]
       }
+      arena_players: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          display_name: string
+          ea_id: string | null
+          id: string
+          psn_username: string | null
+          updated_at: string | null
+          user_id: string
+          xbox_gamertag: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name: string
+          ea_id?: string | null
+          id?: string
+          psn_username?: string | null
+          updated_at?: string | null
+          user_id: string
+          xbox_gamertag?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name?: string
+          ea_id?: string | null
+          id?: string
+          psn_username?: string | null
+          updated_at?: string | null
+          user_id?: string
+          xbox_gamertag?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
