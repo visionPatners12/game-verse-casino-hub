@@ -3,19 +3,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, Upload, Check, X, Camera } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 interface EAFC25ProofUploadProps {
-  roomId: string;
-  currentUserId: string | null;
-  onSubmit: () => void;
+  onSubmit: (file: File) => Promise<boolean>;
   submitted: boolean;
 }
 
 export function EAFC25ProofUpload({ 
-  roomId, 
-  currentUserId, 
   onSubmit,
   submitted
 }: EAFC25ProofUploadProps) {
@@ -29,13 +23,13 @@ export function EAFC25ProofUpload({
       
       // Validate file type
       if (!['image/jpeg', 'image/png', 'image/jpg'].includes(selectedFile.type)) {
-        toast.error("Invalid file type. Please upload a JPG or PNG image.");
+        alert("Invalid file type. Please upload a JPG or PNG image.");
         return;
       }
       
       // Validate file size (max 5MB)
       if (selectedFile.size > 5 * 1024 * 1024) {
-        toast.error("File is too large. Maximum size is 5MB.");
+        alert("File is too large. Maximum size is 5MB.");
         return;
       }
       
@@ -51,32 +45,16 @@ export function EAFC25ProofUpload({
   };
 
   const handleUpload = async () => {
-    if (!file || !currentUserId || submitted) return;
+    if (!file || submitted) return;
     
     setUploading(true);
     try {
-      // For example: match-proof/{roomId}/{userId}-{timestamp}.jpg
-      const fileExt = file.name.split('.').pop();
-      const fileName = `match-proof/${roomId}/${currentUserId}-${Date.now()}.${fileExt}`;
-      
-      // Upload to Supabase Storage
-      // Note: This assumes you have a "match-proofs" bucket set up in Supabase Storage
-      // In a real implementation, you would need to create this bucket and set up appropriate permissions
-      const { error: uploadError } = await supabase.storage
-        .from('match-proofs')
-        .upload(fileName, file);
-        
-      if (uploadError) throw uploadError;
-      
-      // Store reference to the proof in the database
-      // This would require additional database tables and schema updates
-      // For now, we'll just simulate success
-      
-      toast.success("Proof uploaded successfully");
-      onSubmit();
+      const success = await onSubmit(file);
+      if (!success) {
+        throw new Error("Failed to upload proof");
+      }
     } catch (error) {
       console.error("Error uploading proof:", error);
-      toast.error("Failed to upload proof");
     } finally {
       setUploading(false);
     }
@@ -115,7 +93,7 @@ export function EAFC25ProofUpload({
                 </button>
               </div>
             ) : (
-              <div className="border-2 border-dashed border-border rounded-md p-6 text-center">
+              <div className="border-2 border-dashed border-border rounded-md p-6 text-center relative">
                 <Camera className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
                   Click to upload a screenshot of the final score

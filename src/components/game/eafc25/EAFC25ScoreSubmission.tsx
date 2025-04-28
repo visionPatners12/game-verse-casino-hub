@@ -5,19 +5,13 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Send } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 interface EAFC25ScoreSubmissionProps {
-  roomId: string;
-  currentUserId: string | null;
-  onSubmit: () => void;
+  onSubmit: (myScore: number, opponentScore: number) => Promise<boolean>;
   submitted: boolean;
 }
 
 export function EAFC25ScoreSubmission({ 
-  roomId, 
-  currentUserId, 
   onSubmit,
   submitted
 }: EAFC25ScoreSubmissionProps) {
@@ -28,28 +22,15 @@ export function EAFC25ScoreSubmission({
   const handleSubmitScore = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (currentUserId && !submitted) {
+    if (!submitted) {
       setIsSubmitting(true);
       try {
-        // Update the player's score in the database
-        const { error } = await supabase
-          .from('game_players')
-          .update({ 
-            current_score: myScore,
-            // Store the opponent's score in the metadata or a specific column
-            // This would require a database schema change
-          })
-          .eq('user_id', currentUserId)
-          .eq('session_id', roomId);
-
-        if (error) throw error;
-        
-        // Notify success
-        toast.success("Score submitted successfully");
-        onSubmit();
+        const success = await onSubmit(myScore, opponentScore);
+        if (!success) {
+          throw new Error("Failed to submit score");
+        }
       } catch (error) {
         console.error("Error submitting score:", error);
-        toast.error("Failed to submit score");
       } finally {
         setIsSubmitting(false);
       }

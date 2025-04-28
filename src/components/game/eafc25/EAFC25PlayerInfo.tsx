@@ -2,7 +2,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { GamePlatform } from "@/types/futarena";
-import { Gamepad2, MonitorPlay, Globe } from "lucide-react";
+import { MonitorPlay, Gamepad2, Globe } from "lucide-react";
 
 interface Player {
   id: string;
@@ -33,7 +33,9 @@ export function EAFC25PlayerInfo({ player, isCurrentUser, platform }: EAFC25Play
     <MonitorPlay className="h-4 w-4 text-blue-500" />
   ) : platform === "xbox_series" ? (
     <Gamepad2 className="h-4 w-4 text-green-500" />
-  ) : null;
+  ) : (
+    <Globe className="h-4 w-4 text-purple-500" />
+  );
 
   const displayName = player.users?.username || player.display_name;
   const eaId = player.ea_id || player.users?.ea_id || "EA ID Not Set";

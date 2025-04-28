@@ -23,6 +23,8 @@ export function useEAFC25Match(roomId: string | undefined) {
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [proofSubmitted, setProofSubmitted] = useState(false);
   const [disputeActive, setDisputeActive] = useState(false);
+  const [myScore, setMyScore] = useState<number>(0);
+  const [opponentScore, setOpponentScore] = useState<number>(0);
   
   // Start match timer when game becomes active
   useEffect(() => {
@@ -78,7 +80,7 @@ export function useEAFC25Match(roomId: string | undefined) {
   
   // Submit score to the database
   const submitScore = async (myScore: number, opponentScore: number) => {
-    if (!currentUserId || !roomId) return;
+    if (!currentUserId || !roomId) return false;
     
     try {
       // Update the player's score
@@ -90,6 +92,8 @@ export function useEAFC25Match(roomId: string | undefined) {
       
       if (error) throw error;
       
+      setMyScore(myScore);
+      setOpponentScore(opponentScore);
       setScoreSubmitted(true);
       toast.success("Score submitted successfully");
       return true;
@@ -102,7 +106,7 @@ export function useEAFC25Match(roomId: string | undefined) {
   
   // Submit proof (screenshot)
   const submitProof = async (proofFile: File) => {
-    if (!currentUserId || !roomId) return;
+    if (!currentUserId || !roomId) return false;
     
     try {
       // Upload proof to storage
@@ -114,12 +118,6 @@ export function useEAFC25Match(roomId: string | undefined) {
         .upload(fileName, proofFile);
       
       if (uploadError) throw uploadError;
-      
-      // Update player record with proof URL
-      const proofUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/match-proofs/${fileName}`;
-      
-      // This would require adding a column to game_players table
-      // For now, we'll just simulate success
       
       setProofSubmitted(true);
       toast.success("Proof submitted successfully");
@@ -147,6 +145,8 @@ export function useEAFC25Match(roomId: string | undefined) {
     setMatchEnded,
     scoreSubmitted,
     proofSubmitted,
+    myScore,
+    opponentScore,
     submitScore,
     submitProof,
     disputeActive,
