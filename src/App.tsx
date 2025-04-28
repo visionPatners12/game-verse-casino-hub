@@ -20,6 +20,7 @@ import Support from "./pages/Support";
 import DuoBets from "./pages/DuoBets";
 import ArenaPlay from "./pages/ArenaPlay";
 import JoinRoomConfirmPage from "./pages/JoinRoomConfirmPage";
+import EAFC25Room from "./pages/EAFC25Room";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/support" element={<Support />} />
             <Route path="/duo-bets" element={<DuoBets />} />
+            <Route path="/eafc25-room/:roomId" element={<EAFC25Room />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

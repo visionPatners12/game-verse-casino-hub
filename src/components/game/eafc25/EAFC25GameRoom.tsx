@@ -1,17 +1,18 @@
 
 import { Layout } from "@/components/Layout";
-import { GameRoomLayout } from "@/components/game/GameRoomLayout";
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { useGameRoom } from "@/hooks/useGameRoom";
+import { useSimpleGameRoom } from "@/hooks/useSimpleGameRoom";
 import { useWallet } from "@/hooks/useWallet";
 import { useActiveRoomGuard } from "@/hooks/useActiveRoomGuard";
 import { useRoomConnectionStatus } from "@/hooks/room/useRoomConnectionStatus";
 import { WelcomeMessage } from "@/components/game/WelcomeMessage";
+import { EAFC25RoomLayout } from "./EAFC25RoomLayout";
+import { GamePlatform } from "@/types/futarena";
 
-const GameRoom = () => {
+const EAFC25GameRoom = () => {
   useActiveRoomGuard();
   
   const navigate = useNavigate();
@@ -32,12 +33,15 @@ const GameRoom = () => {
     forfeitGame,
     players,
     fetchRoomData
-  } = useGameRoom();
+  } = useSimpleGameRoom();
 
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
+  const [matchEnded, setMatchEnded] = useState(false);
+  const [matchStartTime, setMatchStartTime] = useState<Date | null>(null);
   
   const { isConnecting, connectionVerified } = useRoomConnectionStatus(roomId, currentUserId);
 
+  // Check authentication
   useEffect(() => {
     if (!authLoading && !session) {
       console.log("User not authenticated, redirecting to /auth");
@@ -46,27 +50,23 @@ const GameRoom = () => {
     }
   }, [authLoading, session, navigate]);
 
-  // Redirect to EAFC25 room if this is an EAFC25 game
+  // Show welcome message
   useEffect(() => {
-    if (!loading && roomData && roomData.game_type?.toLowerCase() === "eafc25") {
-      console.log("Redirecting to EAFC25 specialized room");
-      navigate(`/eafc25-room/${roomId}`);
-    }
-  }, [loading, roomData, roomId, navigate]);
-
-  useEffect(() => {
-    if (roomData?.game_type?.toLowerCase() === "futarena" && roomData?.status === "waiting") {
+    if (roomData?.status === "waiting") {
       setShowWelcomeMessage(true);
     }
   }, [roomData]);
 
+  // Mark game as active when both players are ready
   useEffect(() => {
     if (roomData?.status === "Active" && gameStatus === "waiting") {
       console.log("Room is active but gameStatus is waiting, updating to playing");
       startGame();
+      setMatchStartTime(new Date());
     }
   }, [roomData?.status, gameStatus, startGame]);
 
+  // Poll for room data updates
   useEffect(() => {
     if (roomId && !loading) {
       fetchRoomData();
@@ -91,9 +91,13 @@ const GameRoom = () => {
     return <Layout><div className="flex items-center justify-center min-h-screen">Verifying room connection...</div></Layout>;
   }
 
+  const platform = roomData?.platform as GamePlatform || "ps5";
+  const halfLengthMinutes = roomData?.half_length_minutes || 12;
+  const matchDuration = (halfLengthMinutes * 2) + 5; // Game time + 5 min margin
+
   return (
     <Layout>
-      <GameRoomLayout
+      <EAFC25RoomLayout
         loading={loading}
         roomData={roomData}
         currentUserId={currentUserId}
@@ -103,15 +107,18 @@ const GameRoom = () => {
         onToggleReady={toggleReady}
         onStartGame={startGame}
         onForfeit={forfeitGame}
+        matchEnded={matchEnded}
+        setMatchEnded={setMatchEnded}
+        matchStartTime={matchStartTime}
+        matchDuration={matchDuration}
       />
-      {roomData?.game_type?.toLowerCase() === "futarena" && (
-        <WelcomeMessage
-          open={showWelcomeMessage}
-          onOpenChange={setShowWelcomeMessage}
-        />
-      )}
+      
+      <WelcomeMessage
+        open={showWelcomeMessage}
+        onOpenChange={setShowWelcomeMessage}
+      />
     </Layout>
   );
 };
 
-export default GameRoom;
+export default EAFC25GameRoom;
