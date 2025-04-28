@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,13 +75,6 @@ export const useGamerTagCheck = () => {
         throw new Error("User data not found");
       }
 
-      // Check if arena player exists
-      const { data: existingPlayer } = await supabase
-        .from('arena_players')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
       // Prepare arena player data
       const playerData: any = {
         display_name: userData.username,

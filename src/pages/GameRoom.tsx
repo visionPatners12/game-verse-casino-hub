@@ -1,10 +1,10 @@
+
 import { Layout } from "@/components/Layout";
 import { GameRoomLayout } from "@/components/game/GameRoomLayout";
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFutId } from "@/hooks/useFutId";
-import { FutIdDialog } from "@/components/game/FutIdDialog";
 import { toast } from "sonner";
 import { useGameRoom } from "@/hooks/useGameRoom";
 import { useWallet } from "@/hooks/useWallet";
@@ -35,11 +35,7 @@ const GameRoom = () => {
     fetchRoomData
   } = useGameRoom();
 
-  const [showFutIdDialog, setShowFutIdDialog] = useState(false);
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
-  
-  const { futId, isLoading: futIdLoading, saveFutId } = useFutId(currentUserId || "");
-  const [isFutArena, setIsFutArena] = useState(false);
   
   const { isConnecting, connectionVerified } = useRoomConnectionStatus(roomId, currentUserId);
 
@@ -52,10 +48,10 @@ const GameRoom = () => {
   }, [authLoading, session, navigate]);
 
   useEffect(() => {
-    if (roomData?.game_type) {
-      setIsFutArena(roomData.game_type.toLowerCase() === "futarena");
+    if (roomData?.game_type?.toLowerCase() === "futarena" && roomData?.status === "waiting") {
+      setShowWelcomeMessage(true);
     }
-  }, [roomData?.game_type]);
+  }, [roomData]);
 
   useEffect(() => {
     if (roomData?.status === "Active" && gameStatus === "waiting") {
@@ -63,26 +59,6 @@ const GameRoom = () => {
       startGame();
     }
   }, [roomData?.status, gameStatus, startGame]);
-
-  useEffect(() => {
-    if (
-      isFutArena &&
-      !!currentUserId &&
-      !futId &&
-      !futIdLoading &&
-      !showFutIdDialog &&
-      !authLoading &&
-      session
-    ) {
-      setShowFutIdDialog(true);
-    }
-  }, [isFutArena, currentUserId, futId, futIdLoading, showFutIdDialog, authLoading, session]);
-
-  useEffect(() => {
-    if (roomData?.game_type?.toLowerCase() === "futarena" && roomData?.status === "waiting") {
-      setShowWelcomeMessage(true);
-    }
-  }, [roomData]);
 
   useEffect(() => {
     if (roomId && !loading) {
@@ -122,20 +98,10 @@ const GameRoom = () => {
         onForfeit={forfeitGame}
       />
       {roomData?.game_type?.toLowerCase() === "futarena" && (
-        <>
-          <WelcomeMessage
-            open={showWelcomeMessage}
-            onOpenChange={setShowWelcomeMessage}
-          />
-          {isFutArena && (
-            <FutIdDialog
-              open={showFutIdDialog}
-              onOpenChange={setShowFutIdDialog}
-              onSave={saveFutId}
-              isLoading={futIdLoading}
-            />
-          )}
-        </>
+        <WelcomeMessage
+          open={showWelcomeMessage}
+          onOpenChange={setShowWelcomeMessage}
+        />
       )}
     </Layout>
   );
