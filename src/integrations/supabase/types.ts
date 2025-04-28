@@ -1302,6 +1302,7 @@ export type Database = {
         | "Madden24"
         | "NBA2K24"
         | "NHL24"
+        | "eafc25"
       game_variant:
         | "ludo"
         | "checkers"
@@ -1466,6 +1467,7 @@ export const Constants = {
         "Madden24",
         "NBA2K24",
         "NHL24",
+        "eafc25",
       ],
       game_variant: [
         "ludo",
