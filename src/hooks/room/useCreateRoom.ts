@@ -9,6 +9,24 @@ import { useWallet } from "@/hooks/useWallet";
 
 type RoomFormData = CreateClassicRoomFormData | CreateArenaRoomFormData;
 
+// Helper function to convert game code to proper case for database
+const formatGameTypeForDB = (gameType: GameCode): string => {
+  switch(gameType) {
+    case "ludo": return "Ludo";
+    case "checkers": return "Checkers";
+    case "tictactoe": return "TicTacToe";
+    case "checkgame": return "CheckGame";
+    case "eafc25": return "EAFC25";
+    case "madden24": return "Madden24";
+    case "nba2k24": return "NBA2K24";
+    case "nhl24": return "NHL24";
+    default: 
+      // This should never happen due to validation
+      console.error(`Unexpected game type: ${gameType}`);
+      return gameType;
+  }
+};
+
 export function useCreateRoom(username: string, gameType: string | undefined) {
   const navigate = useNavigate();
   const { wallet } = useWallet({ enableTransactions: false });
@@ -29,15 +47,8 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       const safeGameType = gameType as GameCode;
 
       // First create the base game session
-      const baseInsertData: {
-        game_type: "LUDO" | "CHECKERS" | "TICTACTOE" | "CHECKGAME" | "EAFC25" | "MADDEN24" | "NBA2K24" | "NHL24";
-        room_type: 'private' | 'public';
-        room_id: string;
-        max_players: number;
-        entry_fee: number;
-        commission_rate: number;
-      } = {
-        game_type: safeGameType.toUpperCase() as "LUDO" | "CHECKERS" | "TICTACTOE" | "CHECKGAME" | "EAFC25" | "MADDEN24" | "NBA2K24" | "NHL24",
+      const baseInsertData = {
+        game_type: formatGameTypeForDB(safeGameType),
         room_type: 'private' as 'private' | 'public',
         room_id: Math.random().toString(36).substring(2, 8).toUpperCase(),
         max_players: values.maxPlayers || 2,
