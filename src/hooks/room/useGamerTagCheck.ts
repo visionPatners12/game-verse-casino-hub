@@ -46,7 +46,7 @@ export const useGamerTagCheck = () => {
     
     setIsSaving(true);
     try {
-      // First, get the user's current information (including display_name)
+      // First, get the user's current information
       const { data: userData } = await supabase
         .from('users')
         .select('username')
@@ -56,27 +56,53 @@ export const useGamerTagCheck = () => {
       if (!userData) {
         throw new Error("User data not found");
       }
+
+      // Check if arena player already exists
+      const { data: existingPlayer } = await supabase
+        .from('arena_players')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
       
-      // Prepare the update data with display_name included
-      const updateData: any = { 
-        user_id: user.id,
-        display_name: userData.username // Adding the required display_name field
-      };
+      let result;
       
-      // Add the appropriate gamer tag based on platform
-      if (platform === 'ps5') {
-        updateData.psn_username = gamerTag;
-      } else if (platform === 'xbox_series') {
-        updateData.xbox_gamertag = gamerTag;
+      if (existingPlayer) {
+        // Update existing player
+        const updateData: any = {};
+        
+        if (platform === 'ps5') {
+          updateData.psn_username = gamerTag;
+        } else if (platform === 'xbox_series') {
+          updateData.xbox_gamertag = gamerTag;
+        } else {
+          updateData.ea_id = gamerTag;
+        }
+        
+        result = await supabase
+          .from('arena_players')
+          .update(updateData)
+          .eq('user_id', user.id);
       } else {
-        updateData.ea_id = gamerTag;
+        // Create new player
+        const insertData: any = { 
+          user_id: user.id,
+          display_name: userData.username
+        };
+        
+        if (platform === 'ps5') {
+          insertData.psn_username = gamerTag;
+        } else if (platform === 'xbox_series') {
+          insertData.xbox_gamertag = gamerTag;
+        } else {
+          insertData.ea_id = gamerTag;
+        }
+        
+        result = await supabase
+          .from('arena_players')
+          .insert(insertData);
       }
 
-      const { error } = await supabase
-        .from('arena_players')
-        .upsert(updateData);
-
-      if (error) throw error;
+      if (result.error) throw result.error;
       
       toast.success("Gamer tag sauvegardé avec succès");
       return true;
