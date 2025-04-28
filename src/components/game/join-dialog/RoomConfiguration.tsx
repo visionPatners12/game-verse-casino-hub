@@ -26,6 +26,8 @@ interface RoomConfigurationProps {
 }
 
 export function RoomConfiguration({ gameSettings, hostData, isFutArena }: RoomConfigurationProps) {
+  console.log("RoomConfiguration rendering with:", { gameSettings, hostData, isFutArena });
+  
   return (
     <div className="space-y-6">
       {isFutArena && hostData && (
@@ -47,7 +49,7 @@ export function RoomConfiguration({ gameSettings, hostData, isFutArena }: RoomCo
 
       <section>
         <h3 className="text-lg font-semibold mb-4 text-casino-accent">Configuration du match</h3>
-        {gameSettings && (
+        {gameSettings ? (
           <GameSettings
             halfLengthMinutes={gameSettings.halfLengthMinutes}
             legacyDefendingAllowed={gameSettings.legacyDefendingAllowed}
@@ -57,6 +59,8 @@ export function RoomConfiguration({ gameSettings, hostData, isFutArena }: RoomCo
             teamType={gameSettings.teamType}
             gamerTag={gameSettings.gamerTag}
           />
+        ) : (
+          <p className="text-muted-foreground">Aucune configuration disponible</p>
         )}
       </section>
 

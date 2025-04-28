@@ -73,6 +73,7 @@ export function useJoinRoomData(roomId: string | undefined): {
 
         console.log("Room data retrieved:", roomData);
         const arenaConfig = roomData.arena_config?.[0];
+        console.log("Arena config:", arenaConfig);
         
         let gameSettings = null;
         let hostData = null;
@@ -91,6 +92,9 @@ export function useJoinRoomData(roomId: string | undefined): {
         if (roomData.game_players && roomData.game_players.length > 0) {
           const creator = roomData.game_players[0];
           const userData = creator.users;
+          
+          console.log("Creator data:", creator);
+          console.log("User data:", userData);
           
           let gamerTag = userData?.ea_id || "Non spécifié";
           let gamerTagType = "EA ID";
@@ -115,6 +119,7 @@ export function useJoinRoomData(roomId: string | undefined): {
           };
         }
 
+        console.log("Processed data:", { roomData, hostData, gameSettings });
         setData({ roomData, hostData, gameSettings });
       } catch (error: any) {
         console.error('Error:', error);

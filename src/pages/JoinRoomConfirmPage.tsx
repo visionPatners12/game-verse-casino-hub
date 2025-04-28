@@ -19,6 +19,9 @@ export default function JoinRoomConfirmPage() {
     }
   };
 
+  console.log("JoinRoomConfirmPage rendering with data:", data);
+  console.log("Game type:", gameType);
+
   if (isLoading || !data) {
     return (
       <Layout>
@@ -31,6 +34,10 @@ export default function JoinRoomConfirmPage() {
 
   const { roomData, hostData, gameSettings } = data;
   const isFutArena = roomData.game_type?.toLowerCase() === "futarena" || roomData.game_type?.toLowerCase() === "eafc25";
+
+  console.log("Room is FutArena:", isFutArena);
+  console.log("Host data:", hostData);
+  console.log("Game settings:", gameSettings);
 
   return (
     <Layout>
