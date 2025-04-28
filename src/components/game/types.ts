@@ -12,6 +12,7 @@ export interface RoomData {
   status: string;
   created_at: string;
   connected_players: string[];
+  start_time?: string; // Added this property
   // EAFC25 specific fields
   platform?: string; // Changed from GamePlatform to string
   mode?: string;
