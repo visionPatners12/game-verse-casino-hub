@@ -1,8 +1,7 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { GamePlatform } from "@/types/futarena";
-import { MonitorPlay, Gamepad2, Globe, Check } from "lucide-react";
+import { MonitorPlay, Gamepad2, Globe, Check, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
@@ -76,14 +75,11 @@ export function EAFC25PlayerInfo({ player, isCurrentUser, platform }: EAFC25Play
 
   const displayName = player.users?.username || player.display_name;
   
-  // Get the EA ID from arena_players first, then from player.users, then from player, or fallback
   const eaId = arenaPlayerData?.ea_id || player.ea_id || player.users?.ea_id || "EA ID Not Set";
   
-  // Get the console ID from arena_players first, then from player.users, or fallback
   const psnId = arenaPlayerData?.psn_username || player.users?.psn_username || "PSN ID Not Set";
   const xboxId = arenaPlayerData?.xbox_gamertag || player.users?.xbox_gamertag || "Xbox Gamertag Not Set";
 
-  // Only show the primary ID based on platform (with clear labeling)
   let primaryIdLabel = "EA ID:";
   let primaryIdValue = eaId;
   
@@ -118,10 +114,15 @@ export function EAFC25PlayerInfo({ player, isCurrentUser, platform }: EAFC25Play
             <div className="flex items-center gap-2">
               <span className="font-medium">{displayName}</span>
               {isCurrentUser && <span className="text-xs text-muted-foreground">(You)</span>}
-              {player.is_ready && (
+              {player.is_ready ? (
                 <Badge variant="success" className="flex items-center gap-1">
                   <Check className="h-3 w-3" />
                   Ready
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  Not Ready
                 </Badge>
               )}
             </div>
@@ -141,7 +142,6 @@ export function EAFC25PlayerInfo({ player, isCurrentUser, platform }: EAFC25Play
             <span className="font-mono">{primaryIdValue}</span>
           </div>
           
-          {/* Only show EA ID if it's not already shown as primary */}
           {(platform === "ps5" || platform === "xbox_series") && (
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">EA ID:</span>

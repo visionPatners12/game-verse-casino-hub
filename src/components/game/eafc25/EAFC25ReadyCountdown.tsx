@@ -2,16 +2,21 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Clock, AlertTriangle } from 'lucide-react';
+import { Clock, AlertTriangle, Users } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface EAFC25ReadyCountdownProps {
   endTime: Date | null;
   isActive: boolean;
+  readyPlayersCount: number;
+  totalPlayers: number;
 }
 
 export function EAFC25ReadyCountdown({ 
   endTime,
-  isActive 
+  isActive,
+  readyPlayersCount,
+  totalPlayers
 }: EAFC25ReadyCountdownProps) {
   const [timeRemaining, setTimeRemaining] = useState<number>(300); // 5 minutes in seconds
   const [progress, setProgress] = useState<number>(100);
@@ -52,8 +57,8 @@ export function EAFC25ReadyCountdown({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Don't render anything if not active
-  if (!isActive) {
+  // Don't render if not active and all players aren't ready
+  if (!isActive && readyPlayersCount === 0) {
     return null;
   }
 
@@ -61,21 +66,41 @@ export function EAFC25ReadyCountdown({
     <Card className={`p-4 mb-4 ${isAlmostOver ? 'border-amber-500' : ''}`}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <Clock className={`h-5 w-5 ${isAlmostOver ? 'text-amber-500' : ''}`} />
-          <span className="font-medium">Waiting for players to get ready</span>
+          {isActive ? (
+            <>
+              <Clock className={`h-5 w-5 ${isAlmostOver ? 'text-amber-500' : ''}`} />
+              <span className="font-medium">Waiting for all players to get ready</span>
+            </>
+          ) : (
+            <>
+              <Users className="h-5 w-5" />
+              <span className="font-medium">Ready Status</span>
+            </>
+          )}
         </div>
-        <span className={`font-bold text-lg ${isAlmostOver ? 'text-amber-500 animate-pulse' : ''}`}>
-          {formatTime(timeRemaining)}
-        </span>
+        <div className="flex items-center gap-2">
+          <Badge variant={readyPlayersCount === totalPlayers ? "success" : "default"}>
+            {readyPlayersCount}/{totalPlayers} Ready
+          </Badge>
+          {isActive && (
+            <span className={`font-bold text-lg ${isAlmostOver ? 'text-amber-500 animate-pulse' : ''}`}>
+              {formatTime(timeRemaining)}
+            </span>
+          )}
+        </div>
       </div>
       
-      <Progress value={progress} className={isAlmostOver ? 'bg-amber-100' : ''} />
-      
-      {isAlmostOver && (
-        <div className="mt-2 flex items-center gap-2 text-xs text-amber-500">
-          <AlertTriangle className="h-4 w-4" />
-          <span>Get ready soon! Match will be canceled if not all players are ready.</span>
-        </div>
+      {isActive && (
+        <>
+          <Progress value={progress} className={isAlmostOver ? 'bg-amber-100' : ''} />
+          
+          {isAlmostOver && (
+            <div className="mt-2 flex items-center gap-2 text-xs text-amber-500">
+              <AlertTriangle className="h-4 w-4" />
+              <span>Get ready soon! Match will be canceled if not all players are ready.</span>
+            </div>
+          )}
+        </>
       )}
     </Card>
   );
