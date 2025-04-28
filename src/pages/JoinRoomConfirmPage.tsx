@@ -172,6 +172,17 @@ export default function JoinRoomConfirmPage() {
                   xboxId={hostData.users.xbox_gamertag}
                   eaId={hostData.users.ea_id || hostData.ea_id}
                 />
+                
+                <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                  <p className="font-semibold mb-2">📱 Instructions pour rejoindre la partie:</p>
+                  <p className="text-sm text-muted-foreground">
+                    Une fois que vous aurez rejoint la salle, vous devrez envoyer une invitation à{' '}
+                    <span className="font-semibold text-casino-accent">
+                      {hostData.users.username}
+                    </span>{' '}
+                    via son identifiant {roomData.platform === 'ps5' ? 'PSN' : roomData.platform === 'xbox_series' ? 'Xbox' : 'EA'}.
+                  </p>
+                </div>
               </section>
             )}
 
