@@ -10,21 +10,10 @@ import { useMatchState } from "@/hooks/room/match/useMatchState";
 import { useMatchSubmissions } from "@/hooks/room/match/useMatchSubmissions";
 import { usePlayerReadyStatus } from "@/hooks/arena/usePlayerReadyStatus";
 import { arenaRoomService } from "@/services/arena/ArenaRoomWebSocketService";
-import { usePlayerConnection } from "@/hooks/room/usePlayerConnection";
-import { useRoomConnectionStatus } from "@/hooks/room/useRoomConnectionStatus";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 
 export function EAFC25GameRoom() {
   useActiveRoomGuard();
   const { roomId } = useParams<{ roomId: string }>();
-  const { user } = useAuth();
-  
-  // Mark user as connected to this room
-  usePlayerConnection(roomId);
-  
-  // Verify connection status
-  const { isConnecting, connectionVerified } = useRoomConnectionStatus(roomId, user?.id || null);
   
   // Get room data
   const {
@@ -51,7 +40,6 @@ export function EAFC25GameRoom() {
   const {
     isReady,
     toggleReady,
-    isLoading: isReadyLoading,
     allPlayersReady
   } = usePlayerReadyStatus(roomId, currentUserId);
   
@@ -73,32 +61,6 @@ export function EAFC25GameRoom() {
       };
     }
   }, [roomId]);
-  
-  // Log room data for debugging
-  useEffect(() => {
-    if (roomData) {
-      console.log('[EAFC25GameRoom] Room data updated:', {
-        id: roomData.id,
-        status: roomData.status,
-        current_players: roomData.current_players,
-        connected_players: roomData.connected_players,
-        players: roomData.game_players?.map(p => ({
-          id: p.id,
-          user_id: p.user_id,
-          is_connected: p.is_connected,
-          is_ready: p.is_ready,
-          display_name: p.display_name
-        }))
-      });
-
-      // Check why the "Get Ready" button might not be visible
-      if (roomData.game_players) {
-        const connectedPlayers = roomData.game_players.filter(p => p.is_connected).length;
-        console.log(`[EAFC25GameRoom] Connected players: ${connectedPlayers}, Status: ${gameStatus}`);
-        console.log(`[EAFC25GameRoom] ShowGetReady condition: ${connectedPlayers >= 2 && gameStatus === 'waiting'}`);
-      }
-    }
-  }, [roomData, gameStatus]);
   
   // Start game when all players are ready
   useEffect(() => {
@@ -197,17 +159,8 @@ export function EAFC25GameRoom() {
     }
   }, [matchEnded]);
 
-  // Log explicit button state info
-  useEffect(() => {
-    console.log('[EAFC25GameRoom] Ready button state:', {
-      isReady,
-      isReadyLoading,
-      currentUserId,
-      roomId,
-      gameStatus,
-      connectionVerified
-    });
-  }, [isReady, isReadyLoading, currentUserId, roomId, gameStatus, connectionVerified]);
+  // Import supabase
+  const { supabase } = require('@/integrations/supabase/client');
 
   return (
     <Layout>
@@ -226,12 +179,11 @@ export function EAFC25GameRoom() {
         setMatchEnded={setMatchEnded}
         scoreSubmitted={scoreSubmitted}
         proofSubmitted={proofSubmitted}
-        readyCountdownActive={false}
-        readyCountdownEndTime={null}
+        readyCountdownActive={false} // This is handled by the EAFC25ReadyCountdown component now
+        readyCountdownEndTime={null} // This is handled by the EAFC25ReadyCountdown component now
         onScoreSubmit={submitScore}
         onProofSubmit={submitProof}
         showMatchInstructions={showMatchInstructions}
-        isReadyLoading={isReadyLoading}
       />
     </Layout>
   );

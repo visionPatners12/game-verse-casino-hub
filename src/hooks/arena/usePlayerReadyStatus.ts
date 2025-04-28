@@ -124,20 +124,6 @@ export function usePlayerReadyStatus(roomId: string | undefined, userId: string 
     try {
       console.log(`[usePlayerReadyStatus] Toggling ready status for user ${userId} to ${!isReady}`);
       
-      // Directly update the database first
-      const { error: dbError } = await supabase
-        .from('game_players')
-        .update({ is_ready: !isReady })
-        .eq('session_id', roomId)
-        .eq('user_id', userId);
-        
-      if (dbError) {
-        console.error('[usePlayerReadyStatus] Error updating ready status in database:', dbError);
-        toast.error("Failed to update ready status in database");
-        return;
-      }
-      
-      // Now update via WebSocket for real-time notifications
       const success = await arenaRoomService.updatePlayerReadyStatus(
         roomId,
         userId,
@@ -153,10 +139,6 @@ export function usePlayerReadyStatus(roomId: string | undefined, userId: string 
         } else {
           toast.info("You are no longer ready");
         }
-      } else {
-        console.error('[usePlayerReadyStatus] WebSocket update failed');
-        // The database update was successful so we update the local state anyway
-        setIsReady(!isReady);
       }
     } catch (error) {
       console.error('[usePlayerReadyStatus] Error toggling ready status:', error);
