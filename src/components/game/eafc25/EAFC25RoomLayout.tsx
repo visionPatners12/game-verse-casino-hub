@@ -20,6 +20,7 @@ interface EAFC25RoomLayoutProps {
   currentUserId: string | null;
   gameStatus: 'waiting' | 'starting' | 'playing' | 'ended';
   isReady: boolean;
+  isReadyLoading?: boolean;
   onToggleReady: () => void;
   onStartGame: () => void;
   onForfeit: () => void;
@@ -41,6 +42,7 @@ export function EAFC25RoomLayout({
   roomData,
   currentUserId,
   isReady,
+  isReadyLoading = false,
   gameStatus,
   onToggleReady,
   onStartGame,
@@ -67,6 +69,19 @@ export function EAFC25RoomLayout({
   const enoughPlayers = connectedPlayers >= 2;
   const canStartGame = allPlayersReady && enoughPlayers && gameStatus === 'waiting';
   const showGetReady = enoughPlayers && gameStatus === 'waiting';
+
+  // Add debug log for visibilty of ready button
+  console.log('[EAFC25RoomLayout] Button visibility conditions:', {
+    enoughPlayers,
+    gameStatus,
+    showGetReady,
+    connectedPlayers,
+    players: players.map(p => ({
+      user_id: p.user_id,
+      is_connected: p.is_connected,
+      is_ready: p.is_ready
+    }))
+  });
 
   const copyRoomCode = () => {
     if (roomData?.room_id) {
@@ -117,6 +132,7 @@ export function EAFC25RoomLayout({
                     <GameControls 
                       gameStatus={gameStatus}
                       isReady={isReady}
+                      isReadyLoading={isReadyLoading}
                       canStartGame={canStartGame}
                       onToggleReady={onToggleReady}
                       onStartGame={onStartGame}
