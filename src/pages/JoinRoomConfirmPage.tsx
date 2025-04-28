@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { GameType } from "@/components/GameCard";
 import { useJoinRoom } from "@/hooks/room/useJoinRoom";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
@@ -14,46 +15,15 @@ import { DisclaimerSection } from "@/components/game/join-dialog/DisclaimerSecti
 import { HostInfoCard } from "@/components/games/HostInfoCard";
 import { RoomInfo } from "@/components/game/join-dialog/RoomInfo";
 import { Loader2 } from "lucide-react";
-import { useRequireAuth } from "@/hooks/useRequireAuth";
-
-interface RoomPlayer {
-  id: string;
-  user_id: string;
-  display_name: string;
-  ea_id?: string;
-  users?: {
-    username: string;
-    avatar_url?: string;
-    psn_username?: string;
-    xbox_gamertag?: string;
-    ea_id?: string;
-  };
-}
-
-interface RoomData {
-  id: string;
-  room_id: string;
-  game_type: string;
-  current_players: number;
-  max_players: number;
-  entry_fee: number;
-  platform?: string;
-  half_length_minutes?: number;
-  legacy_defending_allowed?: boolean;
-  custom_formations_allowed?: boolean;
-  mode?: string;
-  team_type?: string;
-  game_players?: RoomPlayer[];
-}
+import { GamePlatform } from "@/types/futarena";
 
 export default function JoinRoomConfirmPage() {
   const { gameType, roomId } = useParams();
   const navigate = useNavigate();
   const { joinRoom, isLoading } = useJoinRoom();
-  const [roomData, setRoomData] = useState<RoomData | null>(null);
-  const [hostData, setHostData] = useState<RoomPlayer | null>(null);
+  const [roomData, setRoomData] = useState<any>(null);
+  const [hostData, setHostData] = useState<any>(null);
   const [isRoomLoading, setIsRoomLoading] = useState(true);
-  useRequireAuth();
 
   useEffect(() => {
     const fetchRoomData = async () => {
@@ -61,7 +31,9 @@ export default function JoinRoomConfirmPage() {
       
       try {
         setIsRoomLoading(true);
+        console.log("Fetching room data for roomId:", roomId);
         
+        // Récupérer les données de la salle avec la requête JOIN pour le host
         const { data: room, error } = await supabase
           .from('game_sessions')
           .select(`
@@ -71,7 +43,7 @@ export default function JoinRoomConfirmPage() {
               user_id,
               display_name,
               ea_id,
-              users (
+              users:user_id (
                 username,
                 avatar_url,
                 psn_username,
@@ -81,9 +53,10 @@ export default function JoinRoomConfirmPage() {
             )
           `)
           .eq('room_id', roomId.toUpperCase())
-          .maybeSingle();
+          .single();
           
         if (error) {
+          console.error('Error fetching room data:', error);
           toast.error("Erreur lors de la récupération des données de la salle");
           navigate('/games');
           return;
@@ -95,13 +68,36 @@ export default function JoinRoomConfirmPage() {
           return;
         }
 
+        console.log("Données de la salle récupérées:", room);
         setRoomData(room);
         
+        // S'il y a des joueurs dans la salle, le premier est probablement le créateur
         if (room.game_players && room.game_players.length > 0) {
-          setHostData(room.game_players[0]);
+          const host = room.game_players[0];
+          console.log("Host data:", host);
+          setHostData(host);
         }
         
+        // Pour les jeux de type EAFC25/FutArena, récupérer les configurations supplémentaires
+        if (room.game_type?.toLowerCase() === 'eafc25' || room.game_type?.toLowerCase() === 'futarena') {
+          const { data: arenaConfig, error: configError } = await supabase
+            .from('arena_game_sessions')
+            .select('*')
+            .eq('id', room.id)
+            .single();
+            
+          if (configError) {
+            console.error('Error fetching arena configuration:', configError);
+          } else if (arenaConfig) {
+            console.log("Configuration arène récupérée:", arenaConfig);
+            setRoomData(prev => ({
+              ...prev,
+              ...arenaConfig
+            }));
+          }
+        }
       } catch (error: any) {
+        console.error('Error:', error);
         toast.error("Une erreur s'est produite");
         navigate('/games');
       } finally {
@@ -141,8 +137,8 @@ export default function JoinRoomConfirmPage() {
     );
   }
 
-  const isFutArena = roomData.game_type?.toLowerCase().includes('futarena') || 
-                     roomData.game_type?.toLowerCase().includes('eafc25');
+  // Check if the game type is related to FutArena using lowercase comparison for safety
+  const isFutArena = roomData?.game_type?.toLowerCase() === "futarena" || roomData?.game_type?.toLowerCase() === "eafc25";
 
   return (
     <Layout>
@@ -157,9 +153,9 @@ export default function JoinRoomConfirmPage() {
                 </p>
               </div>
               <RoomInfo
-                currentPlayers={roomData.current_players}
-                maxPlayers={roomData.max_players}
-                entryFee={roomData.entry_fee}
+                currentPlayers={roomData?.current_players}
+                maxPlayers={roomData?.max_players}
+                entryFee={roomData?.entry_fee}
               />
             </div>
           </CardHeader>
@@ -171,7 +167,7 @@ export default function JoinRoomConfirmPage() {
                 <HostInfoCard 
                   hostUsername={hostData.users.username}
                   hostAvatar={hostData.users.avatar_url}
-                  platform={roomData.platform || 'ps5'}
+                  platform={roomData.platform || 'ps5' as GamePlatform}
                   psn={hostData.users.psn_username}
                   xboxId={hostData.users.xbox_gamertag}
                   eaId={hostData.users.ea_id || hostData.ea_id}
