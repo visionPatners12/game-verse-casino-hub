@@ -1,107 +1,22 @@
+
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { GameType } from "@/components/GameCard";
-import { useJoinRoom } from "@/hooks/room/useJoinRoom";
+import { useParams } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
-import { GameSettings } from "@/components/game/join-dialog/GameSettings";
+import { useJoinRoom } from "@/hooks/room/useJoinRoom";
+import { useJoinRoomConfirmData } from "@/hooks/room/useJoinRoomConfirmData";
+import { JoinRoomLoading } from "@/components/game/join-dialog/JoinRoomLoading";
+import { RoomInfo } from "@/components/game/join-dialog/RoomInfo";
+import { RoomSettings } from "@/components/game/join-dialog/RoomSettings";
 import { PlatformRules } from "@/components/game/join-dialog/PlatformRules";
 import { DisclaimerSection } from "@/components/game/join-dialog/DisclaimerSection";
-import { RoomInfo } from "@/components/game/join-dialog/RoomInfo";
-import { Loader2 } from "lucide-react";
-import { GamePlatform } from "@/types/futarena";
 
 export default function JoinRoomConfirmPage() {
-  const { gameType, roomId } = useParams();
-  const navigate = useNavigate();
+  const { roomId } = useParams();
   const { joinRoom, isLoading } = useJoinRoom();
-  const [roomData, setRoomData] = useState<any>(null);
-  const [hostData, setHostData] = useState<any>(null);
-  const [isRoomLoading, setIsRoomLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchRoomData = async () => {
-      if (!roomId) return;
-      
-      try {
-        setIsRoomLoading(true);
-        console.log("Fetching room data for roomId:", roomId);
-        
-        const { data: room, error } = await supabase
-          .from('game_sessions')
-          .select(`
-            *,
-            game_players!game_players_session_id_fkey (
-              id, 
-              user_id,
-              display_name,
-              ea_id,
-              users:user_id (
-                username,
-                avatar_url,
-                psn_username,
-                xbox_gamertag,
-                ea_id
-              )
-            )
-          `)
-          .eq('room_id', roomId.toUpperCase())
-          .single();
-          
-        if (error) {
-          console.error('Error fetching room data:', error);
-          toast.error("Erreur lors de la récupération des données de la salle");
-          navigate('/games');
-          return;
-        }
-        
-        if (!room) {
-          toast.error("Salon introuvable");
-          navigate('/games');
-          return;
-        }
-
-        console.log("Données de la salle récupérées:", room);
-        setRoomData(room);
-        
-        if (room.game_players && room.game_players.length > 0) {
-          const host = room.game_players[0];
-          console.log("Host data:", host);
-          setHostData(host);
-        }
-        
-        if (room.game_type?.toLowerCase() === 'eafc25' || room.game_type?.toLowerCase() === 'futarena') {
-          const { data: arenaConfig, error: configError } = await supabase
-            .from('arena_game_sessions')
-            .select('*')
-            .eq('id', room.id)
-            .single();
-            
-          if (configError) {
-            console.error('Error fetching arena configuration:', configError);
-          } else if (arenaConfig) {
-            console.log("Configuration arène récupérée:", arenaConfig);
-            setRoomData(prev => ({
-              ...prev,
-              ...arenaConfig
-            }));
-          }
-        }
-      } catch (error: any) {
-        console.error('Error:', error);
-        toast.error("Une erreur s'est produite");
-        navigate('/games');
-      } finally {
-        setIsRoomLoading(false);
-      }
-    };
-
-    fetchRoomData();
-  }, [roomId, navigate]);
+  const { roomData, isRoomLoading } = useJoinRoomConfirmData(roomId);
 
   const handleJoinConfirm = async () => {
     if (roomId) {
@@ -110,16 +25,7 @@ export default function JoinRoomConfirmPage() {
   };
 
   if (isRoomLoading) {
-    return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" />
-            <p>Chargement des informations de la salle...</p>
-          </div>
-        </div>
-      </Layout>
-    );
+    return <JoinRoomLoading />;
   }
 
   if (!roomData) {
@@ -157,19 +63,19 @@ export default function JoinRoomConfirmPage() {
           <CardContent className="space-y-6">
             <Separator className="bg-casino-accent/20" />
 
-            <section>
-              <h3 className="text-lg font-semibold mb-4 text-casino-accent">Configuration du match</h3>
-              <GameSettings
-                halfLengthMinutes={roomData.half_length_minutes}
-                legacyDefendingAllowed={roomData.legacy_defending_allowed}
-                customFormationsAllowed={roomData.custom_formations_allowed}
-                platform={roomData.platform}
-                mode={roomData.mode}
-                teamType={roomData.team_type}
-              />
-            </section>
-
-            <Separator className="bg-casino-accent/20" />
+            {isFutArena && (
+              <>
+                <RoomSettings
+                  halfLengthMinutes={roomData.half_length_minutes}
+                  legacyDefendingAllowed={roomData.legacy_defending_allowed}
+                  customFormationsAllowed={roomData.custom_formations_allowed}
+                  platform={roomData.platform}
+                  mode={roomData.mode}
+                  teamType={roomData.team_type}
+                />
+                <Separator className="bg-casino-accent/20" />
+              </>
+            )}
 
             <PlatformRules />
 
