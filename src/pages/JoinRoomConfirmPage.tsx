@@ -96,15 +96,13 @@ export default function JoinRoomConfirmPage() {
 
         const room = rooms[0];
         console.log("Room data retrieved:", room);
-
         setRoomData(room);
         
-        // Correction: arena_game_sessions est un objet, pas un tableau
-        const arenaConfig = room.arena_game_sessions && room.arena_game_sessions[0];
+        // Correction: arena_game_sessions est un tableau d'objets dans la réponse
+        const arenaConfig = room.arena_game_sessions?.[0];
         console.log("Arena configuration:", arenaConfig);
         
         if (arenaConfig) {
-          // Configurer les paramètres du jeu avec des valeurs par défaut si nécessaire
           setGameSettings({
             halfLengthMinutes: arenaConfig.half_length_minutes || 12,
             legacyDefendingAllowed: arenaConfig.legacy_defending_allowed || false,
