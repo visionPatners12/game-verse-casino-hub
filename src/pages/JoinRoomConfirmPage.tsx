@@ -1,134 +1,17 @@
+
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useJoinRoom } from "@/hooks/room/useJoinRoom";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
-import { GameSettings } from "@/components/game/join-dialog/GameSettings";
-import { PlatformRules } from "@/components/game/join-dialog/PlatformRules";
-import { DisclaimerSection } from "@/components/game/join-dialog/DisclaimerSection";
-import { HostInfoCard } from "@/components/games/HostInfoCard";
+import { useParams } from "react-router-dom";
 import { RoomInfo } from "@/components/game/join-dialog/RoomInfo";
-import { GamePlatform, GameMode, TeamType } from "@/types/futarena";
+import { useJoinRoom } from "@/hooks/room/useJoinRoom";
+import { useJoinRoomData } from "@/hooks/room/useJoinRoomData";
+import { RoomConfiguration } from "@/components/game/join-dialog/RoomConfiguration";
 
 export default function JoinRoomConfirmPage() {
   const { gameType, roomId } = useParams();
-  const navigate = useNavigate();
-  const { joinRoom, isLoading } = useJoinRoom();
-  const [roomData, setRoomData] = useState<any>(null);
-  const [hostData, setHostData] = useState<any>(null);
-  const [gameSettings, setGameSettings] = useState<{
-    halfLengthMinutes: number;
-    legacyDefendingAllowed: boolean;
-    customFormationsAllowed: boolean;
-    platform: GamePlatform;
-    mode: GameMode;
-    teamType: TeamType;
-    gamerTag?: string;
-  } | null>(null);
-
-  useEffect(() => {
-    const fetchRoomData = async () => {
-      if (!roomId) return;
-      
-      try {
-        console.log("Fetching room data for:", roomId);
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(roomId);
-        
-        const { data: roomData, error } = await supabase
-          .from('game_sessions')
-          .select(`
-            *,
-            game_players:game_players(
-              id,
-              user_id,
-              display_name,
-              ea_id,
-              users:users(
-                username,
-                avatar_url,
-                psn_username,
-                xbox_gamertag,
-                ea_id
-              )
-            ),
-            arena_config:arena_game_sessions(*)
-          `)
-          .eq(isUuid ? 'id' : 'room_id', roomId)
-          .single();
-
-        if (error) {
-          console.error('Error fetching room data:', error);
-          toast.error("Erreur lors de la récupération des données de la salle");
-          navigate('/games');
-          return;
-        }
-
-        if (!roomData) {
-          toast.error("Salon introuvable");
-          navigate('/games');
-          return;
-        }
-
-        console.log("Room data retrieved:", roomData);
-        setRoomData(roomData);
-        
-        const arenaConfig = roomData.arena_config?.[0];
-        console.log("Arena configuration:", arenaConfig);
-        
-        if (arenaConfig) {
-          setGameSettings({
-            halfLengthMinutes: arenaConfig.half_length_minutes || 12,
-            legacyDefendingAllowed: arenaConfig.legacy_defending_allowed || false,
-            customFormationsAllowed: arenaConfig.custom_formations_allowed || false,
-            platform: arenaConfig.platform || 'ps5',
-            mode: arenaConfig.mode || 'online_friendlies',
-            teamType: arenaConfig.team_type || 'any_teams',
-            gamerTag: arenaConfig.gamer_tag_1 || null
-          });
-        } else {
-          console.warn("No arena configuration found for room:", roomId);
-        }
-        
-        if (roomData.game_players && roomData.game_players.length > 0) {
-          const creator = roomData.game_players[0];
-          const userData = creator.users;
-          
-          let gamerTag = creator.ea_id || (userData?.ea_id) || "Non spécifié";
-          let gamerTagType = "EA ID";
-          
-          if (arenaConfig?.platform === 'ps5' && userData?.psn_username) {
-            gamerTag = userData.psn_username;
-            gamerTagType = "PSN Username";
-          } else if (arenaConfig?.platform === 'xbox_series' && userData?.xbox_gamertag) {
-            gamerTag = userData.xbox_gamertag;
-            gamerTagType = "Xbox Gamertag";
-          }
-          
-          const creatorData = {
-            ...creator,
-            username: userData?.username || creator.display_name || "Joueur inconnu",
-            avatar_url: userData?.avatar_url || null,
-            gamer_tag: gamerTag,
-            gamer_tag_type: gamerTagType
-          };
-          
-          console.log("Creator data:", creatorData);
-          setHostData(creatorData);
-        }
-
-      } catch (error: any) {
-        console.error('Error:', error);
-        toast.error("Une erreur s'est produite");
-        navigate('/games');
-      }
-    };
-
-    fetchRoomData();
-  }, [roomId, navigate]);
+  const { joinRoom, isLoading: isJoining } = useJoinRoom();
+  const { isLoading, data } = useJoinRoomData(roomId);
 
   const handleJoinConfirm = async () => {
     if (roomId) {
@@ -136,7 +19,7 @@ export default function JoinRoomConfirmPage() {
     }
   };
 
-  if (!roomData) {
+  if (isLoading || !data) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
@@ -146,6 +29,7 @@ export default function JoinRoomConfirmPage() {
     );
   }
 
+  const { roomData, hostData, gameSettings } = data;
   const isFutArena = roomData.game_type?.toLowerCase() === "futarena" || roomData.game_type?.toLowerCase() === "eafc25";
 
   return (
@@ -169,51 +53,16 @@ export default function JoinRoomConfirmPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {isFutArena && hostData && (
-              <section>
-                <h3 className="font-semibold text-lg mb-4 text-casino-accent">Informations du créateur</h3>
-                <HostInfoCard 
-                  hostUsername={hostData.username}
-                  hostAvatar={hostData.avatar_url}
-                  gamerTag={hostData.gamer_tag}
-                  gamerTagType={hostData.gamer_tag_type}
-                />
-                <p className="text-sm text-muted-foreground mt-2 italic">
-                  Pour commencer le match, envoyez une invitation à l'ID {hostData.gamer_tag_type} du créateur
-                </p>
-              </section>
-            )}
-
-            <Separator className="bg-casino-accent/20" />
-
-            <section>
-              <h3 className="text-lg font-semibold mb-4 text-casino-accent">Configuration du match</h3>
-              {gameSettings && (
-                <GameSettings
-                  halfLengthMinutes={gameSettings.halfLengthMinutes}
-                  legacyDefendingAllowed={gameSettings.legacyDefendingAllowed}
-                  customFormationsAllowed={gameSettings.customFormationsAllowed}
-                  platform={gameSettings.platform}
-                  mode={gameSettings.mode}
-                  teamType={gameSettings.teamType}
-                  gamerTag={gameSettings.gamerTag}
-                />
-              )}
-            </section>
-
-            <Separator className="bg-casino-accent/20" />
-
-            <PlatformRules />
-
-            <Separator className="bg-casino-accent/20" />
-
-            <DisclaimerSection />
-
+            <RoomConfiguration 
+              gameSettings={gameSettings}
+              hostData={hostData}
+              isFutArena={isFutArena}
+            />
             <div className="pt-4">
               <Button 
                 onClick={handleJoinConfirm} 
                 className="w-full bg-casino-accent hover:bg-casino-accent/90"
-                disabled={isLoading}
+                disabled={isJoining}
               >
                 J'ai lu les règles et je rejoins la partie
               </Button>
