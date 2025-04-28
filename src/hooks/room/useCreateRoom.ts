@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { GameCode, GameType, gameCodeToType, isValidGameType } from "@/lib/gameTypes";
@@ -7,6 +8,23 @@ import { toast } from "sonner";
 import { useWallet } from "@/hooks/useWallet";
 
 type RoomFormData = CreateClassicRoomFormData | CreateArenaRoomFormData;
+
+// Function to convert GameType enum to the specific string format expected by database
+function getDbGameType(gameType: GameType): string {
+  // Mapping to match the database enum values exactly
+  const dbMapping: Record<GameType, string> = {
+    [GameType.Ludo]: "ludo",
+    [GameType.Checkers]: "checkers",
+    [GameType.TicTacToe]: "tictactoe",
+    [GameType.CheckGame]: "checkgame",
+    [GameType.EAFC25]: "eafc25",
+    [GameType.Madden24]: "madden24", 
+    [GameType.NBA2K24]: "nba2k24",
+    [GameType.NHL24]: "nhl24"
+  };
+  
+  return dbMapping[gameType];
+}
 
 export function useCreateRoom(username: string, gameType: string | undefined) {
   const navigate = useNavigate();
@@ -25,11 +43,12 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
         return;
       }
 
-      const safeGameType = gameCodeToType[gameType];
+      const safeGameType = gameCodeToType[gameType as GameCode];
+      const dbGameType = getDbGameType(safeGameType);
       
       // First create the base game session
       const baseInsertData = {
-        game_type: safeGameType,
+        game_type: dbGameType,
         room_type: 'private' as const,
         room_id: Math.random().toString(36).substring(2, 8).toUpperCase(),
         max_players: values.maxPlayers || 2,
@@ -58,7 +77,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       console.log("Room created:", data);
 
       // If it's an arena game, insert the specific settings into arena_game_sessions table
-      const isArenaGame = ["eafc25", "madden24", "nba2k24", "nhl24"].includes(safeGameType);
+      const isArenaGame = ["eafc25", "madden24", "nba2k24", "nhl24"].includes(dbGameType);
       if (isArenaGame && 'platform' in values) {
         const arenaValues = values as CreateArenaRoomFormData;
         const arenaInsertData = {
