@@ -57,41 +57,24 @@ export const useJoinRoomConfirmData = (roomId: string | undefined) => {
             game_players: players
           });
           
-          // If we have players, fetch host data (first player is considered the host)
+          // If we have players, process host data (first player is considered the host)
           if (players && players.length > 0) {
             const hostPlayer = players[0];
             console.log("Host player:", hostPlayer);
             
-            try {
-              // Get the host user information - use maybeSingle() to handle potential missing data
-              const { data: hostUserData, error: hostError } = await supabase
-                .from('users')
-                .select('username, avatar_url, psn_username, xbox_gamertag, ea_id')
-                .eq('id', hostPlayer.user_id)
-                .maybeSingle();
-                
-              if (hostError) {
-                console.error('Error fetching host user data:', hostError);
-              } else {
-                console.log("Host user data:", hostUserData);
-                // Only set host data if we actually found user data
-                if (hostUserData) {
-                  setHostData({
-                    ...hostPlayer,
-                    users: hostUserData
-                  });
-                } else {
-                  console.log("No host user data found for ID:", hostPlayer.user_id);
-                  // Still set basic host data without user details
-                  setHostData({
-                    ...hostPlayer,
-                    users: null
-                  });
-                }
+            // Instead of trying to fetch user data directly (which may be restricted by RLS),
+            // we'll simply use the display_name and other fields already available in the player data
+            setHostData({
+              ...hostPlayer,
+              users: {
+                username: hostPlayer.display_name || 'Host',
+                avatar_url: null,
+                // We'll use whatever game IDs are available in the player record
+                psn_username: null,
+                xbox_gamertag: null,
+                ea_id: hostPlayer.ea_id || null
               }
-            } catch (err) {
-              console.error('Exception when fetching host user data:', err);
-            }
+            });
           }
         }
         
