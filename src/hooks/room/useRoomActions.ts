@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { roomService } from "@/services/room";
 import { toast } from "sonner";
@@ -19,6 +20,9 @@ export function useRoomActions({
   setIsReady,
   setGameStatus,
 }: RoomActionsProps) {
+  // Get the disconnectFromRoom function from the hook at the top level
+  const { disconnectFromRoom } = useRoomDisconnect(roomId, currentUserId, setGameStatus);
+
   const toggleReady = useCallback(async () => {
     if (!roomId || !currentUserId) return;
 
@@ -61,10 +65,10 @@ export function useRoomActions({
     }
   }, [roomId, setGameStatus]);
 
+  // Modified to use the already initialized disconnectFromRoom function
   const forfeitGame = useCallback(async () => {
-    const { disconnectFromRoom } = useRoomDisconnect(roomId, currentUserId, setGameStatus);
     await disconnectFromRoom();
-  }, [roomId, currentUserId, setGameStatus]);
+  }, [disconnectFromRoom]);
 
   const updateRoomPot = async (shouldLog: boolean = false) => {
     if (!roomId) return;
