@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,8 @@ import { PlatformRules } from "@/components/game/join-dialog/PlatformRules";
 import { DisclaimerSection } from "@/components/game/join-dialog/DisclaimerSection";
 import { HostInfoCard } from "@/components/games/HostInfoCard";
 import { RoomInfo } from "@/components/game/join-dialog/RoomInfo";
+import { Loader2 } from "lucide-react";
+import { GamePlatform } from "@/types/futarena";
 
 export default function JoinRoomConfirmPage() {
   const { gameType, roomId } = useParams();
@@ -20,12 +23,16 @@ export default function JoinRoomConfirmPage() {
   const { joinRoom, isLoading } = useJoinRoom();
   const [roomData, setRoomData] = useState<any>(null);
   const [hostData, setHostData] = useState<any>(null);
+  const [isRoomLoading, setIsRoomLoading] = useState(true);
 
   useEffect(() => {
     const fetchRoomData = async () => {
       if (!roomId) return;
       
       try {
+        setIsRoomLoading(true);
+        console.log("Fetching room data for roomId:", roomId);
+        
         // Récupérer les données de la salle avec la requête JOIN pour le host
         const { data: room, error } = await supabase
           .from('game_sessions')
@@ -93,6 +100,8 @@ export default function JoinRoomConfirmPage() {
         console.error('Error:', error);
         toast.error("Une erreur s'est produite");
         navigate('/games');
+      } finally {
+        setIsRoomLoading(false);
       }
     };
 
@@ -105,11 +114,24 @@ export default function JoinRoomConfirmPage() {
     }
   };
 
+  if (isRoomLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" />
+            <p>Chargement des informations de la salle...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   if (!roomData) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
-          <p>Chargement...</p>
+          <p>Aucune information de salle disponible.</p>
         </div>
       </Layout>
     );
@@ -145,10 +167,10 @@ export default function JoinRoomConfirmPage() {
                 <HostInfoCard 
                   hostUsername={hostData.users.username}
                   hostAvatar={hostData.users.avatar_url}
-                  platform={roomData.platform || 'ps5'}
+                  platform={roomData.platform || 'ps5' as GamePlatform}
                   psn={hostData.users.psn_username}
                   xboxId={hostData.users.xbox_gamertag}
-                  eaId={hostData.users.ea_id}
+                  eaId={hostData.users.ea_id || hostData.ea_id}
                 />
               </section>
             )}
@@ -181,7 +203,14 @@ export default function JoinRoomConfirmPage() {
                 className="w-full bg-casino-accent hover:bg-casino-accent/90"
                 disabled={isLoading}
               >
-                J'ai lu les règles et je rejoins la partie
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Connexion...
+                  </>
+                ) : (
+                  "J'ai lu les règles et je rejoins la partie"
+                )}
               </Button>
             </div>
           </CardContent>
