@@ -84,7 +84,7 @@ export function useEAFC25Match(roomId: string | undefined) {
         schema: 'public',
         table: 'game_players',
         filter: `session_id=eq.${roomId}`,
-      }, (payload: { new: PlayerUpdatePayload['new']; old?: PlayerUpdatePayload['old'] }) => {
+      }, (payload: any) => {
         console.log('Game player updated in real-time:', payload);
         
         if (payload.new && payload.new.user_id === currentUserId) {
