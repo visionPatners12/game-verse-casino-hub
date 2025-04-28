@@ -5,6 +5,8 @@ import { GamePlatform } from "@/types/futarena";
 import { MonitorPlay, Gamepad2, Globe, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Player {
   id: string;
@@ -31,6 +33,39 @@ interface EAFC25PlayerInfoProps {
 }
 
 export function EAFC25PlayerInfo({ player, isCurrentUser, platform }: EAFC25PlayerInfoProps) {
+  const [arenaPlayerData, setArenaPlayerData] = useState<{
+    psn_username?: string;
+    xbox_gamertag?: string;
+    ea_id?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const fetchArenaPlayerData = async () => {
+      if (!player.user_id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('arena_players')
+          .select('psn_username, xbox_gamertag, ea_id')
+          .eq('user_id', player.user_id)
+          .single();
+          
+        if (error) {
+          console.error("Error fetching arena player data:", error);
+          return;
+        }
+        
+        if (data) {
+          setArenaPlayerData(data);
+        }
+      } catch (error) {
+        console.error("Error in arena player data fetch:", error);
+      }
+    };
+    
+    fetchArenaPlayerData();
+  }, [player.user_id]);
+
   const platformIcon = platform === "ps5" ? (
     <MonitorPlay className="h-4 w-4 text-blue-500" />
   ) : platform === "xbox_series" ? (
@@ -40,10 +75,15 @@ export function EAFC25PlayerInfo({ player, isCurrentUser, platform }: EAFC25Play
   );
 
   const displayName = player.users?.username || player.display_name;
-  const eaId = player.ea_id || player.users?.ea_id || "EA ID Not Set";
-  const consoleId = platform === "ps5" 
-    ? (player.users?.psn_username || "PSN ID Not Set")
-    : (player.users?.xbox_gamertag || "Xbox Gamertag Not Set");
+  
+  // Get the EA ID from arena_players first, then from player.users, then from player, or fallback
+  const eaId = arenaPlayerData?.ea_id || player.ea_id || player.users?.ea_id || "EA ID Not Set";
+  
+  // Get the console ID from arena_players first, then from player.users, or fallback
+  const psnId = arenaPlayerData?.psn_username || player.users?.psn_username || "PSN ID Not Set";
+  const xboxId = arenaPlayerData?.xbox_gamertag || player.users?.xbox_gamertag || "Xbox Gamertag Not Set";
+  
+  const consoleId = platform === "ps5" ? psnId : xboxId;
 
   return (
     <Card 

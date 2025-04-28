@@ -9,6 +9,9 @@ import { GameControls } from "./room-layout/GameControls";
 import { MatchStatus } from "./room-layout/MatchStatus";
 import { MatchInstructions } from "./room-layout/MatchInstructions";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Copy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface EAFC25RoomLayoutProps {
   loading?: boolean;
@@ -52,6 +55,13 @@ export function EAFC25RoomLayout({
   const enoughPlayers = players.filter(player => player.is_connected).length >= 2;
   const canStartGame = allPlayersReady && enoughPlayers && gameStatus === 'waiting';
 
+  const copyRoomCode = () => {
+    if (roomData?.room_id) {
+      navigator.clipboard.writeText(roomData.room_id);
+      toast.success("Room code copied to clipboard!");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -69,9 +79,24 @@ export function EAFC25RoomLayout({
               <CardHeader className="pb-3 px-3 sm:px-6">
                 {roomData && (
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <CardTitle className="text-xl">
-                      EA FC 25 Match Room
-                    </CardTitle>
+                    <div className="flex flex-col">
+                      <CardTitle className="text-xl">
+                        EA FC 25 Match Room
+                      </CardTitle>
+                      <div className="flex items-center mt-1 text-sm">
+                        <span className="text-muted-foreground mr-2">Room Code:</span>
+                        <code className="bg-muted px-2 py-0.5 rounded font-mono">{roomData.room_id}</code>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="ml-1 h-6 w-6 p-0" 
+                          onClick={copyRoomCode}
+                        >
+                          <Copy className="h-3 w-3" />
+                          <span className="sr-only">Copy room code</span>
+                        </Button>
+                      </div>
+                    </div>
                     
                     <GameControls 
                       gameStatus={gameStatus}

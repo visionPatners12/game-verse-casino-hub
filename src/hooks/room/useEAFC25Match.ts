@@ -1,134 +1,110 @@
 
-import { useState, useEffect } from 'react';
-import { useRoomWebSocketSlim } from './useRoomWebSocketSlim';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { useRoomDataState } from "./useRoomDataState";
+import { useRoomActions } from "./useRoomActions";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 export function useEAFC25Match(roomId: string | undefined) {
+  const { session } = useAuth();
+  const [isReady, setIsReady] = useState(false);
+  const [matchStartTime, setMatchStartTime] = useState<Date | null>(null);
+  const [matchEnded, setMatchEnded] = useState(false);
+  const [scoreSubmitted, setScoreSubmitted] = useState(false);
+  const [proofSubmitted, setProofSubmitted] = useState(false);
+  
   const {
     roomData,
     isLoading,
     currentUserId,
     gameStatus,
-    fetchRoomData,
-    isReady,
-    toggleReady,
-    startGame,
-    forfeitGame,
-    players
-  } = useRoomWebSocketSlim(roomId);
+    setGameStatus,
+  } = useRoomDataState(roomId);
 
-  const [matchStartTime, setMatchStartTime] = useState<Date | null>(null);
-  const [matchEnded, setMatchEnded] = useState(false);
-  const [scoreSubmitted, setScoreSubmitted] = useState(false);
-  const [proofSubmitted, setProofSubmitted] = useState(false);
-  const [disputeActive, setDisputeActive] = useState(false);
-  const [myScore, setMyScore] = useState<number>(0);
-  const [opponentScore, setOpponentScore] = useState<number>(0);
-  
-  // Start match timer when game becomes active
+  const { toggleReady: toggleReadyAction, startGame: startGameAction, forfeitGame: forfeitGameAction } = useRoomActions({
+    roomId,
+    currentUserId,
+    isReady,
+    setIsReady,
+    setGameStatus,
+  });
+
+  // Check if current player is ready when room data loads
   useEffect(() => {
-    if (gameStatus === 'playing' && !matchStartTime) {
+    if (roomData && currentUserId && !isLoading) {
+      const currentPlayer = roomData.game_players?.find(player => player.user_id === currentUserId);
+      if (currentPlayer) {
+        setIsReady(currentPlayer.is_ready || false);
+      }
+    }
+  }, [roomData, currentUserId, isLoading]);
+
+  // Set match start time when game status changes to playing
+  useEffect(() => {
+    if (gameStatus === 'playing' && !matchStartTime && roomData?.start_time) {
+      setMatchStartTime(new Date(roomData.start_time));
+    }
+  }, [gameStatus, matchStartTime, roomData]);
+
+  // Reset match ended state when room data changes
+  useEffect(() => {
+    if (gameStatus === 'waiting') {
+      setMatchEnded(false);
+      setScoreSubmitted(false);
+      setProofSubmitted(false);
+    }
+  }, [gameStatus]);
+
+  // Listen for real-time updates to room data
+  useEffect(() => {
+    if (!roomId) return;
+
+    const channel = supabase
+      .channel(`room_${roomId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'game_players',
+        filter: `session_id=eq.${roomId}`,
+      }, payload => {
+        console.log('Game player updated:', payload);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [roomId]);
+
+  const toggleReady = async () => {
+    await toggleReadyAction();
+  };
+
+  const startGame = async () => {
+    if (!roomId) return;
+    
+    try {
+      await startGameAction();
       setMatchStartTime(new Date());
-    }
-  }, [gameStatus, matchStartTime]);
-  
-  // Check if all players have submitted scores
-  useEffect(() => {
-    if (matchEnded) {
-      const checkScoresSubmitted = async () => {
-        try {
-          // Check if all players have submitted scores
-          const { data: gamePlayers, error } = await supabase
-            .from('game_players')
-            .select('id, user_id, current_score')
-            .eq('session_id', roomId);
-            
-          if (error) throw error;
-          
-          // Simple logic to check if scores match
-          if (gamePlayers && gamePlayers.length > 1) {
-            const playerScores = gamePlayers.map(p => p.current_score);
-            const allSubmitted = playerScores.every(score => score !== null && score !== undefined);
-            
-            if (allSubmitted) {
-              // Logic to determine match outcome
-              const player1 = gamePlayers[0];
-              const player2 = gamePlayers[1];
-              
-              if (player1.current_score === player2.current_score) {
-                // Draw
-                toast.info("Match ended in a draw");
-              } else {
-                const winner = player1.current_score > player2.current_score ? player1 : player2;
-                if (winner.user_id === currentUserId) {
-                  toast.success("You won the match!");
-                } else {
-                  toast.info("You lost the match");
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.error("Error checking scores:", error);
-        }
-      };
-      
-      checkScoresSubmitted();
-    }
-  }, [matchEnded, roomId, currentUserId, scoreSubmitted]);
-  
-  // Submit score to the database
-  const submitScore = async (myScore: number, opponentScore: number) => {
-    if (!currentUserId || !roomId) return false;
-    
-    try {
-      // Update the player's score
-      const { error } = await supabase
-        .from('game_players')
-        .update({ current_score: myScore })
-        .eq('session_id', roomId)
-        .eq('user_id', currentUserId);
-      
-      if (error) throw error;
-      
-      setMyScore(myScore);
-      setOpponentScore(opponentScore);
-      setScoreSubmitted(true);
-      toast.success("Score submitted successfully");
-      return true;
     } catch (error) {
-      console.error("Error submitting score:", error);
-      toast.error("Failed to submit score");
-      return false;
+      console.error('Error starting game:', error);
+      toast.error('Failed to start the game');
     }
   };
-  
-  // Submit proof (screenshot)
-  const submitProof = async (proofFile: File) => {
-    if (!currentUserId || !roomId) return false;
+
+  const forfeitGame = async () => {
+    if (!roomId || !currentUserId) return;
     
     try {
-      // Upload proof to storage
-      const fileExt = proofFile.name.split('.').pop();
-      const fileName = `match-proofs/${roomId}/${currentUserId}-${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('match-proofs')
-        .upload(fileName, proofFile);
-      
-      if (uploadError) throw uploadError;
-      
-      setProofSubmitted(true);
-      toast.success("Proof submitted successfully");
-      return true;
+      await forfeitGameAction();
+      toast.info('You have left the match');
     } catch (error) {
-      console.error("Error submitting proof:", error);
-      toast.error("Failed to submit proof");
-      return false;
+      console.error('Error forfeiting game:', error);
+      toast.error('Failed to leave the match');
     }
   };
-  
+
   return {
     roomData,
     isLoading,
@@ -138,18 +114,10 @@ export function useEAFC25Match(roomId: string | undefined) {
     toggleReady,
     startGame,
     forfeitGame,
-    players,
-    fetchRoomData,
     matchStartTime,
     matchEnded,
     setMatchEnded,
     scoreSubmitted,
     proofSubmitted,
-    myScore,
-    opponentScore,
-    submitScore,
-    submitProof,
-    disputeActive,
-    setDisputeActive
   };
 }
