@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/games/:gameType/room/:roomId" element={<GameRoom />} />
             <Route path="/games/:gameType/create" element={<CreateRoom />} />
             <Route path="/games/:gameType/public" element={<PublicRooms />} />
+            <Route path="/games/eafc25/room/:roomId" element={<EAFC25Room />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/store" element={<Store />} />
@@ -47,7 +49,6 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/support" element={<Support />} />
             <Route path="/duo-bets" element={<DuoBets />} />
-            <Route path="/games/eafc25/room/:roomId" element={<EAFC25Room />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
