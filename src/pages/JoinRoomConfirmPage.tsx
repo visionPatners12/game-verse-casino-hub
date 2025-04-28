@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -138,7 +137,7 @@ export default function JoinRoomConfirmPage() {
   }
 
   // Check if the game type is related to FutArena using lowercase comparison for safety
-  const isFutArena = roomData.game_type?.toLowerCase() === "futarena" || roomData.game_type?.toLowerCase() === "eafc25";
+  const isFutArena = roomData?.game_type?.toLowerCase() === "futarena" || roomData?.game_type?.toLowerCase() === "eafc25";
 
   return (
     <Layout>
@@ -153,9 +152,9 @@ export default function JoinRoomConfirmPage() {
                 </p>
               </div>
               <RoomInfo
-                currentPlayers={roomData.current_players}
-                maxPlayers={roomData.max_players}
-                entryFee={roomData.entry_fee}
+                currentPlayers={roomData?.current_players}
+                maxPlayers={roomData?.max_players}
+                entryFee={roomData?.entry_fee}
               />
             </div>
           </CardHeader>

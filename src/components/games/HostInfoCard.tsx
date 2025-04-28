@@ -62,5 +62,4 @@ export function HostInfoCard({
         </div>
       </CardContent>
     </Card>
-  );
-}
+  
