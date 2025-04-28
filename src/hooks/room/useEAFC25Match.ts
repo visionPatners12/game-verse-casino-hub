@@ -9,6 +9,17 @@ import { useReadyCountdown } from "./match/useReadyCountdown";
 import { useMatchSubmissions } from "./match/useMatchSubmissions";
 import { toast } from "sonner";
 
+interface PlayerUpdatePayload {
+  new: {
+    user_id: string;
+    is_ready: boolean;
+  };
+  old?: {
+    user_id: string;
+    is_ready: boolean;
+  };
+}
+
 export function useEAFC25Match(roomId: string | undefined) {
   const { session } = useAuth();
   const [isReady, setIsReady] = useState(false);
@@ -69,18 +80,17 @@ export function useEAFC25Match(roomId: string | undefined) {
     const playersChannel = supabase
       .channel(`game_players_${roomId}`)
       .on('postgres_changes', {
-        event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
+        event: '*',
         schema: 'public',
         table: 'game_players',
         filter: `session_id=eq.${roomId}`,
-      }, payload => {
+      }, (payload: { new: PlayerUpdatePayload['new']; old?: PlayerUpdatePayload['old'] }) => {
         console.log('Game player updated in real-time:', payload);
         
-        // When our own player status changes, update isReady
         if (payload.new && payload.new.user_id === currentUserId) {
           setIsReady(!!payload.new.is_ready);
           
-          if (payload.new.is_ready && !payload.old?.is_ready) {
+          if (payload.new.is_ready && (!payload.old || !payload.old.is_ready)) {
             toast.success("You are now ready! Waiting for other players...");
           }
         }
@@ -98,7 +108,6 @@ export function useEAFC25Match(roomId: string | undefined) {
       }, payload => {
         console.log('Room status updated in real-time:', payload);
         
-        // Update game status when the room status changes in the database
         if (payload.new && payload.new.status !== payload.old?.status) {
           if (payload.new.status === 'Active') {
             setGameStatus('playing');
@@ -120,10 +129,7 @@ export function useEAFC25Match(roomId: string | undefined) {
 
   const toggleReady = async () => {
     try {
-      const success = await toggleReadyAction();
-      
-      // We don't need this toast here anymore, as it will be triggered by the subscription
-      // when the real-time update comes back
+      await toggleReadyAction();
     } catch (error) {
       console.error('Error toggling ready state:', error);
       toast.error('Failed to update ready status');

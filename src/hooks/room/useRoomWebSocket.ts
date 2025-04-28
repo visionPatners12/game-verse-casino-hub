@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from "react";
 import { useRoomDataState } from "./useRoomDataState";
 import { useRoomSocketEvents } from "./useRoomSocketEvents";
@@ -41,7 +40,7 @@ export function useRoomWebSocket(roomId: string | undefined) {
     setPresenceState
   });
 
-  const { toggleReady, startGame, broadcastMove, endGame, forfeitGame } = useRoomActions({
+  const { toggleReady, startGame, forfeitGame } = useRoomActions({
     roomId,
     currentUserId,
     isReady,
@@ -49,20 +48,16 @@ export function useRoomWebSocket(roomId: string | undefined) {
     setGameStatus,
   });
 
-  // Check for stored room connection when no roomId is provided (on other pages)
   useEffect(() => {
-    // Early return if we already have a roomId
     if (roomId) {
       return;
     }
     
-    // Early return if we've already attempted reconnection
     if (hasAttemptedReconnect) {
       return;
     }
 
     const checkStoredConnection = async () => {
-      // Only proceed if there's a logged-in user
       if (!user || !user.id) {
         console.log("No authenticated user, clearing any stored room connection");
         roomService.saveActiveRoomToStorage("", "", "");
@@ -75,12 +70,10 @@ export function useRoomWebSocket(roomId: string | undefined) {
       
       const { roomId: storedRoomId, userId: storedUserId, gameType: storedGameType } = roomService.getStoredRoomConnection();
       
-      // Validate that the stored user ID matches the current user ID
       if (storedRoomId && storedUserId && storedGameType && storedUserId === user.id) {
         console.log(`Found stored room connection on page load: ${storedRoomId} (${storedGameType}) for user ${storedUserId}, reconnecting without redirect`);
         
         try {
-          // Verify connection was successful through direct DB check
           const { data: sessionData } = await supabase
             .from('game_sessions')
             .select('id, status')
@@ -89,12 +82,11 @@ export function useRoomWebSocket(roomId: string | undefined) {
             
           if (!sessionData || !sessionData.id) {
             console.log("Room no longer exists, clearing storage");
-            roomService.saveActiveRoomToStorage("", "", ""); // Clear by passing empty strings
+            roomService.saveActiveRoomToStorage("", "", "");
             sessionStorage.removeItem('activeRoomId');
             sessionStorage.removeItem('activeUserId');
             sessionStorage.removeItem('activeGameType');
           } else {
-            // Check if player is actually in this room
             const { data: playerData } = await supabase
               .from('game_players')
               .select('id')
@@ -103,7 +95,6 @@ export function useRoomWebSocket(roomId: string | undefined) {
               .maybeSingle();
               
             if (playerData && playerData.id) {
-              // Only connect to room if this user is actually a player in that room
               console.log("User is a valid player in this room, reconnecting");
               roomService.connectToRoom(storedRoomId, storedUserId, storedGameType);
             } else {
@@ -122,7 +113,6 @@ export function useRoomWebSocket(roomId: string | undefined) {
           sessionStorage.removeItem('activeGameType');
         }
       } else if (storedRoomId || storedUserId || storedGameType) {
-        // If there's partial data or user mismatch, clear it all
         console.log("Invalid stored room data or user mismatch, clearing storage");
         roomService.saveActiveRoomToStorage("", "", "");
         sessionStorage.removeItem('activeRoomId');
@@ -136,7 +126,6 @@ export function useRoomWebSocket(roomId: string | undefined) {
     checkStoredConnection();
   }, [navigate, roomId, toast, hasAttemptedReconnect, user]);
 
-  // Setup beforeunload handler to save room data
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (roomId && currentUserId && gameStatus !== 'ended') {
@@ -159,8 +148,6 @@ export function useRoomWebSocket(roomId: string | undefined) {
     gameStatus,
     toggleReady,
     startGame,
-    broadcastMove,
-    endGame,
     forfeitGame,
     fetchRoomData
   };

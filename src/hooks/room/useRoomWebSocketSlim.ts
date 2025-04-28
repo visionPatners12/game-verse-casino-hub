@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useRoomDataState } from "./useRoomDataState";
 import { useRoomSocketEvents } from "./useRoomSocketEvents";
@@ -41,9 +40,7 @@ export function useRoomWebSocketSlim(roomId: string | undefined) {
   // Set up room actions (toggle ready, start game, etc)
   const { 
     toggleReady, 
-    startGame, 
-    broadcastMove, 
-    endGame, 
+    startGame,
     forfeitGame 
   } = useRoomActions({
     roomId,
@@ -63,8 +60,6 @@ export function useRoomWebSocketSlim(roomId: string | undefined) {
     gameStatus,
     toggleReady,
     startGame,
-    broadcastMove,
-    endGame,
     forfeitGame,
     fetchRoomData
   };
