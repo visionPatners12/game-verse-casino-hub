@@ -12,9 +12,9 @@ import { GamePlatform } from "@/types/futarena";
 
 export default function JoinRoomConfirmPage() {
   const { roomId } = useParams();
-  const { joinRoom, isLoading } = useJoinRoom();
+  const { joinRoom, isLoading: isJoiningRoom } = useJoinRoom();
   const { roomData, hostData, isRoomLoading } = useJoinRoomConfirmData(roomId);
-  const { checkRequiredGamerTag, saveGamerTag, isChecking } = useGamerTagCheck();
+  const { checkRequiredGamerTag, saveGamerTag, isChecking, isSaving } = useGamerTagCheck();
   const [showGamerTagPrompt, setShowGamerTagPrompt] = useState(false);
   const [showRoomCard, setShowRoomCard] = useState(false);
 
@@ -57,10 +57,14 @@ export default function JoinRoomConfirmPage() {
   const handleSaveGamerTag = async (gamerTag: string) => {
     if (!roomData?.platform) return;
     
-    const success = await saveGamerTag(roomData.platform as GamePlatform, gamerTag);
-    if (success) {
-      setShowGamerTagPrompt(false);
-      setShowRoomCard(true);
+    try {
+      const success = await saveGamerTag(roomData.platform as GamePlatform, gamerTag);
+      if (success) {
+        setShowGamerTagPrompt(false);
+        setShowRoomCard(true);
+      }
+    } catch (error) {
+      console.error("Error saving gamer tag:", error);
     }
   };
 
@@ -85,7 +89,7 @@ export default function JoinRoomConfirmPage() {
           <JoinRoomCard 
             roomData={roomData}
             hostData={hostData}
-            isLoading={isLoading}
+            isLoading={isJoiningRoom}
             onJoinConfirm={handleJoinConfirm}
           />
         )}
@@ -95,7 +99,7 @@ export default function JoinRoomConfirmPage() {
             onOpenChange={setShowGamerTagPrompt}
             platform={roomData.platform as GamePlatform}
             onSave={handleSaveGamerTag}
-            isLoading={isLoading || isChecking}
+            isLoading={isJoiningRoom || isChecking || isSaving}
           />
         )}
       </div>

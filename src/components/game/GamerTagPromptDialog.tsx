@@ -19,10 +19,11 @@ export function GamerTagPromptDialog({
   onOpenChange,
   platform,
   onSave,
-  isLoading
+  isLoading = false
 }: GamerTagPromptDialogProps) {
   const [gamerTag, setGamerTag] = useState("");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +35,17 @@ export function GamerTagPromptDialog({
     }
     
     setError("");
-    await onSave(trimmedGamerTag);
+    try {
+      setIsSubmitting(true);
+      await onSave(trimmedGamerTag);
+      // Reset form state after successful save
+      setGamerTag("");
+    } catch (error) {
+      console.error("Error saving gamer tag:", error);
+      setError("Une erreur s'est produite lors de l'enregistrement");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Prevent dialog from being closed if it's required
@@ -85,8 +96,8 @@ export function GamerTagPromptDialog({
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={isLoading || !gamerTag.trim()}>
-              {isLoading ? (
+            <Button type="submit" disabled={isSubmitting || isLoading || !gamerTag.trim()}>
+              {isSubmitting || isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Enregistrement...

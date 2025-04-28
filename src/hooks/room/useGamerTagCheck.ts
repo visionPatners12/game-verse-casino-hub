@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 export const useGamerTagCheck = () => {
   const [isChecking, setIsChecking] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { user } = useAuth();
 
   const checkRequiredGamerTag = async (platform: GamePlatform) => {
@@ -41,8 +42,9 @@ export const useGamerTagCheck = () => {
   };
 
   const saveGamerTag = async (platform: GamePlatform, gamerTag: string) => {
-    if (!user) return false;
-
+    if (!user) throw new Error("No authenticated user");
+    
+    setIsSaving(true);
     try {
       // First, get the user's current information (including display_name)
       const { data: userData } = await supabase
@@ -81,12 +83,15 @@ export const useGamerTagCheck = () => {
     } catch (error) {
       console.error('Error saving gamer tag:', error);
       toast.error("Erreur lors de la sauvegarde du gamer tag");
-      return false;
+      throw error; // Rethrow to let the component handle it
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return {
     isChecking,
+    isSaving,
     checkRequiredGamerTag,
     saveGamerTag
   };
