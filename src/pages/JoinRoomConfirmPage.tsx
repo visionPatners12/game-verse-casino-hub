@@ -1,4 +1,3 @@
-
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,19 +36,18 @@ export default function JoinRoomConfirmPage() {
       
       try {
         console.log("Fetching room data for:", roomId);
-        // Vérifier si l'ID est un UUID ou un code de salle
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(roomId);
         
-        const query = supabase
+        const { data: roomData, error } = await supabase
           .from('game_sessions')
           .select(`
             *,
-            game_players(
+            game_players:game_players(
               id,
               user_id,
               display_name,
               ea_id,
-              users(
+              users:users(
                 username,
                 avatar_url,
                 psn_username,
@@ -57,29 +55,10 @@ export default function JoinRoomConfirmPage() {
                 ea_id
               )
             ),
-            arena_game_sessions(
-              platform,
-              mode,
-              team_type,
-              half_length_minutes,
-              legacy_defending_allowed,
-              custom_formations_allowed,
-              gamer_tag_1
-            )
-          `);
-        
-        let roomResult;
-        
-        // Utiliser le champ approprié pour la recherche
-        if (isUuid) {
-          console.log("Searching by id (UUID)");
-          roomResult = await query.eq('id', roomId);
-        } else {
-          console.log("Searching by room_id (short code)");
-          roomResult = await query.eq('room_id', roomId);
-        }
-        
-        const { data: rooms, error } = roomResult;
+            arena_config:arena_game_sessions(*)
+          `)
+          .eq(isUuid ? 'id' : 'room_id', roomId)
+          .single();
 
         if (error) {
           console.error('Error fetching room data:', error);
@@ -88,18 +67,16 @@ export default function JoinRoomConfirmPage() {
           return;
         }
 
-        if (!rooms || rooms.length === 0) {
+        if (!roomData) {
           toast.error("Salon introuvable");
           navigate('/games');
           return;
         }
 
-        const room = rooms[0];
-        console.log("Room data retrieved:", room);
-        setRoomData(room);
+        console.log("Room data retrieved:", roomData);
+        setRoomData(roomData);
         
-        // Correction: arena_game_sessions est un tableau d'objets dans la réponse
-        const arenaConfig = room.arena_game_sessions?.[0];
+        const arenaConfig = roomData.arena_config?.[0];
         console.log("Arena configuration:", arenaConfig);
         
         if (arenaConfig) {
@@ -112,27 +89,23 @@ export default function JoinRoomConfirmPage() {
             teamType: arenaConfig.team_type || 'any_teams',
             gamerTag: arenaConfig.gamer_tag_1 || null
           });
+        } else {
+          console.warn("No arena configuration found for room:", roomId);
         }
         
-        // Récupérer les données du créateur (premier joueur)
-        if (room.game_players && room.game_players.length > 0) {
-          const creator = room.game_players[0];
-          
-          // Accéder aux données utilisateur si disponibles
+        if (roomData.game_players && roomData.game_players.length > 0) {
+          const creator = roomData.game_players[0];
           const userData = creator.users;
           
-          // Déterminer le type de gamer tag à afficher en fonction de la plateforme
           let gamerTag = creator.ea_id || (userData?.ea_id) || "Non spécifié";
           let gamerTagType = "EA ID";
           
-          if (arenaConfig && arenaConfig.platform === 'ps5' && userData?.psn_username) {
+          if (arenaConfig?.platform === 'ps5' && userData?.psn_username) {
             gamerTag = userData.psn_username;
             gamerTagType = "PSN Username";
-          } else if (arenaConfig && arenaConfig.platform === 'xbox_series' && userData?.xbox_gamertag) {
+          } else if (arenaConfig?.platform === 'xbox_series' && userData?.xbox_gamertag) {
             gamerTag = userData.xbox_gamertag;
             gamerTagType = "Xbox Gamertag";
-          } else if (userData?.ea_id) {
-            gamerTag = userData.ea_id;
           }
           
           const creatorData = {
