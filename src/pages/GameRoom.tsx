@@ -1,3 +1,4 @@
+
 import { Layout } from "@/components/Layout";
 import { GameRoomLayout } from "@/components/game/GameRoomLayout";
 import { useParams, useNavigate } from "react-router-dom";
@@ -54,12 +55,6 @@ const GameRoom = () => {
   }, [loading, roomData, roomId, navigate]);
 
   useEffect(() => {
-    if (roomData?.game_type?.toLowerCase() === "futarena" && roomData?.status === "waiting") {
-      setShowWelcomeMessage(true);
-    }
-  }, [roomData]);
-
-  useEffect(() => {
     if (roomData?.status === "Active" && gameStatus === "waiting") {
       console.log("Room is active but gameStatus is waiting, updating to playing");
       startGame();
@@ -103,12 +98,10 @@ const GameRoom = () => {
         onStartGame={startGame}
         onForfeit={forfeitGame}
       />
-      {roomData?.game_type?.toLowerCase() === "futarena" && (
-        <WelcomeMessage
-          open={showWelcomeMessage}
-          onOpenChange={setShowWelcomeMessage}
-        />
-      )}
+      <WelcomeMessage
+        open={showWelcomeMessage}
+        onOpenChange={setShowWelcomeMessage}
+      />
     </Layout>
   );
 };

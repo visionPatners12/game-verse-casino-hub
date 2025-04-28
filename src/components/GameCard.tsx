@@ -48,7 +48,7 @@ const GameCard = ({
         className="absolute top-3 right-3 z-10 bg-background/50 hover:bg-background/80"
         onClick={handlePublicRoomClick}
       >
-        {type === "futarena" ? (
+        {type === "eafc25" ? (
           <CircleDot className="h-4 w-4" />
         ) : (
           <Globe className="h-4 w-4" />

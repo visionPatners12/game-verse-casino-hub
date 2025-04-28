@@ -31,7 +31,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
 
       // First create the base game session
       const baseInsertData = {
-        game_type: gameTypeEnum,
+        game_type: gameTypeEnum as unknown as string, // Cast to string to avoid type error
         room_type: 'private' as 'private' | 'public',
         room_id: Math.random().toString(36).substring(2, 8).toUpperCase(),
         max_players: values.maxPlayers || 2,
@@ -60,7 +60,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       console.log("Room created:", data);
 
       // If it's an arena game, insert the specific settings into arena_game_sessions table
-      const isArenaGame = ["futarena", "eafc25", "madden24", "nba2k24", "nhl24"].includes(safeGameType);
+      const isArenaGame = ["eafc25", "madden24", "nba2k24", "nhl24"].includes(safeGameType);
       if (isArenaGame && 'platform' in values) {
         const arenaValues = values as CreateArenaRoomFormData;
         const arenaInsertData = {

@@ -1,13 +1,14 @@
 
 import { useNavigate } from "react-router-dom";
-import GameCard, { GameType } from "@/components/GameCard";
+import GameCard from "@/components/GameCard";
+import { GameCode } from "@/lib/gameTypes";
 
 interface Game {
   id: string;
   name: string;
   description: string;
   image: string;
-  type: GameType;
+  type: GameCode;
   players?: {
     min: number;
     max: number;

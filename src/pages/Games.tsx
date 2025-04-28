@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GamesList from "@/components/games/GamesList";
@@ -9,6 +10,19 @@ import { JoinGameDialog } from "@/components/games/JoinGameDialog";
 import { Layout } from "@/components/Layout";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { Gamepad } from "lucide-react";
+import { GameCode } from "@/lib/gameTypes";
+
+interface Game {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  type: GameCode;
+  players?: {
+    min: number;
+    max: number;
+  };
+}
 
 const Games = () => {
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
@@ -25,20 +39,27 @@ const Games = () => {
         .order('name');
       
       if (error) throw error;
-      return data.map(game => ({
-        id: game.id,
-        name: game.name,
-        type: game.code,
-        description: `${game.min_players}${game.max_players > game.min_players ? `-${game.max_players}` : ''} players`,
-        players: {
-          min: game.min_players,
-          max: game.max_players
-        },
-        image: game.image_url || "https://images.unsplash.com/photo-1611996575749-79a3a250f948?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3"
-      }));
+      return data
+        .filter(game => isValidGameCode(game.code)) // Filter to only include valid game codes
+        .map(game => ({
+          id: game.id,
+          name: game.name,
+          type: game.code as GameCode, // Cast to GameCode after filtering
+          description: `${game.min_players}${game.max_players > game.min_players ? `-${game.max_players}` : ''} players`,
+          players: {
+            min: game.min_players,
+            max: game.max_players
+          },
+          image: game.image_url || "https://images.unsplash.com/photo-1611996575749-79a3a250f948?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3"
+        }));
     },
     enabled: isAuthenticated
   });
+  
+  // Helper function to validate game codes
+  const isValidGameCode = (code: string): code is GameCode => {
+    return ["ludo", "checkers", "tictactoe", "checkgame", "eafc25", "madden24", "nba2k24", "nhl24"].includes(code);
+  };
   
   const isLoading = authLoading || gamesLoading;
   

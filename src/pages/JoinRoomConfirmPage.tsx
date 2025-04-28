@@ -6,7 +6,6 @@ import { useJoinRoomConfirmData } from "@/hooks/room/useJoinRoomConfirmData";
 import { JoinRoomLoading } from "@/components/game/join-dialog/JoinRoomLoading";
 import { JoinRoomCard } from "@/components/game/join-dialog/JoinRoomCard";
 import { GamerTagPromptDialog } from "@/components/game/GamerTagPromptDialog";
-import { useGamerTagCheck } from "@/hooks/room/useGamerTagCheck";
 import { useState, useEffect } from "react";
 import { GamePlatform } from "@/types/futarena";
 
@@ -23,10 +22,9 @@ export default function JoinRoomConfirmPage() {
     const checkGamerTag = async () => {
       if (roomData?.platform) {
         const platform = roomData.platform as GamePlatform;
-        const isFutArena = roomData.game_type?.toLowerCase() === "futarena" || 
-                          roomData.game_type?.toLowerCase() === "eafc25";
+        const isArenaGame = roomData.game_type?.toLowerCase() === "eafc25";
         
-        if (isFutArena) {
+        if (isArenaGame) {
           const hasGamerTag = await checkRequiredGamerTag(platform);
           
           if (!hasGamerTag) {
