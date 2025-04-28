@@ -58,8 +58,9 @@ export function GameControls({
         {canStartGame && (
           <Button 
             size="sm" 
-            variant="success" 
+            variant="secondary" 
             onClick={onStartGame}
+            className="bg-green-500 hover:bg-green-600 text-white"
           >
             Start Game
           </Button>

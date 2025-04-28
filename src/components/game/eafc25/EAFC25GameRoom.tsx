@@ -13,16 +13,18 @@ import { arenaRoomService } from "@/services/arena/ArenaRoomWebSocketService";
 import { usePlayerConnection } from "@/hooks/room/usePlayerConnection";
 import { useRoomConnectionStatus } from "@/hooks/room/useRoomConnectionStatus";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function EAFC25GameRoom() {
   useActiveRoomGuard();
   const { roomId } = useParams<{ roomId: string }>();
+  const { user } = useAuth();
   
   // Mark user as connected to this room
   usePlayerConnection(roomId);
   
   // Verify connection status
-  const { isConnecting, connectionVerified } = useRoomConnectionStatus(roomId, supabase.auth.getSession().then(({ data }) => data?.session?.user?.id || null));
+  const { isConnecting, connectionVerified } = useRoomConnectionStatus(roomId, user?.id || null);
   
   // Get room data
   const {
