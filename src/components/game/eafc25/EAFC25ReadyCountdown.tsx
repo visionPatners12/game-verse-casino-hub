@@ -4,24 +4,79 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Clock, AlertTriangle, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { arenaRoomService } from '@/services/arena/ArenaRoomWebSocketService';
 
 interface EAFC25ReadyCountdownProps {
-  endTime: Date | null;
-  isActive: boolean;
+  roomId: string;
   readyPlayersCount: number;
   totalPlayers: number;
 }
 
 export function EAFC25ReadyCountdown({ 
-  endTime,
-  isActive,
+  roomId,
   readyPlayersCount,
   totalPlayers
 }: EAFC25ReadyCountdownProps) {
   const [timeRemaining, setTimeRemaining] = useState<number>(300); // 5 minutes in seconds
   const [progress, setProgress] = useState<number>(100);
   const [isAlmostOver, setIsAlmostOver] = useState<boolean>(false);
+  const [isActive, setIsActive] = useState<boolean>(false);
+  const [endTime, setEndTime] = useState<Date | null>(null);
 
+  // Connect to the service when the component mounts
+  useEffect(() => {
+    if (!roomId) return;
+    
+    console.log(`[ReadyCountdown] Connecting to room ${roomId} and setting up timer listeners`);
+    
+    // Connect to room channel
+    arenaRoomService.connectToRoom(roomId);
+    
+    // Listen for timer updates
+    const unsubscribe = arenaRoomService.onTimerChange(roomId, (newEndTime, newIsActive) => {
+      console.log(`[ReadyCountdown] Timer change: endTime=${newEndTime}, isActive=${newIsActive}`);
+      setEndTime(newEndTime);
+      setIsActive(newIsActive);
+    });
+    
+    // Handle ready status changes
+    const checkAndUpdateCountdown = () => {
+      // Start countdown if at least one player is ready but not all
+      if (readyPlayersCount >= 1 && readyPlayersCount < totalPlayers && totalPlayers > 1 && !isActive) {
+        console.log('[ReadyCountdown] Starting countdown - at least 1 player ready');
+        const newEndTime = new Date();
+        newEndTime.setMinutes(newEndTime.getMinutes() + 5); // 5 minute countdown
+        
+        setEndTime(newEndTime);
+        setIsActive(true);
+        
+        // Broadcast this change to other clients
+        arenaRoomService.updateReadyCountdown(roomId, newEndTime, true);
+      } 
+      // Stop countdown when all players are ready
+      else if (readyPlayersCount === totalPlayers && totalPlayers > 1 && isActive) {
+        console.log('[ReadyCountdown] All players ready, stopping countdown');
+        setIsActive(false);
+        
+        // Broadcast all players ready and stop countdown
+        arenaRoomService.broadcastAllPlayersReady(roomId);
+        arenaRoomService.updateReadyCountdown(roomId, null, false);
+      }
+    };
+    
+    // Check initial countdown status
+    checkAndUpdateCountdown();
+    
+    // Update countdown when ready player count changes
+    const intervalId = setInterval(checkAndUpdateCountdown, 2000);
+    
+    return () => {
+      unsubscribe();
+      clearInterval(intervalId);
+    };
+  }, [roomId, readyPlayersCount, totalPlayers, isActive]);
+
+  // Timer effect to update countdown
   useEffect(() => {
     if (!endTime || !isActive) return;
     
@@ -44,11 +99,15 @@ export function EAFC25ReadyCountdown({
       // End countdown when timer reaches zero
       if (remaining <= 0) {
         clearInterval(interval);
+        
+        // Notify that the countdown has ended
+        arenaRoomService.updateReadyCountdown(roomId, null, false);
+        setIsActive(false);
       }
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [endTime, isActive]);
+  }, [endTime, isActive, roomId]);
 
   // Format time as MM:SS
   const formatTime = (seconds: number): string => {
@@ -57,8 +116,8 @@ export function EAFC25ReadyCountdown({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Don't render if not active and all players aren't ready
-  if (!isActive && readyPlayersCount === 0) {
+  // Don't render if no players are ready
+  if (readyPlayersCount === 0 && !isActive) {
     return null;
   }
 

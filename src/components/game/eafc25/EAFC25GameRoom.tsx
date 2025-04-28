@@ -3,35 +3,141 @@ import { useParams } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { useEAFC25Match } from "@/hooks/room/useEAFC25Match";
 import { useActiveRoomGuard } from "@/hooks/useActiveRoomGuard";
 import { EAFC25RoomLayout } from "./EAFC25RoomLayout";
+import { useRoomDataState } from "@/hooks/room/useRoomDataState";
+import { useMatchState } from "@/hooks/room/match/useMatchState";
+import { useMatchSubmissions } from "@/hooks/room/match/useMatchSubmissions";
+import { usePlayerReadyStatus } from "@/hooks/arena/usePlayerReadyStatus";
+import { arenaRoomService } from "@/services/arena/ArenaRoomWebSocketService";
 
 export function EAFC25GameRoom() {
   useActiveRoomGuard();
   const { roomId } = useParams<{ roomId: string }>();
   
+  // Get room data
   const {
     roomData,
     isLoading,
     currentUserId,
     gameStatus,
-    isReady,
-    toggleReady,
-    startGame,
-    forfeitGame,
+    setGameStatus,
+    fetchRoomData
+  } = useRoomDataState(roomId);
+  
+  // Match state
+  const {
     matchStartTime,
     matchEnded,
     setMatchEnded,
     scoreSubmitted,
     proofSubmitted,
-    readyCountdownActive,
-    readyCountdownEndTime,
-    submitScore,
-    submitProof,
     showMatchInstructions,
     setShowMatchInstructions
-  } = useEAFC25Match(roomId);
+  } = useMatchState({ roomData, gameStatus });
+  
+  // Player ready status
+  const {
+    isReady,
+    toggleReady,
+    allPlayersReady
+  } = usePlayerReadyStatus(roomId, currentUserId);
+  
+  // Match submissions
+  const {
+    submitScore,
+    submitProof,
+  } = useMatchSubmissions(roomId, currentUserId);
+
+  // Connect to the room's WebSocket channel
+  useEffect(() => {
+    if (roomId) {
+      console.log(`[EAFC25GameRoom] Connecting to room ${roomId}`);
+      arenaRoomService.connectToRoom(roomId);
+      
+      return () => {
+        console.log(`[EAFC25GameRoom] Disconnecting from room ${roomId}`);
+        arenaRoomService.disconnectFromRoom(roomId);
+      };
+    }
+  }, [roomId]);
+  
+  // Start game when all players are ready
+  useEffect(() => {
+    if (allPlayersReady && gameStatus === 'waiting' && roomId) {
+      console.log('[EAFC25GameRoom] All players ready, preparing to start game');
+      // Short delay to ensure UI updates are visible
+      const timer = setTimeout(() => {
+        startGame();
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [allPlayersReady, gameStatus, roomId]);
+
+  const startGame = async () => {
+    if (!roomId) return;
+    
+    try {
+      console.log('[EAFC25GameRoom] Starting game');
+      
+      // Update game status in database
+      const { data: updateData, error: updateError } = await supabase
+        .from('game_sessions')
+        .update({ 
+          status: 'Active',
+          start_time: new Date().toISOString()
+        })
+        .eq('id', roomId);
+        
+      if (updateError) {
+        console.error('[EAFC25GameRoom] Error starting game:', updateError);
+        toast.error('Failed to start the game');
+        return;
+      }
+      
+      // Update local state
+      setGameStatus('playing');
+      
+      toast.info("Match is starting! Remember to take a screenshot of the final score after the match.", {
+        duration: 10000,
+      });
+      
+      fetchRoomData(); // Refresh room data
+    } catch (error) {
+      console.error('[EAFC25GameRoom] Error in startGame:', error);
+      toast.error('Failed to start the game');
+    }
+  };
+
+  const forfeitGame = async () => {
+    if (!roomId || !currentUserId) return;
+    
+    try {
+      console.log('[EAFC25GameRoom] Player forfeiting game');
+      
+      // Update player status
+      const { error: playerError } = await supabase
+        .from('game_players')
+        .update({ has_forfeited: true })
+        .eq('session_id', roomId)
+        .eq('user_id', currentUserId);
+        
+      if (playerError) {
+        console.error('[EAFC25GameRoom] Error updating player forfeit status:', playerError);
+        toast.error('Failed to leave the match');
+        return;
+      }
+      
+      // Navigate user away from the room
+      window.location.href = '/games';
+      
+      toast.info('You have left the match');
+    } catch (error) {
+      console.error('[EAFC25GameRoom] Error in forfeitGame:', error);
+      toast.error('Failed to leave the match');
+    }
+  };
 
   const halfLengthMinutes = roomData?.half_length_minutes || 12;
   const matchDuration = (halfLengthMinutes * 2) + 5;
@@ -53,6 +159,9 @@ export function EAFC25GameRoom() {
     }
   }, [matchEnded]);
 
+  // Import supabase
+  const { supabase } = require('@/integrations/supabase/client');
+
   return (
     <Layout>
       <EAFC25RoomLayout
@@ -70,8 +179,8 @@ export function EAFC25GameRoom() {
         setMatchEnded={setMatchEnded}
         scoreSubmitted={scoreSubmitted}
         proofSubmitted={proofSubmitted}
-        readyCountdownActive={readyCountdownActive}
-        readyCountdownEndTime={readyCountdownEndTime}
+        readyCountdownActive={false} // This is handled by the EAFC25ReadyCountdown component now
+        readyCountdownEndTime={null} // This is handled by the EAFC25ReadyCountdown component now
         onScoreSubmit={submitScore}
         onProofSubmit={submitProof}
         showMatchInstructions={showMatchInstructions}

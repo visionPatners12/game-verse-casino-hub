@@ -1,3 +1,4 @@
+
 import { RoomData } from "@/components/game/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import GameChat from "@/components/GameChat";
@@ -129,12 +130,13 @@ export function EAFC25RoomLayout({
               <CardContent className="p-3 sm:p-6">
                 {roomData && (
                   <div className="space-y-6">
-                    <EAFC25ReadyCountdown 
-                      endTime={readyCountdownEndTime} 
-                      isActive={readyCountdownActive}
-                      readyPlayersCount={readyPlayersCount}
-                      totalPlayers={totalPlayers}
-                    />
+                    {roomData && (
+                      <EAFC25ReadyCountdown 
+                        roomId={roomData.id}
+                        readyPlayersCount={readyPlayersCount}
+                        totalPlayers={totalPlayers}
+                      />
+                    )}
                     
                     {gameStatus === 'playing' && (
                       <EAFC25MatchTimer 
