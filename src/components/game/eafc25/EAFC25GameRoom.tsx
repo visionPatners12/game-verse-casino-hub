@@ -1,3 +1,4 @@
+
 import { useParams } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { useEffect } from "react";
@@ -28,45 +29,8 @@ export function EAFC25GameRoom() {
     setGameStatus,
     fetchRoomData
   } = useRoomDataState(roomId);
-  
-  // Match state
-  const {
-    matchStartTime,
-    setMatchStartTime,
-    matchEnded,
-    setMatchEnded,
-    scoreSubmitted,
-    proofSubmitted,
-    showMatchInstructions,
-    setShowMatchInstructions
-  } = useMatchState({ roomData, gameStatus });
-  
-  // Player ready status with auto-start function
-  const {
-    isReady,
-    toggleReady,
-    allPlayersReady
-  } = usePlayerReadyStatus(roomId, currentUserId, startGame);
-  
-  // Match submissions
-  const {
-    submitScore,
-    submitProof,
-  } = useMatchSubmissions(roomId, currentUserId);
 
-  // Connect to the room's WebSocket channel
-  useEffect(() => {
-    if (roomId) {
-      console.log(`[EAFC25GameRoom] Connecting to room ${roomId}`);
-      arenaRoomService.connectToRoom(roomId);
-      
-      return () => {
-        console.log(`[EAFC25GameRoom] Disconnecting from room ${roomId}`);
-        arenaRoomService.disconnectFromRoom(roomId);
-      };
-    }
-  }, [roomId]);
-  
+  // Define startGame function before using it in hooks
   const startGame = async () => {
     if (!roomId) return;
     
@@ -101,6 +65,44 @@ export function EAFC25GameRoom() {
       toast.error('Failed to start the game');
     }
   };
+  
+  // Player ready status with auto-start function
+  const {
+    isReady,
+    toggleReady,
+    allPlayersReady
+  } = usePlayerReadyStatus(roomId, currentUserId, startGame);
+  
+  // Match state
+  const {
+    matchStartTime,
+    setMatchStartTime,
+    matchEnded,
+    setMatchEnded,
+    scoreSubmitted,
+    proofSubmitted,
+    showMatchInstructions,
+    setShowMatchInstructions
+  } = useMatchState({ roomData, gameStatus });
+  
+  // Match submissions
+  const {
+    submitScore,
+    submitProof,
+  } = useMatchSubmissions(roomId, currentUserId);
+
+  // Connect to the room's WebSocket channel
+  useEffect(() => {
+    if (roomId) {
+      console.log(`[EAFC25GameRoom] Connecting to room ${roomId}`);
+      arenaRoomService.connectToRoom(roomId);
+      
+      return () => {
+        console.log(`[EAFC25GameRoom] Disconnecting from room ${roomId}`);
+        arenaRoomService.disconnectFromRoom(roomId);
+      };
+    }
+  }, [roomId]);
 
   const forfeitGame = async () => {
     if (!roomId || !currentUserId) return;
