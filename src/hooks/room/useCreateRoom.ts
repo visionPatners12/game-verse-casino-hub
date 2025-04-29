@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { GameCode, GameType, gameCodeToType, isValidGameType } from "@/lib/gameTypes";
@@ -9,10 +8,13 @@ import { useWallet } from "@/hooks/useWallet";
 
 type RoomFormData = CreateClassicRoomFormData | CreateArenaRoomFormData;
 
+// Define a type that represents valid game_type values accepted by the database
+type DbGameType = "Ludo" | "Checkers" | "TicTacToe" | "CheckGame" | "eafc25" | "Madden24" | "NBA2K24" | "NHL24" | "FUTArena";
+
 // Function to convert GameType enum to the specific string format expected by database
-function getDbGameType(gameType: GameType): string {
+function getDbGameType(gameType: GameType): DbGameType {
   // Mapping to match the database enum values exactly
-  const dbMapping: Record<GameType, string> = {
+  const dbMapping: Record<GameType, DbGameType> = {
     [GameType.Ludo]: "Ludo",
     [GameType.Checkers]: "Checkers",
     [GameType.TicTacToe]: "TicTacToe",
