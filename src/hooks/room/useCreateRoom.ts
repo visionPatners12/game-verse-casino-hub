@@ -13,14 +13,14 @@ type RoomFormData = CreateClassicRoomFormData | CreateArenaRoomFormData;
 function getDbGameType(gameType: GameType): string {
   // Mapping to match the database enum values exactly
   const dbMapping: Record<GameType, string> = {
-    [GameType.Ludo]: "ludo",
-    [GameType.Checkers]: "checkers",
-    [GameType.TicTacToe]: "tictactoe",
-    [GameType.CheckGame]: "checkgame",
+    [GameType.Ludo]: "Ludo",
+    [GameType.Checkers]: "Checkers",
+    [GameType.TicTacToe]: "TicTacToe",
+    [GameType.CheckGame]: "CheckGame",
     [GameType.EAFC25]: "eafc25",
-    [GameType.Madden24]: "madden24", 
-    [GameType.NBA2K24]: "nba2k24",
-    [GameType.NHL24]: "nhl24"
+    [GameType.Madden24]: "Madden24", 
+    [GameType.NBA2K24]: "NBA2K24",
+    [GameType.NHL24]: "NHL24"
   };
   
   return dbMapping[gameType];
@@ -48,7 +48,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       
       // First create the base game session
       const baseInsertData = {
-        game_type: dbGameType as any, // Using type assertion to bypass TypeScript check since we know the value is valid
+        game_type: dbGameType,
         room_type: 'private' as const,
         room_id: Math.random().toString(36).substring(2, 8).toUpperCase(),
         max_players: values.maxPlayers || 2,
@@ -77,7 +77,7 @@ export function useCreateRoom(username: string, gameType: string | undefined) {
       console.log("Room created:", data);
 
       // If it's an arena game, insert the specific settings into arena_game_sessions table
-      const isArenaGame = ["eafc25", "madden24", "nba2k24", "nhl24"].includes(dbGameType);
+      const isArenaGame = ["eafc25", "madden24", "nba2k24", "nhl24"].includes(dbGameType.toLowerCase());
       if (isArenaGame && 'platform' in values) {
         const arenaValues = values as CreateArenaRoomFormData;
         const arenaInsertData = {
