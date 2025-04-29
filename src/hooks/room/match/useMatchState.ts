@@ -16,10 +16,11 @@ export function useMatchState({ roomData, gameStatus }: MatchStateProps) {
 
   // Set match start time when game status changes to playing
   useEffect(() => {
-    if (gameStatus === 'playing' && !matchStartTime && roomData?.start_time) {
+    if (gameStatus === 'playing' && roomData?.start_time) {
+      console.log(`[useMatchState] Setting match start time from roomData: ${roomData.start_time}`);
       setMatchStartTime(new Date(roomData.start_time));
     }
-  }, [gameStatus, matchStartTime, roomData]);
+  }, [gameStatus, roomData]);
 
   // Reset match states when room data changes
   useEffect(() => {
@@ -32,6 +33,7 @@ export function useMatchState({ roomData, gameStatus }: MatchStateProps) {
 
   return {
     matchStartTime,
+    setMatchStartTime,
     matchEnded,
     setMatchEnded,
     scoreSubmitted,

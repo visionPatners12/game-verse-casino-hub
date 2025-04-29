@@ -10,11 +10,15 @@ import { useMatchState } from "@/hooks/room/match/useMatchState";
 import { useMatchSubmissions } from "@/hooks/room/match/useMatchSubmissions";
 import { usePlayerReadyStatus } from "@/hooks/arena/usePlayerReadyStatus";
 import { arenaRoomService } from "@/services/arena/ArenaRoomWebSocketService";
-import { supabase } from "@/integrations/supabase/client"; // Proper import instead of require
+import { supabase } from "@/integrations/supabase/client"; 
+import { usePlayerConnection } from "@/hooks/room/usePlayerConnection";
 
 export function EAFC25GameRoom() {
   useActiveRoomGuard();
   const { roomId } = useParams<{ roomId: string }>();
+  
+  // Ensure player is marked as connected in the database
+  usePlayerConnection(roomId);
   
   // Get room data
   const {
@@ -143,6 +147,8 @@ export function EAFC25GameRoom() {
   const halfLengthMinutes = roomData?.half_length_minutes || 12;
   const matchDuration = (halfLengthMinutes * 2) + 5;
   
+  console.log(`[EAFC25GameRoom] Match settings: Half length: ${halfLengthMinutes}min, Total duration: ${matchDuration}min`);
+  
   useEffect(() => {
     if (gameStatus === 'playing' && showMatchInstructions) {
       toast.info("Match has started! Play fair and remember to take a screenshot of the final score screen.", {
@@ -177,8 +183,8 @@ export function EAFC25GameRoom() {
         setMatchEnded={setMatchEnded}
         scoreSubmitted={scoreSubmitted}
         proofSubmitted={proofSubmitted}
-        readyCountdownActive={false} // This is handled by the EAFC25ReadyCountdown component now
-        readyCountdownEndTime={null} // This is handled by the EAFC25ReadyCountdown component now
+        readyCountdownActive={false} 
+        readyCountdownEndTime={null} 
         onScoreSubmit={submitScore}
         onProofSubmit={submitProof}
         showMatchInstructions={showMatchInstructions}

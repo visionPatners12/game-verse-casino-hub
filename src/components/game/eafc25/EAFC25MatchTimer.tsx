@@ -22,11 +22,15 @@ export function EAFC25MatchTimer({
   useEffect(() => {
     if (!startTime) return;
     
+    console.log(`[EAFC25MatchTimer] Starting timer with duration: ${durationMinutes} minutes`);
+    
     const totalSeconds = durationMinutes * 60;
     const interval = setInterval(() => {
       const now = new Date();
       const secondsPassed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
       const remaining = Math.max(0, totalSeconds - secondsPassed);
+      
+      console.log(`[EAFC25MatchTimer] Time remaining: ${formatTime(remaining)} (${remaining}s / ${totalSeconds}s)`);
       
       setTimeRemaining(remaining);
       setProgress((remaining / totalSeconds) * 100);
@@ -38,12 +42,16 @@ export function EAFC25MatchTimer({
       
       // End match when timer reaches zero
       if (remaining <= 0) {
+        console.log('[EAFC25MatchTimer] Timer ended, triggering match end');
         clearInterval(interval);
         onTimeEnd();
       }
     }, 1000);
     
-    return () => clearInterval(interval);
+    return () => {
+      console.log('[EAFC25MatchTimer] Clearing timer interval');
+      clearInterval(interval);
+    }
   }, [startTime, durationMinutes, onTimeEnd]);
 
   // Format time as MM:SS
