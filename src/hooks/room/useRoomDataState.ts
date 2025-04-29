@@ -66,8 +66,6 @@ export function useRoomDataState(roomId: string | undefined) {
             current_score,
             is_connected,
             is_ready,
-            has_submitted_score,
-            has_submitted_proof,
             created_at,
             updated_at,
             ea_id,
@@ -129,26 +127,32 @@ export function useRoomDataState(roomId: string | undefined) {
         })
       };
       
-      // Make sure game_players conforms to the expected type
+      // Make sure game_players conforms to the expected GamePlayer type
       if (mergedRoomData.game_players) {
-        mergedRoomData.game_players = mergedRoomData.game_players.map((player: any) => ({
-          id: player.id,
-          display_name: player.display_name,
-          user_id: player.user_id,
-          session_id: player.session_id || roomId, // Ensure session_id is present
-          current_score: player.current_score,
-          is_connected: player.is_connected,
-          is_ready: player.is_ready,
-          has_submitted_score: player.has_submitted_score || false,
-          has_submitted_proof: player.has_submitted_proof || false,
-          created_at: player.created_at,
-          updated_at: player.updated_at,
-          users: player.users,
-          ea_id: player.ea_id
-        }));
+        mergedRoomData.game_players = mergedRoomData.game_players.map((player: any) => {
+          // Create a GamePlayer object with the correct properties
+          const gamePlayer: GamePlayer = {
+            id: player.id,
+            display_name: player.display_name,
+            user_id: player.user_id,
+            session_id: player.session_id || roomId, // Ensure session_id is present
+            current_score: player.current_score || null,
+            is_connected: player.is_connected || false,
+            is_ready: player.is_ready || false,
+            // These fields are not in the database yet, but required by the GamePlayer type
+            has_submitted_score: false,
+            has_submitted_proof: false,
+            created_at: player.created_at,
+            updated_at: player.updated_at,
+            users: player.users,
+            ea_id: player.ea_id
+          };
+          return gamePlayer;
+        });
       }
       
-      const typedRoomData = mergedRoomData as RoomData;
+      // Type assertion to handle the conversion
+      const typedRoomData = mergedRoomData as unknown as RoomData;
       const newDataHash = hashRoomData(typedRoomData);
       
       setRoomData(prevData => {

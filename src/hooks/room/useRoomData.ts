@@ -44,8 +44,6 @@ export const useRoomData = (roomId: string | undefined) => {
               current_score,
               is_connected,
               is_ready,
-              has_submitted_score,
-              has_submitted_proof,
               created_at,
               updated_at,
               users:user_id(username, avatar_url)
@@ -87,20 +85,24 @@ export const useRoomData = (roomId: string | undefined) => {
           updated_at: data.updated_at,
           ea_id: data.ea_id,
           // Ensure game_players has all the required fields
-          game_players: (data.game_players || []).map((player: any) => ({
-            id: player.id,
-            display_name: player.display_name,
-            user_id: player.user_id,
-            session_id: player.session_id || roomId, // Ensure session_id is present
-            current_score: player.current_score,
-            is_connected: player.is_connected,
-            is_ready: player.is_ready,
-            has_submitted_score: player.has_submitted_score || false,
-            has_submitted_proof: player.has_submitted_proof || false,
-            created_at: player.created_at,
-            updated_at: player.updated_at,
-            users: player.users
-          }))
+          game_players: (data.game_players || []).map((player: any) => {
+            const gamePlayer: GamePlayer = {
+              id: player.id,
+              display_name: player.display_name,
+              user_id: player.user_id,
+              session_id: player.session_id || roomId,
+              current_score: player.current_score,
+              is_connected: player.is_connected || false,
+              is_ready: player.is_ready || false,
+              has_submitted_score: false,
+              has_submitted_proof: false,
+              created_at: player.created_at,
+              updated_at: player.updated_at,
+              users: player.users,
+              ea_id: undefined
+            };
+            return gamePlayer;
+          })
         };
         
         setRoomData(formattedData);
