@@ -1,8 +1,16 @@
+
 export interface User {
   id: string;
   username: string;
   avatar_url: string | null;
   email: string;
+}
+
+export interface PresenceData {
+  user_id: string;
+  online_at: string;
+  is_ready?: boolean;
+  [key: string]: any;
 }
 
 export interface GamePlayer {

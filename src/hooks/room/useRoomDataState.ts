@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { RoomData, DatabaseSessionStatus } from "@/components/game/types";
+import { RoomData, DatabaseSessionStatus, GamePlayer } from "@/components/game/types";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -62,9 +62,14 @@ export function useRoomDataState(roomId: string | undefined) {
             id,
             display_name,
             user_id,
+            session_id,
             current_score,
             is_connected,
             is_ready,
+            has_submitted_score,
+            has_submitted_proof,
+            created_at,
+            updated_at,
             ea_id,
             users:user_id(username, avatar_url)
           )
@@ -79,7 +84,7 @@ export function useRoomDataState(roomId: string | undefined) {
       
       // Fetch EAFC25 specific match settings from arena_game_sessions
       let eafc25Data = null;
-      if (roomData.game_type === 'EAFC25') {
+      if (roomData.game_type?.toLowerCase() === 'eafc25') {
         const { data: arenaData, error: arenaError } = await supabase
           .from('arena_game_sessions')
           .select('*')
@@ -124,7 +129,26 @@ export function useRoomDataState(roomId: string | undefined) {
         })
       };
       
-      const typedRoomData = mergedRoomData as unknown as RoomData;
+      // Make sure game_players conforms to the expected type
+      if (mergedRoomData.game_players) {
+        mergedRoomData.game_players = mergedRoomData.game_players.map((player: any) => ({
+          id: player.id,
+          display_name: player.display_name,
+          user_id: player.user_id,
+          session_id: player.session_id || roomId, // Ensure session_id is present
+          current_score: player.current_score,
+          is_connected: player.is_connected,
+          is_ready: player.is_ready,
+          has_submitted_score: player.has_submitted_score || false,
+          has_submitted_proof: player.has_submitted_proof || false,
+          created_at: player.created_at,
+          updated_at: player.updated_at,
+          users: player.users,
+          ea_id: player.ea_id
+        }));
+      }
+      
+      const typedRoomData = mergedRoomData as RoomData;
       const newDataHash = hashRoomData(typedRoomData);
       
       setRoomData(prevData => {

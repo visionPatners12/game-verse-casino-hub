@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { RoomData } from "@/components/game/types";
+import { RoomData, GamePlayer } from "@/components/game/types";
 
 export const useRoomData = (roomId: string | undefined) => {
   const navigate = useNavigate();
@@ -40,9 +40,14 @@ export const useRoomData = (roomId: string | undefined) => {
               id,
               display_name,
               user_id,
+              session_id,
               current_score,
               is_connected,
               is_ready,
+              has_submitted_score,
+              has_submitted_proof,
+              created_at,
+              updated_at,
               users:user_id(username, avatar_url)
             )
           `)
@@ -62,7 +67,43 @@ export const useRoomData = (roomId: string | undefined) => {
         }
         
         console.log("Room data:", data);
-        setRoomData(data as RoomData);
+        
+        // Format data to match RoomData type
+        const formattedData: RoomData = {
+          id: data.id,
+          game_type: data.game_type,
+          room_id: data.room_id || '',
+          max_players: data.max_players,
+          current_players: data.current_players,
+          entry_fee: data.entry_fee,
+          pot: data.pot,
+          commission_rate: data.commission_rate,
+          status: data.status,
+          start_time: data.start_time,
+          end_time: data.end_time,
+          connected_players: data.connected_players,
+          room_type: data.room_type,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+          ea_id: data.ea_id,
+          // Ensure game_players has all the required fields
+          game_players: (data.game_players || []).map((player: any) => ({
+            id: player.id,
+            display_name: player.display_name,
+            user_id: player.user_id,
+            session_id: player.session_id || roomId, // Ensure session_id is present
+            current_score: player.current_score,
+            is_connected: player.is_connected,
+            is_ready: player.is_ready,
+            has_submitted_score: player.has_submitted_score || false,
+            has_submitted_proof: player.has_submitted_proof || false,
+            created_at: player.created_at,
+            updated_at: player.updated_at,
+            users: player.users
+          }))
+        };
+        
+        setRoomData(formattedData);
       } catch (error) {
         console.error("Error fetching room data:", error);
         toast({
