@@ -34,6 +34,8 @@ interface EAFC25RoomLayoutProps {
   onScoreSubmit: (myScore: number, opponentScore: number) => Promise<boolean>;
   onProofSubmit: (file: File) => Promise<boolean>;
   showMatchInstructions: boolean;
+  showGetReady?: boolean;
+  allPlayersReady?: boolean;
 }
 
 export function EAFC25RoomLayout({
@@ -55,18 +57,19 @@ export function EAFC25RoomLayout({
   readyCountdownEndTime,
   onScoreSubmit,
   onProofSubmit,
-  showMatchInstructions
+  showMatchInstructions,
+  showGetReady = true,
+  allPlayersReady = false
 }: EAFC25RoomLayoutProps) {
   const isMobile = useIsMobile();
   
   const players = roomData?.game_players || [];
   const currentPlayer = players.find(player => player.user_id === currentUserId);
   const opponentPlayer = players.find(player => player.user_id !== currentUserId);
-  const allPlayersReady = players.every(player => player.is_ready || !player.is_connected);
   const connectedPlayers = players.filter(player => player.is_connected).length;
   const enoughPlayers = connectedPlayers >= 2;
-  const canStartGame = allPlayersReady && enoughPlayers && gameStatus === 'waiting';
-  const showGetReady = enoughPlayers && gameStatus === 'waiting';
+  // Auto-start is handled in usePlayerReadyStatus now, only show start button during debug
+  const canStartGame = false; // No longer needed as we auto-start
 
   const copyRoomCode = () => {
     if (roomData?.room_id) {
@@ -122,6 +125,7 @@ export function EAFC25RoomLayout({
                       onStartGame={onStartGame}
                       onForfeit={onForfeit}
                       showGetReady={showGetReady}
+                      allPlayersReady={allPlayersReady}
                     />
                   </div>
                 )}

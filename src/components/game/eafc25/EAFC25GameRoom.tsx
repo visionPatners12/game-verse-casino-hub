@@ -1,4 +1,3 @@
-
 import { useParams } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { useEffect } from "react";
@@ -33,6 +32,7 @@ export function EAFC25GameRoom() {
   // Match state
   const {
     matchStartTime,
+    setMatchStartTime,
     matchEnded,
     setMatchEnded,
     scoreSubmitted,
@@ -41,12 +41,12 @@ export function EAFC25GameRoom() {
     setShowMatchInstructions
   } = useMatchState({ roomData, gameStatus });
   
-  // Player ready status
+  // Player ready status with auto-start function
   const {
     isReady,
     toggleReady,
     allPlayersReady
-  } = usePlayerReadyStatus(roomId, currentUserId);
+  } = usePlayerReadyStatus(roomId, currentUserId, startGame);
   
   // Match submissions
   const {
@@ -67,19 +67,6 @@ export function EAFC25GameRoom() {
     }
   }, [roomId]);
   
-  // Start game when all players are ready
-  useEffect(() => {
-    if (allPlayersReady && gameStatus === 'waiting' && roomId) {
-      console.log('[EAFC25GameRoom] All players ready, preparing to start game');
-      // Short delay to ensure UI updates are visible
-      const timer = setTimeout(() => {
-        startGame();
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [allPlayersReady, gameStatus, roomId]);
-
   const startGame = async () => {
     if (!roomId) return;
     
@@ -166,6 +153,11 @@ export function EAFC25GameRoom() {
     }
   }, [matchEnded]);
 
+  // Calculate if the "Get Ready" button should be shown
+  const connectedPlayers = roomData?.game_players?.filter(player => player.is_connected).length || 0;
+  const enoughPlayers = connectedPlayers >= 2;
+  const showGetReady = enoughPlayers && gameStatus === 'waiting' && !allPlayersReady;
+
   return (
     <Layout>
       <EAFC25RoomLayout
@@ -188,6 +180,8 @@ export function EAFC25GameRoom() {
         onScoreSubmit={submitScore}
         onProofSubmit={submitProof}
         showMatchInstructions={showMatchInstructions}
+        showGetReady={showGetReady}
+        allPlayersReady={allPlayersReady}
       />
     </Layout>
   );

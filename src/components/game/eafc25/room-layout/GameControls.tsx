@@ -10,6 +10,7 @@ interface GameControlsProps {
   onStartGame: () => void;
   onForfeit: () => void;
   showGetReady?: boolean;
+  allPlayersReady?: boolean;
 }
 
 export function GameControls({
@@ -19,7 +20,8 @@ export function GameControls({
   onToggleReady,
   onStartGame,
   onForfeit,
-  showGetReady = true
+  showGetReady = true,
+  allPlayersReady = false
 }: GameControlsProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -41,6 +43,12 @@ export function GameControls({
             </>
           )}
         </Button>
+      )}
+      
+      {allPlayersReady && gameStatus === 'waiting' && (
+        <div className="text-sm font-medium text-emerald-600 dark:text-emerald-400 animate-pulse">
+          Tous les joueurs sont prêts, la partie va démarrer...
+        </div>
       )}
       
       {canStartGame && (

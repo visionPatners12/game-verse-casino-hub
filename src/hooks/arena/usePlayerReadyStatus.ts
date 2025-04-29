@@ -4,7 +4,7 @@ import { arenaRoomService, PlayerReadyStatus } from '@/services/arena/ArenaRoomW
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export function usePlayerReadyStatus(roomId: string | undefined, userId: string | null) {
+export function usePlayerReadyStatus(roomId: string | undefined, userId: string | null, autoStartMatch?: () => void) {
   const [isReady, setIsReady] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [allPlayersReady, setAllPlayersReady] = useState<boolean>(false);
@@ -83,6 +83,19 @@ export function usePlayerReadyStatus(roomId: string | undefined, userId: string 
     };
   }, [roomId, userId]);
   
+  // Auto start match when all players are ready
+  useEffect(() => {
+    if (allPlayersReady && autoStartMatch) {
+      console.log('[usePlayerReadyStatus] All players ready, auto-starting match');
+      // Small delay to ensure UI updates are visible
+      const timer = setTimeout(() => {
+        autoStartMatch();
+      }, 1500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [allPlayersReady, autoStartMatch]);
+  
   // Check if all players are ready
   const checkAllPlayersReady = async () => {
     if (!roomId) return;
@@ -102,7 +115,8 @@ export function usePlayerReadyStatus(roomId: string | undefined, userId: string 
       const readyPlayers = connectedPlayers.filter(player => player.is_ready);
       
       const allReady = connectedPlayers.length > 0 && 
-                     connectedPlayers.length === readyPlayers.length;
+                     connectedPlayers.length === readyPlayers.length &&
+                     connectedPlayers.length >= 2; // Ensure at least 2 players
                      
       console.log(`[usePlayerReadyStatus] All players ready check: ${allReady} (${readyPlayers.length}/${connectedPlayers.length})`);
       
