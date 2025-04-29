@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +45,7 @@ export const useRoomData = (roomId: string | undefined) => {
               is_ready,
               created_at,
               updated_at,
+              ea_id,
               users:user_id(username, avatar_url)
             )
           `)
@@ -99,7 +99,7 @@ export const useRoomData = (roomId: string | undefined) => {
               created_at: player.created_at,
               updated_at: player.updated_at,
               users: player.users,
-              ea_id: undefined
+              ea_id: player.ea_id || null // Ensure ea_id is always set, even if null
             };
             return gamePlayer;
           })

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { RoomData, DatabaseSessionStatus, GamePlayer } from "@/components/game/types";
@@ -131,7 +130,7 @@ export function useRoomDataState(roomId: string | undefined) {
       if (mergedRoomData.game_players) {
         mergedRoomData.game_players = mergedRoomData.game_players.map((player: any) => {
           // Create a GamePlayer object with the correct properties
-          const gamePlayer: GamePlayer = {
+          const gamePlayer = {
             id: player.id,
             display_name: player.display_name,
             user_id: player.user_id,
@@ -145,7 +144,7 @@ export function useRoomDataState(roomId: string | undefined) {
             created_at: player.created_at,
             updated_at: player.updated_at,
             users: player.users,
-            ea_id: player.ea_id
+            ea_id: player.ea_id || null // Ensure ea_id is always set, even if null
           };
           return gamePlayer;
         });

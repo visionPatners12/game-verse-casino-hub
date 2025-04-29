@@ -29,7 +29,7 @@ export interface GamePlayer {
     username: string;
     avatar_url: string | null;
   } | null;
-  ea_id?: string;
+  ea_id: string | null; // Changed from optional to required but nullable
 }
 
 export type DatabaseSessionStatus = 'Waiting' | 'Active' | 'Finished' | 'Canceled';
