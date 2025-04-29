@@ -17,6 +17,15 @@ export function EAFC25MatchDetails({ roomData }: EAFC25MatchDetailsProps) {
   const customFormationsAllowed = roomData.custom_formations_allowed || false;
   const teamType = roomData.team_type || "any_teams";
 
+  console.log("EAFC25MatchDetails roomData:", {
+    platform,
+    mode,
+    halfLength,
+    legacyDefendingAllowed,
+    customFormationsAllowed,
+    teamType
+  });
+
   const platformInfo = {
     icon: platform === "ps5" ? <MonitorPlay className="h-4 w-4" /> : 
           platform === "xbox_series" ? <Gamepad2 className="h-4 w-4" /> : 

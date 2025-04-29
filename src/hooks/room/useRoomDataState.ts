@@ -30,7 +30,7 @@ export function useRoomDataState(roomId: string | undefined) {
         is_ready: p.is_ready,
         is_connected: p.is_connected,
         current_score: p.current_score,
-        ea_id: p.ea_id // Inclure le ea_id dans le hash pour détecter les changements
+        ea_id: p.ea_id
       })) : []
     };
     return JSON.stringify(simplified);
@@ -53,6 +53,7 @@ export function useRoomDataState(roomId: string | undefined) {
       
       const shouldLog = isFirstLoad.current || (Date.now() - lastPollTime.current > 30000);
       
+      // Fetch main game session data
       const { data: roomData, error: roomError } = await supabase
         .from('game_sessions')
         .select(`
@@ -76,8 +77,28 @@ export function useRoomDataState(roomId: string | undefined) {
         return;
       }
       
+      // Fetch EAFC25 specific match settings from arena_game_sessions
+      let eafc25Data = null;
+      if (roomData.game_type === 'EAFC25') {
+        const { data: arenaData, error: arenaError } = await supabase
+          .from('arena_game_sessions')
+          .select('*')
+          .eq('id', roomId)
+          .single();
+          
+        if (arenaError) {
+          console.error('Error fetching arena game session data:', arenaError);
+        } else {
+          eafc25Data = arenaData;
+          console.log('Fetched EAFC25 specific data:', arenaData);
+        }
+      }
+      
       if (isFirstLoad.current) {
         console.log("Fetched room data:", roomData);
+        if (eafc25Data) {
+          console.log("Fetched EAFC25 specific data:", eafc25Data);
+        }
       }
       
       const { data: potData } = await supabase.rpc('calculate_prize_pool', {
@@ -89,7 +110,21 @@ export function useRoomDataState(roomId: string | undefined) {
         roomData.pot = potData;
       }
       
-      const typedRoomData = roomData as unknown as RoomData;
+      // Merge the EAFC25 specific data with the main room data
+      const mergedRoomData = {
+        ...roomData,
+        // Add EAFC25 specific fields if available
+        ...(eafc25Data && {
+          platform: eafc25Data.platform,
+          mode: eafc25Data.mode,
+          team_type: eafc25Data.team_type,
+          half_length_minutes: eafc25Data.half_length_minutes,
+          legacy_defending_allowed: eafc25Data.legacy_defending_allowed,
+          custom_formations_allowed: eafc25Data.custom_formations_allowed
+        })
+      };
+      
+      const typedRoomData = mergedRoomData as unknown as RoomData;
       const newDataHash = hashRoomData(typedRoomData);
       
       setRoomData(prevData => {
