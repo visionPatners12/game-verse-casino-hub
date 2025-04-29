@@ -11,6 +11,7 @@ interface GameControlsProps {
   onForfeit: () => void;
   showGetReady?: boolean;
   allPlayersReady?: boolean;
+  currentPlayerName?: string;
 }
 
 export function GameControls({
@@ -21,7 +22,8 @@ export function GameControls({
   onStartGame,
   onForfeit,
   showGetReady = true,
-  allPlayersReady = false
+  allPlayersReady = false,
+  currentPlayerName = ""
 }: GameControlsProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -29,17 +31,23 @@ export function GameControls({
         <Button 
           onClick={onToggleReady}
           variant={isReady ? "default" : "outline"}
-          className="flex items-center gap-2"
+          className={`flex items-center gap-2 transition-all duration-300 ${
+            isReady 
+              ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-md" 
+              : "border-emerald-500 text-emerald-700 hover:bg-emerald-50"
+          }`}
         >
           {isReady ? (
             <>
               <PauseCircle className="h-4 w-4" />
-              Ready
+              <span>
+                Prêt{currentPlayerName ? ` (${currentPlayerName})` : ""}
+              </span>
             </>
           ) : (
             <>
               <PlayCircle className="h-4 w-4" />
-              Get Ready
+              <span>Se préparer</span>
             </>
           )}
         </Button>
@@ -52,9 +60,9 @@ export function GameControls({
       )}
       
       {canStartGame && (
-        <Button onClick={onStartGame} className="flex items-center gap-2">
+        <Button onClick={onStartGame} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
           <Play className="h-4 w-4" />
-          Start Match
+          Démarrer le match
         </Button>
       )}
       
@@ -64,7 +72,7 @@ export function GameControls({
         className="flex items-center gap-2"
       >
         <DoorOpen className="h-4 w-4" />
-        Leave Match
+        Quitter le match
       </Button>
     </div>
   );

@@ -1,8 +1,9 @@
 
 import { Button } from "@/components/ui/button";
-import { Copy, Share2, Maximize2, Minimize2 } from "lucide-react";
+import { Copy, Maximize2, Minimize2 } from "lucide-react";
 import { toast } from "sonner";
 import type { FullScreenHandle } from "react-full-screen";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface RoomHeaderProps {
   gameName: string;
@@ -11,12 +12,11 @@ interface RoomHeaderProps {
 }
 
 const RoomHeader = ({ gameName, roomId, fullscreenHandle }: RoomHeaderProps) => {
-  const copyRoomLink = () => {
-    const roomUrl = `${window.location.origin}${window.location.pathname}`;
-    navigator.clipboard.writeText(roomUrl);
+  const copyRoomCode = () => {
+    navigator.clipboard.writeText(roomId);
     
-    toast("Link Copied", {
-      description: "Room link copied to clipboard!",
+    toast("Code Copié", {
+      description: "Le code de la salle a été copié dans le presse-papier!",
     });
   };
   
@@ -26,53 +26,57 @@ const RoomHeader = ({ gameName, roomId, fullscreenHandle }: RoomHeaderProps) => 
         {gameName} Room
         {roomId && (
           <span className="text-sm font-normal text-muted-foreground">
-            (Room Code: <span className="font-mono bg-muted px-1 py-0.5 rounded">{roomId}</span>)
+            (Code: <span className="font-mono bg-muted px-1 py-0.5 rounded">{roomId}</span>)
           </span>
         )}
       </div>
       
       <div className="flex items-center gap-2">
         {fullscreenHandle && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-1"
-            onClick={fullscreenHandle.active ? fullscreenHandle.exit : fullscreenHandle.enter}
-          >
-            {fullscreenHandle.active ? (
-              <Minimize2 className="h-4 w-4" />
-            ) : (
-              <Maximize2 className="h-4 w-4" />
-            )}
-            <span className="hidden sm:inline">
-              {fullscreenHandle.active ? 'Exit Fullscreen' : 'Fullscreen'}
-            </span>
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1"
+                  onClick={fullscreenHandle.active ? fullscreenHandle.exit : fullscreenHandle.enter}
+                >
+                  {fullscreenHandle.active ? (
+                    <Minimize2 className="h-4 w-4" />
+                  ) : (
+                    <Maximize2 className="h-4 w-4" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {fullscreenHandle.active ? 'Quitter plein écran' : 'Plein écran'}
+                  </span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{fullscreenHandle.active ? 'Quitter le mode plein écran' : 'Passer en plein écran'}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-1"
-          onClick={copyRoomLink}
-        >
-          <Copy className="h-4 w-4" />
-          <span className="hidden sm:inline">Copy Link</span>
-        </Button>
-        
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-1"
-          onClick={() => {
-            toast("Sharing", {
-              description: "Opening share dialog",
-            });
-          }}
-        >
-          <Share2 className="h-4 w-4" />
-          <span className="hidden sm:inline">Share</span>
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-1"
+                onClick={copyRoomCode}
+              >
+                <Copy className="h-4 w-4" />
+                <span className="hidden sm:inline">Copier le code</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Copier le code de la salle</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   );

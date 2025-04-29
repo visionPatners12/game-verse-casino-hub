@@ -68,13 +68,14 @@ export function EAFC25RoomLayout({
   const opponentPlayer = players.find(player => player.user_id !== currentUserId);
   const connectedPlayers = players.filter(player => player.is_connected).length;
   const enoughPlayers = connectedPlayers >= 2;
+  const currentPlayerName = currentPlayer?.display_name || currentPlayer?.users?.username || '';
   // Auto-start is handled in usePlayerReadyStatus now, only show start button during debug
   const canStartGame = false; // No longer needed as we auto-start
 
   const copyRoomCode = () => {
     if (roomData?.room_id) {
       navigator.clipboard.writeText(roomData.room_id);
-      toast.success("Room code copied to clipboard!");
+      toast.success("Code de salle copié!");
     }
   };
 
@@ -103,7 +104,7 @@ export function EAFC25RoomLayout({
                         EA FC 25 Match Room
                       </CardTitle>
                       <div className="flex items-center mt-1 text-sm">
-                        <span className="text-muted-foreground mr-2">Room Code:</span>
+                        <span className="text-muted-foreground mr-2">Code:</span>
                         <code className="bg-muted px-2 py-0.5 rounded font-mono">{roomData.room_id}</code>
                         <Button 
                           variant="ghost" 
@@ -112,7 +113,7 @@ export function EAFC25RoomLayout({
                           onClick={copyRoomCode}
                         >
                           <Copy className="h-3 w-3" />
-                          <span className="sr-only">Copy room code</span>
+                          <span className="sr-only">Copier le code</span>
                         </Button>
                       </div>
                     </div>
@@ -126,6 +127,7 @@ export function EAFC25RoomLayout({
                       onForfeit={onForfeit}
                       showGetReady={showGetReady}
                       allPlayersReady={allPlayersReady}
+                      currentPlayerName={currentPlayerName}
                     />
                   </div>
                 )}

@@ -2,6 +2,7 @@
 import { Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Player {
   id: string;
@@ -27,16 +28,16 @@ export const RoomPlayersList = ({ players, maxPlayers, currentPlayers }: RoomPla
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5" />
           <span>
-            {currentPlayers}/{maxPlayers} Players
+            {currentPlayers}/{maxPlayers} Joueurs
           </span>
         </div>
         {currentPlayers < maxPlayers ? (
           <span className="text-sm text-muted-foreground">
-            Waiting for players...
+            En attente de joueurs...
           </span>
         ) : (
           <span className="text-sm text-destructive">
-            Room is full
+            Salle complète
           </span>
         )}
       </div>
@@ -45,7 +46,11 @@ export const RoomPlayersList = ({ players, maxPlayers, currentPlayers }: RoomPla
         {players.map((player: Player) => (
           <div 
             key={player.id}
-            className="flex items-center justify-between p-3 rounded-md bg-muted"
+            className={`flex items-center justify-between p-3 rounded-md ${
+              player.is_connected 
+                ? 'bg-muted' 
+                : 'bg-muted/50 border border-red-200'
+            }`}
           >
             <div className="flex items-center gap-3">
               <Avatar className="h-8 w-8">
@@ -60,9 +65,18 @@ export const RoomPlayersList = ({ players, maxPlayers, currentPlayers }: RoomPla
                 {player.users?.username || player.display_name}
               </span>
             </div>
-            <Badge variant={player.is_connected ? "default" : "destructive"}>
-              {player.is_connected ? "Connected" : "Disconnected"}
-            </Badge>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant={player.is_connected ? "success" : "destructive"}>
+                    {player.is_connected ? "Connecté" : "Déconnecté"}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{player.is_connected ? "Joueur actuellement connecté" : "Joueur déconnecté"}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         ))}
         {Array.from({ length: maxPlayers - currentPlayers }).map((_, i) => (
@@ -73,7 +87,7 @@ export const RoomPlayersList = ({ players, maxPlayers, currentPlayers }: RoomPla
             <Avatar className="h-8 w-8">
               <AvatarFallback>?</AvatarFallback>
             </Avatar>
-            <span className="text-muted-foreground">Waiting...</span>
+            <span className="text-muted-foreground">En attente...</span>
           </div>
         ))}
       </div>

@@ -2,6 +2,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Users, CheckCircle2, XCircle, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Player {
   id: string;
@@ -30,17 +31,17 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
     <div className="mb-6">
       <h3 className="text-sm font-medium mb-2 flex items-center gap-1">
         <Users className="h-4 w-4" />
-        Players ({connectedPlayers.length}/{maxPlayers})
+        Joueurs ({connectedPlayers.length}/{maxPlayers})
       </h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {players.map(player => (
           <div 
             key={player.id} 
-            className={`flex items-center justify-between px-3 py-2 rounded-md ${
+            className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors duration-200 ${
               player.user_id === currentUserId 
                 ? 'bg-primary text-primary-foreground' 
                 : player.is_connected 
-                  ? 'bg-muted' 
+                  ? player.is_ready ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800' : 'bg-muted' 
                   : 'bg-muted/50 text-muted-foreground'
             }`}
           >
@@ -67,19 +68,46 @@ const PlayersList = ({ players, maxPlayers, currentUserId }: PlayersListProps) =
                 <span className="text-xs mr-1">{player.current_score} pts</span>
               )}
               {player.is_ready && player.is_connected && !player.has_forfeited && (
-                <Badge variant="default" className="flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3" />
-                </Badge>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Badge variant="success" className="flex items-center gap-1 bg-emerald-500">
+                        <CheckCircle2 className="h-3 w-3" />
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Joueur prêt</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
               {!player.is_connected && !player.has_forfeited && (
-                <Badge variant="destructive" className="flex items-center gap-1">
-                  <XCircle className="h-3 w-3" />
-                </Badge>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Badge variant="destructive" className="flex items-center gap-1">
+                        <XCircle className="h-3 w-3" />
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Joueur déconnecté</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
               {player.has_forfeited && (
-                <Badge variant="destructive" className="flex items-center gap-1">
-                  <X className="h-3 w-3" /> Abandon
-                </Badge>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Badge variant="destructive" className="flex items-center gap-1">
+                        <X className="h-3 w-3" /> Abandon
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Le joueur a abandonné la partie</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
           </div>
